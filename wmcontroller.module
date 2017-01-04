@@ -1,0 +1,17 @@
+<?php
+
+/**
+ * Sets the variables set in a Controller
+ *
+ * @param $variables
+ * @see \Drupal\wmcontroller\ViewBuilder\ViewBuilder::setData
+ */
+function wmcontroller_theme_set_variables(&$variables)
+{
+    // Skip if no data is set or not set as an array
+    if (!isset($variables['_data']) || !is_array($variables['_data'])) {
+        return;
+    }
+    $variables = array_merge($variables, $variables['_data']);
+    unset($variables['_data']);
+}

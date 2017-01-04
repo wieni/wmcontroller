@@ -1,0 +1,6 @@
+services:
+    wmcontroller.renderer.viewbuilder:
+        class: Drupal\wmcontroller\EventSubscriber\ViewRendererSubscriber
+        arguments: ['@entity_type.manager']
+        tags:
+            - { name: event_subscriber }

@@ -1,0 +1,6 @@
+name: Wieni Controller helpers
+type: module
+core: 8.x
+package: Wieni
+dependencies:
+  - node
