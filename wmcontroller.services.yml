@@ -1,6 +1,17 @@
 services:
+    wmcontroller.logger:
+      parent: logger.channel_base
+      arguments: ['wmcontroller']
+    wmcontroller.config:
+      class: Drupal\Core\Config\ImmutableConfig
+      factory: config.factory:get
+      arguments: ['wmcontroller.settings']
+
+    wmcontroller.routing.injectFrontController:
+        class:  Drupal\wmcontroller\Routing\InjectFrontControllerRouteSubscriber
+        arguments: ['@wmcontroller.config', '@wmcontroller.logger']
+        tags: [{ name: event_subscriber }]
     wmcontroller.renderer.viewbuilder:
         class: Drupal\wmcontroller\EventSubscriber\ViewRendererSubscriber
         arguments: ['@entity_type.manager']
-        tags:
-            - { name: event_subscriber }
+        tags: [{ name: event_subscriber }]

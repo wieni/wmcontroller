@@ -2,11 +2,10 @@
 
 namespace Drupal\wmcontroller\Controller;
 
-use Drupal\Core\Controller\ControllerBase;
-use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Controller\ControllerBase as DrupalControllerBase;
 use Drupal\wmcontroller\ViewBuilder\ViewBuilder;
 
-abstract class BaseController extends ControllerBase
+abstract class ControllerBase extends DrupalControllerBase
 {
 
     protected $templateDir = '';

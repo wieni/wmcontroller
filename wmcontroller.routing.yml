@@ -1,0 +1,7 @@
+wmcontroller.settings:
+  path: '/admin/config/services/wmcontroller'
+  defaults:
+    _form: '\Drupal\wmcontroller\Form\WmControllerSettings'
+    _title: 'WmController'
+  requirements:
+    _permission: 'administer site configuration'
