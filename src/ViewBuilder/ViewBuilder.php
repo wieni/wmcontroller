@@ -122,7 +122,7 @@ class ViewBuilder
 
         // Overwrite default template when wanted
         if ($this->template) {
-            $templateDir = $this->templateDir ? $this->templateDir . '_' : '';
+            $templateDir = $this->templateDir ? $this->templateDir . '.' : '';
             $view['#theme'] = $templateDir . $this->template;
         }
 
