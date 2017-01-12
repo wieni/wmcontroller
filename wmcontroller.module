@@ -1,6 +1,14 @@
 <?php
 
 /**
+ * Implements hook_theme().
+ */
+function wmcontroller_theme()
+{
+    return \Drupal::service('wmcontroller.service.templatelocator')->getThemes();
+}
+
+/**
  * Sets the variables set in a Controller
  *
  * @param $variables
