@@ -7,7 +7,7 @@ services:
       factory: config.factory:get
       arguments: ['wmcontroller.settings']
 
-    wmcontroller.routing.injectFrontController:
+    wmcontroller.routing.injectfrontcontroller:
         class:  Drupal\wmcontroller\Routing\InjectFrontControllerRouteSubscriber
         arguments: ['@wmcontroller.config', '@wmcontroller.logger']
         tags: [{ name: event_subscriber }]
