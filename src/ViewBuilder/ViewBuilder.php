@@ -27,6 +27,7 @@ class ViewBuilder
     protected $cache = [
         'tags' => [],
         'contexts' => [],
+        'max-age' => 0,
     ];
 
     public function setTemplateDir($templateDir)
@@ -110,31 +111,43 @@ class ViewBuilder
     {
         return $this->hooks;
     }
-
+    
     /**
      * @param array $hooks
+     * @return $this
      */
     public function setHooks(array $hooks)
     {
         $this->hooks = $hooks;
+        return $this;
     }
-
+    
     /**
      * @param array $cache
+     * @return $this
      */
     public function setCache(array $cache)
     {
         $this->cache = $cache;
+        return $this;
     }
 
     public function addCacheTag(string $tag)
     {
         $this->cache['tags'][] = $tag;
+        return $this;
     }
-
+    
     public function addCacheContexts(string $context)
     {
         $this->cache['contexts'][] = $context;
+        return $this;
+    }
+    
+    public function setCacheMaxAge(int $context)
+    {
+        $this->cache['max-age'] = $context;
+        return $this;
     }
 
     public function render(EntityTypeManagerInterface $typeManager)
@@ -168,19 +181,19 @@ class ViewBuilder
             $this->getHooks()
         );
         $view['#_data'] = $this->data;
-
+        
         // Add cache tags
         if (empty($view['#cache'])) {
             $view['#cache'] = $this->cache;
         } else {
-            foreach (['tags', 'contexts'] as $key) {
+            foreach (['tags', 'contexts', 'max-age'] as $key) {
                 $view['#cache'][$key] = array_merge(
                     $view['#cache'][$key] ?: [],
                     $this->cache[$key]
                 );
             }
         }
-
+        
         return $view;
     }
 
