@@ -27,7 +27,6 @@ class ViewBuilder
     protected $cache = [
         'tags' => [],
         'contexts' => [],
-        'max-age' => 0,
     ];
 
     public function setTemplateDir($templateDir)
@@ -52,9 +51,7 @@ class ViewBuilder
      * @param array $headElements
      * @return $this
      */
-    public function setHeadElements(
-        array $headElements
-    ) {
+    public function setHeadElements(array $headElements) {
         $this->headElements = $headElements;
         return $this;
     }
@@ -187,10 +184,18 @@ class ViewBuilder
             $view['#cache'] = $this->cache;
         } else {
             foreach (['tags', 'contexts', 'max-age'] as $key) {
-                $view['#cache'][$key] = array_merge(
-                    $view['#cache'][$key] ?: [],
-                    $this->cache[$key]
-                );
+                if (isset($this->cache[$key])) {
+                    $value = $this->cache[$key];
+                    
+                    if (is_array($this->cache[$key])) {
+                        $value = array_merge(
+                            $view['#cache'][$key] ?: [],
+                            $this->cache[$key]
+                        );
+                    }
+                    
+                    $view['#cache'][$key] = $value;
+                }
             }
         }
         
@@ -204,5 +209,4 @@ class ViewBuilder
         }
         return array_keys($array) !== range(0, count($array) - 1);
     }
-
 }
