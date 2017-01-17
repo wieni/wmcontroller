@@ -21,6 +21,8 @@ class ViewBuilder
     protected $data = [];
 
     protected $hooks = [];
+    
+    protected $headElements= [];
 
     protected $cache = [
         'tags' => [],
@@ -42,6 +44,29 @@ class ViewBuilder
     public function setEntity(EntityInterface $entity)
     {
         $this->entity = $entity;
+        return $this;
+    }
+    
+    /**
+     * @param array $headElements
+     * @return $this
+     */
+    public function setHeadElements(
+        array $headElements
+    ) {
+        $this->headElements = $headElements;
+        return $this;
+    }
+    
+    /**
+     * @param array $headElement
+     * @param string $key
+     * @return $this
+     */
+    public function addHeadElement(array $headElement, $key = '')
+    {
+        $key = $key ?: bin2hex(random_bytes(20));
+        $this->headElements[] = [$headElement, $key];
         return $this;
     }
 
@@ -124,6 +149,17 @@ class ViewBuilder
         if ($this->template) {
             $templateDir = $this->templateDir ? $this->templateDir . '.' : '';
             $view['#theme'] = $templateDir . $this->template;
+        }
+    
+        if (count($this->headElements) > 0) {
+            if (!isset($view['#attached']['html_head'])) {
+                $view['#attached']['html_head'] = [];
+            }
+        
+            $view['#attached']['html_head'] = array_merge(
+                $view['#attached']['html_head'],
+                $this->headElements
+            );
         }
 
         // Add custom hooks
