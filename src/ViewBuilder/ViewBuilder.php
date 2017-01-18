@@ -135,6 +135,12 @@ class ViewBuilder
         return $this;
     }
     
+    public function addCacheTags(array $tag)
+    {
+        $this->cache['tags'] = array_merge($this->cache['tags'], $tag);
+        return $this;
+    }
+    
     public function addCacheContexts(string $context)
     {
         $this->cache['contexts'][] = $context;
@@ -188,9 +194,11 @@ class ViewBuilder
                     $value = $this->cache[$key];
                     
                     if (is_array($this->cache[$key])) {
-                        $value = array_merge(
-                            $view['#cache'][$key] ?: [],
-                            $this->cache[$key]
+                        $value = array_unique(
+                            array_merge(
+                                $view['#cache'][$key] ?: [],
+                                $this->cache[$key]
+                            )
                         );
                     }
                     
