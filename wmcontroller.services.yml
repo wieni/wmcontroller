@@ -5,6 +5,7 @@ parameters:
             '^/node/\d+$':   1200
             '^/admin/.*$':   0
             '^/user(/.*)?$': 0
+            '.':             50
 
 services:
     wmcontroller.logger:

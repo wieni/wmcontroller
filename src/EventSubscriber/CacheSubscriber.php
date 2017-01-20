@@ -8,9 +8,9 @@ use Drupal\wmcontroller\Http\CachedResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
-use Symfony\Component\HttpKernel\Event\FilterControllerEvent;
 use Symfony\Component\HttpKernel\Event\PostResponseEvent;
 use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
+use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 
 class CacheSubscriber implements EventSubscriberInterface
 {
@@ -24,25 +24,21 @@ class CacheSubscriber implements EventSubscriberInterface
 
     public static function getSubscribedEvents()
     {
-        $events[KernelEvents::CONTROLLER][] = ['onCachedResponse', 255];
+        $events[KernelEvents::REQUEST][] = ['onCachedResponse', 10000];
         $events[KernelEvents::RESPONSE][] = ['onResponse', -255];
         $events[KernelEvents::TERMINATE][] = ['onTerminate', 0];
         return $events;
     }
 
-    public function onCachedResponse(FilterControllerEvent $event)
+    public function onCachedResponse(GetResponseEvent $event)
     {
         if ($this->ignore()) {
             return;
         }
 
         try {
-            $cache = $this->getCache($event->getRequest());
-            $event->setController(
-                function () use ($cache) {
-                    return $cache->toResponse();
-                }
-            );
+            $event->setResponse($this->getCache($event->getRequest())
+                ->toResponse());
         } catch (NoSuchCacheEntryException $e) {
         }
     }
