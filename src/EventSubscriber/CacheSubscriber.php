@@ -38,8 +38,9 @@ class CacheSubscriber implements EventSubscriberInterface
         }
 
         try {
-            $event->setResponse($this->getCache($request)
-                ->toResponse());
+            $event->setResponse(
+                $this->getCache($request)->toResponse()
+            );
         } catch (NoSuchCacheEntryException $e) {
         }
     }
