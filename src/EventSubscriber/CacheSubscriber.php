@@ -32,12 +32,13 @@ class CacheSubscriber implements EventSubscriberInterface
 
     public function onCachedResponse(GetResponseEvent $event)
     {
-        if ($this->ignore()) {
+        $request = $event->getRequest();
+        if ($this->ignore($request)) {
             return;
         }
 
         try {
-            $event->setResponse($this->getCache($event->getRequest())
+            $event->setResponse($this->getCache($request)
                 ->toResponse());
         } catch (NoSuchCacheEntryException $e) {
         }
@@ -45,7 +46,8 @@ class CacheSubscriber implements EventSubscriberInterface
 
     public function onResponse(FilterResponseEvent $event)
     {
-        if ($this->ignore()) {
+        $request = $event->getRequest();
+        if ($this->ignore($request)) {
             return;
         }
 
@@ -57,7 +59,7 @@ class CacheSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $path = $event->getRequest()->getPathInfo();
+        $path = $request->getPathInfo();
         foreach ($this->expiries as $re => $expiry) {
             // # should be safe... I guess
             if (!preg_match('#' . $re . '#', $path)) {
@@ -74,12 +76,12 @@ class CacheSubscriber implements EventSubscriberInterface
 
     public function onTerminate(PostResponseEvent $event)
     {
-        if ($this->ignore()) {
+        $request = $event->getRequest();
+        if ($this->ignore($request)) {
             return;
         }
 
         $response = $event->getResponse();
-        $request = $event->getRequest();
 
         if (
             $response instanceof CachedResponse
@@ -100,9 +102,10 @@ class CacheSubscriber implements EventSubscriberInterface
         );
     }
 
-    protected function ignore()
+    protected function ignore(Request $request)
     {
-        return \Drupal::service('current_user')->id() != 0;
+        return $request->hasSession()
+            && $request->getSession()->get('uid') != 0;
     }
 
     protected function filepath(Request $request)
