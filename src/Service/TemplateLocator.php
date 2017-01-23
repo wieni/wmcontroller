@@ -29,11 +29,25 @@ class TemplateLocator
      */
     public function getThemes()
     {
-        if (!$module = $this->getModule()) {
-            return [];
+        if ($location = $this->getTheme()) {
+            return $this->getThemeFiles('theme', $location);
+        }
+        if ($location = $this->getModule()) {
+            return $this->getThemeFiles('module', $location);
         }
 
-        return $this->getThemesFromModule($module);
+        return [];
+    }
+    
+    /**
+     * Get the configured path
+     * @see /admin/config/services/wmcontroller
+     *
+     * @return string
+     */
+    private function getPath()
+    {
+        return $this->config->get('path');
     }
 
     /**
@@ -46,18 +60,36 @@ class TemplateLocator
     {
         return $this->config->get('module');
     }
+    
+    /**
+     * Get the configured theme, if any
+     * @see /admin/config/services/wmcontroller
+     *
+     * @return string
+     */
+    private function getTheme()
+    {
+        return $this->config->get('theme');
+    }
 
     /**
      * Locate and create theme arrays in a module
      *
-     * @param $module
-     * @param string $directory
+     * @param $type
+     *   module or theme
+     * @param $location
+     *   directory in that module or theme
      * @return array
      */
-    private function getThemesFromModule($module, $directory = '/templates')
+    private function getThemeFiles($type, $location)
     {
+        
+        if (!$directory = $this->getPath()) {
+            $directory = '/templates';
+        }
+        
         $themes = [];
-        $dir = drupal_get_path('module', $module) . $directory;
+        $dir = drupal_get_path($type, $location) . $directory;
 
         if (!file_exists($dir)) {
             return $themes;
