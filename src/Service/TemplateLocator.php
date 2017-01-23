@@ -32,7 +32,7 @@ class TemplateLocator
         if ($location = $this->getTheme()) {
             return $this->getThemeFiles('theme', $location);
         }
-        if (!$location = $this->getModule()) {
+        if ($location = $this->getModule()) {
             return $this->getThemeFiles('module', $location);
         }
 
