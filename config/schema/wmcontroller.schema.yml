@@ -5,5 +5,9 @@ wmcontroller.settings:
     settings:
       type: mapping
       mapping:
+        path:
+          type: string
         module:
+          type: string
+        theme:
           type: string
