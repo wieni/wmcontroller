@@ -1,11 +1,23 @@
 parameters:
-    wmcontroller.cache.config:
-        expiry:
-            '^/$':           250
-            '^/node/\d+$':   1200
-            '^/admin/.*$':   0
-            '^/user(/.*)?$': 0
-            '.':             50
+    wmcontroller.cache.expiry:
+        '^/$':           { maxage: 250, s-maxage: 5 }
+        '^/node/\d+$':   { maxage: 1200, s-maxage: 10 }
+        '^/admin/.*$':   { maxage: 0, s-maxage: 0 }
+        '^/user(/.*)?$': { maxage: 0, s-maxage: 0 }
+
+    # Store the contents of the response and serve it.
+    # If disabled, only tags will be stored.
+    # This could be useful if the site is proxied by a cdn.
+    wmcontroller.cache.store: true
+
+    # Disables caching in its entirety, only add s-maxage and maxage headers.
+    # (Also implies wmcontroller.cache.store = false)
+    wmcontroller.cache.tags: true
+
+    # Amount of items that should be purged during each cron run.
+    # This also determines the amount of times the wmcontroller.purge event
+    # is triggered.
+    wmcontroller.cache.purge_per_cron: 100
 
 services:
     wmcontroller.logger:
@@ -31,7 +43,20 @@ services:
         class: Drupal\wmcontroller\Service\TemplateLocator
         arguments: ['@wmcontroller.config']
 
-    wmcontroller.subscriber.cache:
+    wmcontroller.cache.manager:
+        class: Drupal\wmcontroller\Service\Cache\Manager
+        arguments: ['@wmcontroller.cache.storage.mysql', '@event_dispatcher']
+
+    wmcontroller.cache.subscriber:
         class: Drupal\wmcontroller\EventSubscriber\CacheSubscriber
-        arguments: ['%wmcontroller.cache.config%']
+        arguments:
+            - '@wmcontroller.cache.manager'
+            - '%wmcontroller.cache.expiry%'
+            - '%wmcontroller.cache.store%'
+            - '%wmcontroller.cache.tags%'
         tags: [{ name: event_subscriber }]
+
+    wmcontroller.cache.storage.mysql:
+        class: Drupal\wmcontroller\Service\Cache\Storage\Database
+        arguments: ['@database']
+

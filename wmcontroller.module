@@ -23,3 +23,23 @@ function wmcontroller_theme_set_variables(&$variables)
     $variables = array_merge($variables, $variables['_data']);
     unset($variables['_data']);
 }
+
+/**
+ * Implements hook_cron()
+ */
+function wmcontroller_cron()
+{
+    wmcontroller_cron_purge_expired();
+}
+
+/**
+ * Purge expired wmcontroller_cache items.
+ */
+function wmcontroller_cron_purge_expired()
+{
+    $ctr = Drupal::getContainer();
+
+    $items = $ctr->get('wmcontroller.cache.manager')
+        ->purge($ctr->getParameter('wmcontroller.cache.purge_per_cron'));
+
+}

@@ -5,6 +5,11 @@ namespace Drupal\wmcontroller\EventSubscriber;
 use Drupal\wmcontroller\Exception\NoSuchCacheEntryException;
 use Drupal\wmcontroller\Entity\Cache;
 use Drupal\wmcontroller\Http\CachedResponse;
+use Drupal\wmcontroller\Service\Cache\Manager;
+use Drupal\wmcontroller\Event\EntityPresentedEvent;
+use Drupal\wmcontroller\WmcontrollerEvents;
+use Drupal\wmcontroller\Event\CachePurgeEvent;
+
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
@@ -14,12 +19,27 @@ use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 
 class CacheSubscriber implements EventSubscriberInterface
 {
+    /** @var Manager */
+    protected $manager;
+
     protected $expiries;
 
-    public function __construct(array $config)
-    {
-        $config += ['expiry' => []];
-        $this->expiries = $config['expiry'];
+    protected $store;
+
+    protected $tags;
+
+    protected $presentedEntityTags = [];
+
+    public function __construct(
+        Manager $manager,
+        array $expiries,
+        $store = false,
+        $tags = false
+    ) {
+        $this->manager = $manager;
+        $this->expiries = $expiries;
+        $this->store = $store;
+        $this->tags = $tags;
     }
 
     public static function getSubscribedEvents()
@@ -27,11 +47,17 @@ class CacheSubscriber implements EventSubscriberInterface
         $events[KernelEvents::REQUEST][] = ['onCachedResponse', 10000];
         $events[KernelEvents::RESPONSE][] = ['onResponse', -255];
         $events[KernelEvents::TERMINATE][] = ['onTerminate', 0];
+        $events[WmcontrollerEvents::ENTITY_PRESENTED][] = ['onEntityPresented', 0];
+
         return $events;
     }
 
     public function onCachedResponse(GetResponseEvent $event)
     {
+        if (!$this->store || !$this->tags) {
+            return;
+        }
+
         $request = $event->getRequest();
         if ($this->ignore($request)) {
             return;
@@ -61,22 +87,40 @@ class CacheSubscriber implements EventSubscriberInterface
         }
 
         $path = $request->getPathInfo();
-        foreach ($this->expiries as $re => $expiry) {
+        foreach ($this->expiries as $re => $definition) {
             // # should be safe... I guess
             if (!preg_match('#' . $re . '#', $path)) {
                 continue;
             }
 
-            if ($expiry) {
-                $response->setSharedMaxAge($expiry);
+            if (!empty($definition['s-maxage'])) {
+                $response->setSharedMaxAge($definition['s-maxage']);
+            }
+
+            if (!empty($definition['maxage'])) {
+                $response->setMaxAge($definition['maxage']);
             }
 
             return;
         }
     }
 
+    public function onEntityPresented(EntityPresentedEvent $event)
+    {
+        $entity = $event->getEntity();
+        $this->presentedEntityTags[] = sprintf(
+            '%s:%d',
+            $entity->getEntityTypeId(),
+            $entity->id()
+        );
+    }
+
     public function onTerminate(PostResponseEvent $event)
     {
+        if (!$this->tags) {
+            return;
+        }
+
         $request = $event->getRequest();
         if ($this->ignore($request)) {
             return;
@@ -91,15 +135,17 @@ class CacheSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $fn = $this->filepath($request);
-        file_put_contents(
-            $fn . '.content',
-            $response->getContent()
-        );
-
-        file_put_contents(
-            $fn . '.headers',
-            serialize($response->headers->all())
+        // TODO find a way to handle exceptions thrown from this point on.
+        // (we're in the kernel::TERMINATE phase)
+        $this->manager->set(
+            new Cache(
+                $request->getUri(),
+                $request->getMethod(),
+                $this->store ? $response->getContent() : '',
+                $this->store ? $response->headers->all() : [],
+                time() + $response->getMaxAge() // returns s-maxage if set.
+            ),
+            $this->presentedEntityTags
         );
     }
 
@@ -109,13 +155,6 @@ class CacheSubscriber implements EventSubscriberInterface
             && $request->getSession()->get('uid') != 0;
     }
 
-    protected function filepath(Request $request)
-    {
-        return '/tmp/' . sha1(
-            $request->getMethod() . '|' . $request->getPathInfo()
-        );
-    }
-
     /**
      * @return Cache The cached entry.
      *
@@ -123,23 +162,9 @@ class CacheSubscriber implements EventSubscriberInterface
      */
     protected function getCache(Request $request)
     {
-        $fn = $this->filepath($request);
-        $contentPath = $fn . '.content';
-        if (!file_exists($contentPath)) {
-            throw new NoSuchCacheEntryException(
-                $request->getMethod(),
-                $request->getPathInfo()
-            );
-        }
-
-        $content = file_get_contents($contentPath);
-        $headers = unserialize(
-            file_get_contents($fn . '.headers')
-        );
-
-        return new Cache(
-            '<p>heejkes, ik kom uit de cache. xoxo</p>' . $content,
-            $headers
+        return $this->manager->get(
+            $request->getUri(),
+            $request->getMethod()
         );
     }
 }
