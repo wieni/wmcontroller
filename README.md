@@ -109,10 +109,14 @@ parameters:
 /** @var Drupal\Core\Entity\EntityInterface */
 $entity = get();
 
-/** @var Drupal\wmcontroller\Service\Cache\MainEntityDispatcher */
+/** @var Drupal\wmcontroller\Service\Cache\Dispatcher */
 $dispatcher = injectedService('wmcontroller.cache.dispatcher');
 
-$dispatcher->dispatch($entity);
+$dispatcher->dispatchMainEntity($entity); // To determine maxages
+
+// To attach the entity's cache tags to the current request
+// Only required if the item is not being injected into a twig tpl.
+$dispatcher->dispatchPresented($entity);
 ```
 
 #### purge a tag

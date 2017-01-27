@@ -5,7 +5,7 @@ namespace Drupal\wmcontroller\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Controller\ControllerResolverInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\wmcontroller\Service\Cache\MainEntityDispatcher;
+use Drupal\wmcontroller\Service\Cache\Dispatcher;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,7 +20,7 @@ class FrontController extends ControllerBase
     /** @var Request */
     protected $request;
 
-    /** @var MainEntityDispatcher */
+    /** @var Dispatcher */
     protected $dispatcher;
 
     /**
@@ -30,7 +30,7 @@ class FrontController extends ControllerBase
      */
     public function __construct(
         ControllerResolverInterface $controllerResolver,
-        MainEntityDispatcher $dispatcher
+        Dispatcher $dispatcher
     ) {
         $this->dispatcher = $dispatcher;
         $this->controllerResolver = $controllerResolver;
@@ -100,7 +100,7 @@ class FrontController extends ControllerBase
         // Extract arguments from the $request object using the controllerResolver
         $arguments = $this->getArguments($request, $controller);
 
-        $this->dispatcher->dispatch($entity);
+        $this->dispatcher->dispatchMainEntity($entity);
 
         // Call the controller
         return call_user_func_array($controller, $arguments);

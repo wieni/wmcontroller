@@ -27,10 +27,8 @@ abstract class Template extends \Twig_Template
             }
 
             self::$dispatched[$key] = true;
-            \Drupal::service('event_dispatcher')->dispatch(
-                WmcontrollerEvents::ENTITY_PRESENTED,
-                new EntityPresentedEvent($var)
-            );
+            \Drupal::service('wmcontroller.cache.dispatcher')
+                ->dispatchPresented($var);
         }
 
         return parent::display($context, $blocks);

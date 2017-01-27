@@ -3,16 +3,15 @@
 namespace Drupal\wmcontroller\Service\Cache;
 
 use Drupal\wmcontroller\Event\MainEntityEvent;
+use Drupal\wmcontroller\Event\EntityPresentedEvent;
 use Drupal\wmcontroller\WmcontrollerEvents;
 use Drupal\Core\Entity\EntityInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Tiny convenience wrapper around the symfony event dispatcher
- * to notify our CacheSubscriber of which entity's cache rules apply
- * to the current request.
  */
-class MainEntityDispatcher
+class Dispatcher
 {
     /** @var EventDispatcherInterface */
     protected $dispatcher;
@@ -22,11 +21,19 @@ class MainEntityDispatcher
         $this->dispatcher = $dispatcher;
     }
 
-    public function dispatch(EntityInterface $entity)
+    public function dispatchMainEntity(EntityInterface $entity)
     {
         $this->dispatcher->dispatch(
             WmcontrollerEvents::MAIN_ENTITY_RENDER,
             new MainEntityEvent($entity)
+        );
+    }
+
+    public function dispatchPresented(EntityInterface $entity)
+    {
+        $this->dispatcher->dispatch(
+            WmcontrollerEvents::ENTITY_PRESENTED,
+            new EntityPresentedEvent($entity)
         );
     }
 }

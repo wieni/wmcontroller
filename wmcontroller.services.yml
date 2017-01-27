@@ -8,7 +8,6 @@ parameters:
         entities:
             node:
                 _default: { maxage: 120, s-maxage: 300 }
-                dish:     { maxage: 300, s-maxage: 7200 }
             taxonomy_term:
                 _default: { maxage: 120, s-maxage: 300 }
 
@@ -17,21 +16,21 @@ parameters:
         # The paths these regexes are matched against are the actual request paths,
         # not the route name or route path.
         paths:
-            '^/$':           { maxage: 250, s-maxage: 3600 }
-            '^/node/\d+$':   { maxage: 1200, s-maxage: 10 }
-            '^/admin/.*$':   { maxage: 0, s-maxage: 0 }
-            '^/user(/.*)?$': { maxage: 0, s-maxage: 0 }
+            '^/$':           { maxage: 120, s-maxage: 300 }
+            # '^/admin/.*$':   { maxage: 0, s-maxage: 0 }
+            # '^/user(/.*)?$': { maxage: 0, s-maxage: 0 }
+            '.':             { maxage: 0, s-maxage: 0 }
 
 
 
     # Store the contents of the response and serve it.
     # If disabled, only tags will be stored.
     # This could be useful if the site is proxied by a cdn.
-    wmcontroller.cache.store: true
+    wmcontroller.cache.store: false
 
     # Disables caching in its entirety, only add s-maxage and maxage headers.
     # (Also implies wmcontroller.cache.store = false)
-    wmcontroller.cache.tags: true
+    wmcontroller.cache.tags: false
 
     # Amount of items that should be purged during each cron run.
     # This also determines the amount of times the wmcontroller.purge event
@@ -63,7 +62,7 @@ services:
         arguments: ['@wmcontroller.config']
 
     wmcontroller.cache.dispatcher:
-        class: Drupal\wmcontroller\Service\Cache\MainEntityDispatcher
+        class: Drupal\wmcontroller\Service\Cache\Dispatcher
         arguments: ['@event_dispatcher']
 
     wmcontroller.cache.manager:
