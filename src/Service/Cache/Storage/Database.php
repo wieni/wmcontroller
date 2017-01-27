@@ -136,7 +136,6 @@ class Database implements StorageInterface
         $q->innerJoin(self::TABLE_TAGS, 't', 't.id = c.id');
 
         $stmt = $q->condition('t.tag', $tag)
-            ->groupBy('id')
             ->execute();
 
         $items = [];
