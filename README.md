@@ -102,7 +102,7 @@ parameters:
 
 #### custom route / controller that renders an entity
 
-(this is already done for you the core entity routes)
+(this is not necessary for the core entity routes)
 
 ```php
 
