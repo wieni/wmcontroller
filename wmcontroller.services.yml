@@ -1,9 +1,18 @@
 parameters:
     wmcontroller.cache.expiry:
-        '^/$':           { maxage: 250, s-maxage: 5 }
-        '^/node/\d+$':   { maxage: 1200, s-maxage: 10 }
-        '^/admin/.*$':   { maxage: 0, s-maxage: 0 }
-        '^/user(/.*)?$': { maxage: 0, s-maxage: 0 }
+        paths:
+            '^/$':           { maxage: 250, s-maxage: 5 }
+            '^/node/\d+$':   { maxage: 1200, s-maxage: 10 }
+            '^/admin/.*$':   { maxage: 0, s-maxage: 0 }
+            '^/user(/.*)?$': { maxage: 0, s-maxage: 0 }
+
+        entities:
+            node:
+                _default: { maxage: 120, s-maxage: 300 }
+                dish:     { maxage: 300, s-maxage: 7200 }
+            taxonomy_term:
+                _default: { maxage: 120, s-maxage: 300 }
+
 
     # Store the contents of the response and serve it.
     # If disabled, only tags will be stored.
@@ -42,6 +51,10 @@ services:
     wmcontroller.service.templatelocator:
         class: Drupal\wmcontroller\Service\TemplateLocator
         arguments: ['@wmcontroller.config']
+
+    wmcontroller.cache.dispatcher:
+        class: Drupal\wmcontroller\Service\Cache\MainEntityDispatcher
+        arguments: ['@event_dispatcher']
 
     wmcontroller.cache.manager:
         class: Drupal\wmcontroller\Service\Cache\Manager

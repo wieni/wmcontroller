@@ -7,10 +7,12 @@ use Drupal\wmcontroller\Entity\Cache;
 use Drupal\wmcontroller\Http\CachedResponse;
 use Drupal\wmcontroller\Service\Cache\Manager;
 use Drupal\wmcontroller\Event\EntityPresentedEvent;
-use Drupal\wmcontroller\WmcontrollerEvents;
 use Drupal\wmcontroller\Event\CachePurgeEvent;
-
+use Drupal\wmcontroller\Event\MainEntityEvent;
+use Drupal\wmcontroller\WmcontrollerEvents;
+use Drupal\Core\Entity\EntityInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\HttpKernel\Event\PostResponseEvent;
@@ -19,6 +21,8 @@ use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 
 class CacheSubscriber implements EventSubscriberInterface
 {
+    const CACHE_HEADER = 'X-WM-Cache';
+
     /** @var Manager */
     protected $manager;
 
@@ -30,6 +34,9 @@ class CacheSubscriber implements EventSubscriberInterface
 
     protected $presentedEntityTags = [];
 
+    /** @var EntityInterface */
+    protected $mainEntity;
+
     public function __construct(
         Manager $manager,
         array $expiries,
@@ -37,7 +44,7 @@ class CacheSubscriber implements EventSubscriberInterface
         $tags = false
     ) {
         $this->manager = $manager;
-        $this->expiries = $expiries;
+        $this->expiries = $expiries + ['paths' => [], 'entities' => []];
         $this->store = $store;
         $this->tags = $tags;
     }
@@ -48,8 +55,14 @@ class CacheSubscriber implements EventSubscriberInterface
         $events[KernelEvents::RESPONSE][] = ['onResponse', -255];
         $events[KernelEvents::TERMINATE][] = ['onTerminate', 0];
         $events[WmcontrollerEvents::ENTITY_PRESENTED][] = ['onEntityPresented', 0];
+        $events[WmcontrollerEvents::MAIN_ENTITY_RENDER][] = ['onMainEntity', 0];
 
         return $events;
+    }
+
+    public function onMainEntity(MainEntityEvent $event)
+    {
+        $this->mainEntity = $event->getEntity();
     }
 
     public function onCachedResponse(GetResponseEvent $event)
@@ -64,9 +77,9 @@ class CacheSubscriber implements EventSubscriberInterface
         }
 
         try {
-            $event->setResponse(
-                $this->getCache($request)->toResponse()
-            );
+            $response = $this->getCache($request)->toResponse();
+            $response->headers->set(self::CACHE_HEADER, 'HIT');
+            $event->setResponse($response);
         } catch (NoSuchCacheEntryException $e) {
         }
     }
@@ -79,27 +92,31 @@ class CacheSubscriber implements EventSubscriberInterface
         }
 
         $response = $event->getResponse();
+        if (!($response instanceof CachedResponse)) {
+            $response->headers->set(self::CACHE_HEADER, 'MISS');
+        }
+
+        // Don't override explicitly set maxage headers.
         if (
-            empty($this->expiries)
-            || $response->headers->hasCacheControlDirective('s-maxage')
+            $response->headers->hasCacheControlDirective('s-maxage')
+            || $response->headers->hasCacheControlDirective('maxage')
         ) {
             return;
         }
 
+        if ($entityExpiry = $this->getMaxAgesForMainEntity()) {
+            $this->setMaxAge($response, $entityExpiry);
+            return;
+        }
+
         $path = $request->getPathInfo();
-        foreach ($this->expiries as $re => $definition) {
+        foreach ($this->expiries['paths'] as $re => $definition) {
             // # should be safe... I guess
             if (!preg_match('#' . $re . '#', $path)) {
                 continue;
             }
 
-            if (!empty($definition['s-maxage'])) {
-                $response->setSharedMaxAge($definition['s-maxage']);
-            }
-
-            if (!empty($definition['maxage'])) {
-                $response->setMaxAge($definition['maxage']);
-            }
+            $this->setMaxAge($response, $definition);
 
             return;
         }
@@ -107,12 +124,9 @@ class CacheSubscriber implements EventSubscriberInterface
 
     public function onEntityPresented(EntityPresentedEvent $event)
     {
-        $entity = $event->getEntity();
-        $this->presentedEntityTags[] = sprintf(
-            '%s:%d',
-            $entity->getEntityTypeId(),
-            $entity->id()
-        );
+        foreach ($event->getEntity()->getCacheTagsToInvalidate() as $tag) {
+            $this->presentedEntityTags[] = $tag;
+        }
     }
 
     public function onTerminate(PostResponseEvent $event)
@@ -135,14 +149,32 @@ class CacheSubscriber implements EventSubscriberInterface
             return;
         }
 
+        $body = '';
+        $headers = [];
+        if ($this->store) {
+            $body = $response->getContent();
+            $headers = $response->headers->all();
+        }
+
+        // fix drupal's retarded headers->set(..., ..., false) calls.
+        $toUnset = [
+            'x-content-type-options',
+            'x-frame-options',
+            'x-ua-compatible',
+        ];
+
+        foreach ($toUnset as $k) {
+            unset($headers[$k]);
+        }
+
         // TODO find a way to handle exceptions thrown from this point on.
         // (we're in the kernel::TERMINATE phase)
         $this->manager->set(
             new Cache(
                 $request->getUri(),
                 $request->getMethod(),
-                $this->store ? $response->getContent() : '',
-                $this->store ? $response->headers->all() : [],
+                $body,
+                $headers,
                 time() + $response->getMaxAge() // returns s-maxage if set.
             ),
             $this->presentedEntityTags
@@ -166,6 +198,39 @@ class CacheSubscriber implements EventSubscriberInterface
             $request->getUri(),
             $request->getMethod()
         );
+    }
+
+    protected function getMaxAgesForMainEntity()
+    {
+        if (!isset($this->mainEntity)) {
+            return null;
+        }
+
+        $type = $this->mainEntity->getEntityTypeId();
+        if (!isset($this->expiries['entities'][$type])) {
+            return null;
+        }
+
+        $bundleDefs = $this->expiries['entities'][$type];
+
+        $bundle = $this->mainEntity->bundle();
+
+        if (isset($bundleDefs['_default'])) {
+            $bundleDefs += [$bundle => $bundleDefs['_default']];
+        }
+
+        return $bundleDefs[$bundle];
+    }
+
+    protected function setMaxAge(Response $response, array $definition)
+    {
+        if (!empty($definition['s-maxage'])) {
+            $response->setSharedMaxAge($definition['s-maxage']);
+        }
+
+        if (!empty($definition['maxage'])) {
+            $response->setMaxAge($definition['maxage']);
+        }
     }
 }
 

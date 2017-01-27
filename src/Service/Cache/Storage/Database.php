@@ -181,7 +181,7 @@ class Database implements StorageInterface
         return new Cache(
             $row['uri'],
             $row['method'],
-            empty($row['content']) ? null : 'CACHEEEEE' . $row['content'],
+            empty($row['content']) ? null : $row['content'],
             empty($row['headers']) ? [] : unserialize($row['headers']),
             $row['expiry']
         );
