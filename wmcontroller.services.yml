@@ -82,3 +82,9 @@ services:
         class: Drupal\wmcontroller\Service\Cache\Storage\Database
         arguments: ['@database']
 
+    wmcontroller.cache.middleware:
+        class: Drupal\wmcontroller\Http\Middleware\Cache
+        arguments: ['@event_dispatcher', '@page_cache_request_policy']
+        tags:
+            - { name: http_middleware, priority: 250, responder: true }
+

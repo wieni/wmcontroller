@@ -51,7 +51,7 @@ class CacheSubscriber implements EventSubscriberInterface
 
     public static function getSubscribedEvents()
     {
-        $events[KernelEvents::REQUEST][] = ['onCachedResponse', 10000];
+        $events[WmcontrollerEvents::CACHE_HANDLE][] = ['onCachedResponse', 10000];
         $events[KernelEvents::RESPONSE][] = ['onResponse', -255];
         $events[KernelEvents::TERMINATE][] = ['onTerminate', 0];
         $events[WmcontrollerEvents::ENTITY_PRESENTED][] = ['onEntityPresented', 0];
