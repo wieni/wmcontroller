@@ -78,6 +78,10 @@ class CacheSubscriber implements EventSubscriberInterface
 
         try {
             $response = $this->getCache($request)->toResponse();
+            // Check if we should respond with a 304
+            // Not relevant atm with cache-control: max-age
+            $response->isNotModified($request);
+
             $response->headers->set(self::CACHE_HEADER, 'HIT');
             $event->setResponse($response);
         } catch (NoSuchCacheEntryException $e) {
@@ -224,12 +228,30 @@ class CacheSubscriber implements EventSubscriberInterface
 
     protected function setMaxAge(Response $response, array $definition)
     {
-        if (!empty($definition['s-maxage'])) {
-            $response->setSharedMaxAge($definition['s-maxage']);
+        if (empty($definition['maxage']) && empty($definition['s-maxage'])) {
+            return;
         }
+
+        // Reset cache-control
+        // (probably contains a must-revalidate or no-cache header)
+        $response->headers->set('Cache-Control', '');
+
+        // This triggers a bug in the default PageCache middleware
+        // and is not actually needed according to the http spec.
+        // But since clients ought to ignore it if a maxage is set,
+        // it's pretty useless.
+        //
+        // Can be fixed from WmcontrollerServiceProvider using
+        // $container->removeDefinition('http_middleware.page_cache');
+
+        // $response->headers->remove('expires');
 
         if (!empty($definition['maxage'])) {
             $response->setMaxAge($definition['maxage']);
+        }
+
+        if (!empty($definition['s-maxage'])) {
+            $response->setSharedMaxAge($definition['s-maxage']);
         }
     }
 }
