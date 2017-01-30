@@ -13,6 +13,14 @@ final class WmcontrollerEvents {
     const ENTITY_PRESENTED = 'entity.presented';
 
     /**
+     * This event can be used to attach additional tags to the current page.
+     *
+     * The event object is an instance of
+     * Drupal\wmcontroller\Event\CacheTagsEvent
+     */
+    const CACHE_TAGS = 'cache.tags';
+
+    /**
      * Will be triggered when an EntityInterface is being passed
      * to a controller. (i.e.: the main entity that is supposed to be rendered)
      *

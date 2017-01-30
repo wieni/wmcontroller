@@ -119,6 +119,15 @@ $dispatcher->dispatchMainEntity($entity); // To determine maxages
 $dispatcher->dispatchPresented($entity);
 ```
 
+#### adding custom tags
+
+```php
+/** @var Drupal\wmcontroller\Service\Cache\Dispatcher */
+$dispatcher = injectedService('wmcontroller.cache.dispatcher');
+
+$dispatcher->dispatchTags(['front', 'article:list']);
+```
+
 #### purge a tag
 
 ```php

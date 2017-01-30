@@ -9,6 +9,7 @@ use Drupal\wmcontroller\Service\Cache\Manager;
 use Drupal\wmcontroller\Event\EntityPresentedEvent;
 use Drupal\wmcontroller\Event\CachePurgeEvent;
 use Drupal\wmcontroller\Event\MainEntityEvent;
+use Drupal\wmcontroller\Event\CacheTagsEvent;
 use Drupal\wmcontroller\WmcontrollerEvents;
 use Drupal\Core\Entity\EntityInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -55,6 +56,7 @@ class CacheSubscriber implements EventSubscriberInterface
         $events[KernelEvents::RESPONSE][] = ['onResponse', -255];
         $events[KernelEvents::TERMINATE][] = ['onTerminate', 0];
         $events[WmcontrollerEvents::ENTITY_PRESENTED][] = ['onEntityPresented', 0];
+        $events[WmcontrollerEvents::CACHE_TAGS][] = ['onTags', 0];
         $events[WmcontrollerEvents::MAIN_ENTITY_RENDER][] = ['onMainEntity', 0];
 
         return $events;
@@ -128,8 +130,15 @@ class CacheSubscriber implements EventSubscriberInterface
 
     public function onEntityPresented(EntityPresentedEvent $event)
     {
-        foreach ($event->getEntity()->getCacheTagsToInvalidate() as $tag) {
-            $this->presentedEntityTags[] = $tag;
+        foreach ($event->getCacheTags() as $tag) {
+            $this->presentedEntityTags[$tag] = true;
+        }
+    }
+
+    public function onTags(CacheTagsEvent $event)
+    {
+        foreach ($event->getCacheTags() as $tag) {
+            $this->presentedEntityTags[$tag] = true;
         }
     }
 
@@ -181,7 +190,7 @@ class CacheSubscriber implements EventSubscriberInterface
                 $headers,
                 time() + $response->getMaxAge() // returns s-maxage if set.
             ),
-            $this->presentedEntityTags
+            array_keys($this->presentedEntityTags)
         );
     }
 

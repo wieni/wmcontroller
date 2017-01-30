@@ -4,6 +4,7 @@ namespace Drupal\wmcontroller\Service\Cache;
 
 use Drupal\wmcontroller\Event\MainEntityEvent;
 use Drupal\wmcontroller\Event\EntityPresentedEvent;
+use Drupal\wmcontroller\Event\CacheTagsEvent;
 use Drupal\wmcontroller\WmcontrollerEvents;
 use Drupal\Core\Entity\EntityInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -34,6 +35,14 @@ class Dispatcher
         $this->dispatcher->dispatch(
             WmcontrollerEvents::ENTITY_PRESENTED,
             new EntityPresentedEvent($entity)
+        );
+    }
+
+    public function dispatchTags(array $tags)
+    {
+        $this->dispatcher->dispatch(
+            WmcontrollerEvents::CACHE_TAGS,
+            new CacheTagsEvent($tags)
         );
     }
 }

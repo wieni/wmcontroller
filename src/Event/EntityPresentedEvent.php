@@ -22,5 +22,13 @@ class EntityPresentedEvent extends Event
     {
         return $this->entity;
     }
+
+    /**
+     * @return string[]
+     */
+    public function getCacheTags()
+    {
+        return $this->entity->getCacheTagsToInvalidate();
+    }
 }
 
