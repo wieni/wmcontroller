@@ -23,7 +23,21 @@ interface StorageInterface {
 
     public function set(Cache $cache, array $tags);
 
+    /**
+     * Purge expired items, limited by $amount.
+     *
+     * Note: Content nor headers will be hydrated.
+     *
+     * @return Cache[] The purged cache entries.
+     */
     public function purge($amount);
 
+    /**
+     * Purge items tagged with $tag.
+     *
+     * Note: Content nor headers will be hydrated.
+     *
+     * @return Cache[] The purged cache entries.
+     */
     public function purgeByTag($tag);
 }

@@ -32,7 +32,12 @@ class Manager implements StorageInterface
      */
     public function getByTag($tag)
     {
-        return $this->storage->getByTag($tag);
+        $results = $this->storage->getByTag($tag);
+        if (!is_array($results)) {
+            return [];
+        }
+
+        return $results;
     }
 
     /**
@@ -59,12 +64,16 @@ class Manager implements StorageInterface
      */
     public function purge($amount)
     {
-        return $this->dispatch($this->storage->purge($amount), true);
+        $results = $this->dispatch($this->storage->purge($amount), true);
+        if (!is_array($results)) {
+            return [];
+        }
+
+        return $results;
     }
 
     /**
      * Purge items tagged with $tag.
-     *
      *
      * Note: Content nor headers will be hydrated.
      *
@@ -72,7 +81,12 @@ class Manager implements StorageInterface
      */
     public function purgeByTag($tag)
     {
-        return $this->dispatch($this->storage->purgeByTag($tag));
+        $results = $this->dispatch($this->storage->purgeByTag($tag));
+        if (!is_array($results)) {
+            return [];
+        }
+
+        return $results;
     }
 
     protected function dispatch(array $items, $expired = false)
