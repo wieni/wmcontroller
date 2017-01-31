@@ -22,7 +22,7 @@ use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 
 class CacheSubscriber implements EventSubscriberInterface
 {
-    const CACHE_HEADER = 'X-WM-Cache';
+    const CACHE_HEADER = 'X-Wm-Cache';
 
     /** @var Manager */
     protected $manager;
@@ -33,6 +33,8 @@ class CacheSubscriber implements EventSubscriberInterface
 
     protected $tags;
 
+    protected $addHeader;
+
     protected $presentedEntityTags = [];
 
     /** @var EntityInterface */
@@ -42,12 +44,14 @@ class CacheSubscriber implements EventSubscriberInterface
         Manager $manager,
         array $expiries,
         $store = false,
-        $tags = false
+        $tags = false,
+        $addHeader = false
     ) {
         $this->manager = $manager;
         $this->expiries = $expiries + ['paths' => [], 'entities' => []];
         $this->store = $store;
         $this->tags = $tags;
+        $this->addHeader = $addHeader;
     }
 
     public static function getSubscribedEvents()
@@ -84,7 +88,9 @@ class CacheSubscriber implements EventSubscriberInterface
             // Not relevant atm with cache-control: max-age
             $response->isNotModified($request);
 
-            $response->headers->set(self::CACHE_HEADER, 'HIT');
+            if ($this->addHeader) {
+                $response->headers->set(self::CACHE_HEADER, 'HIT');
+            }
             $event->setResponse($response);
         } catch (NoSuchCacheEntryException $e) {
         }
@@ -98,7 +104,7 @@ class CacheSubscriber implements EventSubscriberInterface
         }
 
         $response = $event->getResponse();
-        if (!($response instanceof CachedResponse)) {
+        if (!($response instanceof CachedResponse) && $this->addHeader) {
             $response->headers->set(self::CACHE_HEADER, 'MISS');
         }
 

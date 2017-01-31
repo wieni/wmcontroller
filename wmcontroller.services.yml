@@ -32,6 +32,9 @@ parameters:
     # (Also implies wmcontroller.cache.store = false)
     wmcontroller.cache.tags: false
 
+    # Add the X-Wm-Cache: HIT/MISS header
+    wmcontroller.cache.hitheader: true
+
     # Amount of items that should be purged during each cron run.
     # This also determines the amount of times the wmcontroller.purge event
     # is triggered.
@@ -76,6 +79,7 @@ services:
             - '%wmcontroller.cache.expiry%'
             - '%wmcontroller.cache.store%'
             - '%wmcontroller.cache.tags%'
+            - '%wmcontroller.cache.hitheader%'
         tags: [{ name: event_subscriber }]
 
     wmcontroller.cache.storage.mysql:
