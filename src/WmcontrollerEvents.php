@@ -9,6 +9,8 @@ final class WmcontrollerEvents {
      *
      * The event object is an instance of
      * Drupal\wmcontroller\Event\EntityPresentedEvent
+     *
+     * @see Manager::dispatchPresented().
      */
     const ENTITY_PRESENTED = 'entity.presented';
 
@@ -17,6 +19,8 @@ final class WmcontrollerEvents {
      *
      * The event object is an instance of
      * Drupal\wmcontroller\Event\CacheTagsEvent
+     *
+     * @see Manager::dispatchTags().
      */
     const CACHE_TAGS = 'cache.tags';
 
@@ -26,6 +30,8 @@ final class WmcontrollerEvents {
      *
      * The event object is an instance of
      * Drupal\wmcontroller\Event\MainEntityEvent
+     *
+     * @see Manager::dispatchMainEntity().
      */
     const MAIN_ENTITY_RENDER = 'entity.main.render';
 

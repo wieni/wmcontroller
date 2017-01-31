@@ -17,12 +17,16 @@ class Manager implements StorageInterface
     /** @var EventDispatcherInterface */
     protected $dispatcher;
 
+    protected $ignores;
+
     public function __construct(
         StorageInterface $storage,
-        EventDispatcherInterface $dispatcher
+        EventDispatcherInterface $dispatcher,
+        array $ignores = []
     ) {
         $this->storage = $storage;
         $this->dispatcher = $dispatcher;
+        $this->ignores = $ignores;
     }
 
     /**
@@ -81,6 +85,12 @@ class Manager implements StorageInterface
      */
     public function purgeByTag($tag)
     {
+        foreach ($this->ignores as $re) {
+            if (preg_match('#' . $re . '#', $tag)) {
+                return [];
+            }
+        }
+
         $results = $this->dispatch($this->storage->purgeByTag($tag));
         if (!is_array($results)) {
             return [];

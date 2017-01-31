@@ -1,5 +1,5 @@
 parameters:
-    # Expiry rules
+    # Expiry rules.
     # maxage = client side caching duration
     # s-maxage = server side caching duration (this can be drupal db or a cdn)
     wmcontroller.cache.expiry:
@@ -22,6 +22,10 @@ parameters:
             '.':             { maxage: 0, s-maxage: 0 }
 
 
+    # Ignore purges for tags that match these regexes.
+    wmcontroller.cache.ignored_tags:
+        - 'config:block.*'
+
 
     # Store the contents of the response and serve it.
     # If disabled, only tags will be stored.
@@ -32,7 +36,7 @@ parameters:
     # (Also implies wmcontroller.cache.store = false)
     wmcontroller.cache.tags: false
 
-    # Add the X-Wm-Cache: HIT/MISS header
+    # Add the X-Wm-Cache: HIT/MISS header.
     wmcontroller.cache.hitheader: true
 
     # Amount of items that should be purged during each cron run.
@@ -70,7 +74,10 @@ services:
 
     wmcontroller.cache.manager:
         class: Drupal\wmcontroller\Service\Cache\Manager
-        arguments: ['@wmcontroller.cache.storage.mysql', '@event_dispatcher']
+        arguments:
+            - '@wmcontroller.cache.storage.mysql'
+            - '@event_dispatcher'
+            - '%wmcontroller.cache.ignored_tags%'
 
     wmcontroller.cache.subscriber:
         class: Drupal\wmcontroller\EventSubscriber\CacheSubscriber
