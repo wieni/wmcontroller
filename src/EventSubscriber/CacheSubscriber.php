@@ -190,7 +190,7 @@ class CacheSubscriber implements EventSubscriberInterface
         // (we're in the kernel::TERMINATE phase)
         $this->manager->set(
             new Cache(
-                $request->getUri(),
+                $this->getRequestUri($request),
                 $request->getMethod(),
                 $body,
                 $headers,
@@ -214,9 +214,16 @@ class CacheSubscriber implements EventSubscriberInterface
     protected function getCache(Request $request)
     {
         return $this->manager->get(
-            $request->getUri(),
+            $this->getRequestUri($request),
             $request->getMethod()
         );
+    }
+
+    protected function getRequestUri(Request $request)
+    {
+        return $request->getSchemeAndHttpHost() .
+            $request->getBaseUrl() .
+            $request->getPathInfo();
     }
 
     protected function getMaxAgesForMainEntity()
