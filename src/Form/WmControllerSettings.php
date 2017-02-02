@@ -17,7 +17,7 @@ class WmControllerSettings extends ConfigFormBase
 
     /**  @var ModuleHandlerInterface */
     protected $moduleHandler;
-    
+
     /** @var  ThemeHandlerInterface */
     protected $themeHandler;
 
@@ -30,8 +30,7 @@ class WmControllerSettings extends ConfigFormBase
         ConfigFactoryInterface $config_factory,
         ModuleHandlerInterface $moduleHandler,
         ThemeHandlerInterface $themeHandler
-    )
-    {
+    ) {
         parent::__construct($config_factory);
         $this->moduleHandler = $moduleHandler;
         $this->themeHandler = $themeHandler;
@@ -84,7 +83,7 @@ class WmControllerSettings extends ConfigFormBase
             '#collapsible' => false,
             '#open' => true,
         );
-        
+
         $form['mapping']['path'] = array(
             '#type' => 'textfield',
             '#required' => true,
@@ -101,7 +100,7 @@ class WmControllerSettings extends ConfigFormBase
             '#default_value' => $config->get('module'),
             '#description' => $this->t('The module where bundle-specific controllers live'),
         );
-        
+
         $form['mapping']['theme'] = array(
             '#type' => 'select',
             '#required' => false,
@@ -144,7 +143,7 @@ class WmControllerSettings extends ConfigFormBase
         }
         return $modules;
     }
-    
+
     /**
      * Get a list of all active themes.
      * @return array
@@ -157,5 +156,5 @@ class WmControllerSettings extends ConfigFormBase
         }
         return $themes;
     }
-
 }
+
