@@ -48,9 +48,52 @@ class ArticleController extends ControllerBase
 
 ## Caching
 
+Handles full page cache for anonymous users.
+
+Kind of reinvents the page_cache wheel but handles cache tags automatically
+if you don't like drupal's way of rendering and use twig as it was meant to
+be used:
+
+Inject your models and use includes instead of the filthy theme suggestions.
+
+
+To enable: set `wmcontroller.cache.store` and `wmcontroller.cache.tags` to true.
+
+*Note*: we currently only disable the page_cache middleware if you're allowing
+wmcontroller to handle page cache. Render cache on the other hand we don't
+interfere with as it's up to you assess whether there's a need for it or not.
+
+Disabling the entire render cache is a simple as setting
+`$settings['cache']['bins']['render']` to a noop backend in settings.php.
+
+
+*Note2*: automatic adding of entity tags requires you to inject each entity
+in the root of the array you pass to twig's include call.
+This seems a natural/logical way to structure you templates anyway,
+so pretty minor issue imo.
+
+
+```twig
+{{ article.getTitle() }}
+{% for paragraph in article.getParagraphs() %}
+    {%
+        include '@thing/article/paragraph/small.html.twig'
+        with {paragraph: paragraph} only
+    %}
+{% endfor %}
+```
+
+Updating one of these paragraphs (without triggering an article save) will
+result in this page being purged.
+
+
 ###  Config
 
-Config is stored as service parameters:
+Config is stored as service parameters: 
+
+You can override these in one of your container yamls.
+
+e.g.: `public/sites/default/services.yml`
 
 e.g.:
 ```yaml
@@ -82,14 +125,18 @@ parameters:
             '^/user(/.*)?$': { maxage: 0, s-maxage: 0 }
 
 
+    # Ignore purges for tags that match these regexes.
+    wmcontroller.cache.ignored_tags:
+        - 'config:block.*'
+
     # Store the contents of the response and serve it.
     # If disabled, only tags will be stored.
     # This could be useful if the site is proxied by a cdn.
-    wmcontroller.cache.store: true
+    wmcontroller.cache.store: false
 
     # Disables caching in its entirety, only add s-maxage and maxage headers.
     # (Also implies wmcontroller.cache.store = false)
-    wmcontroller.cache.tags: true
+    wmcontroller.cache.tags: false
 
     # Amount of items that should be purged during each cron run.
     # This also determines the amount of times the wmcontroller.purge event
