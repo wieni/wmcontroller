@@ -19,12 +19,10 @@ abstract class ControllerBase extends DrupalControllerBase
      */
     protected function view($template = '', $data = [])
     {
-        $builder = (new ViewBuilder())
+        return (new ViewBuilder())
             ->setTemplateDir($this->templateDir)
             ->setData($data)
             ->setTemplate($template);
-
-        return $builder;
     }
 
 }

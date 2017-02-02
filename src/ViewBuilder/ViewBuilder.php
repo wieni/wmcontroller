@@ -21,8 +21,8 @@ class ViewBuilder
     protected $data = [];
 
     protected $hooks = [];
-    
-    protected $headElements= [];
+
+    protected $headElements = [];
 
     protected $cache = [
         'tags' => [],
@@ -46,19 +46,20 @@ class ViewBuilder
         $this->entity = $entity;
         return $this;
     }
-    
+
     /**
-     * @param array $headElements
+     * @param  array $headElements
      * @return $this
      */
-    public function setHeadElements(array $headElements) {
+    public function setHeadElements(array $headElements)
+    {
         $this->headElements = $headElements;
         return $this;
     }
-    
+
     /**
-     * @param array $headElement
-     * @param string $key
+     * @param  array  $headElement
+     * @param  string $key
      * @return $this
      */
     public function addHeadElement(array $headElement, $key = '')
@@ -77,7 +78,7 @@ class ViewBuilder
      *
      * This is done by wmcontroller_theme_set_variables
      *
-     * @param array $data
+     * @param  array $data
      * @return $this
      */
     public function setData(array $data)
@@ -108,9 +109,9 @@ class ViewBuilder
     {
         return $this->hooks;
     }
-    
+
     /**
-     * @param array $hooks
+     * @param  array $hooks
      * @return $this
      */
     public function setHooks(array $hooks)
@@ -118,9 +119,9 @@ class ViewBuilder
         $this->hooks = $hooks;
         return $this;
     }
-    
+
     /**
-     * @param array $cache
+     * @param  array $cache
      * @return $this
      */
     public function setCache(array $cache)
@@ -134,19 +135,19 @@ class ViewBuilder
         $this->cache['tags'][] = $tag;
         return $this;
     }
-    
+
     public function addCacheTags(array $tag)
     {
         $this->cache['tags'] = array_merge($this->cache['tags'], $tag);
         return $this;
     }
-    
+
     public function addCacheContexts(string $context)
     {
         $this->cache['contexts'][] = $context;
         return $this;
     }
-    
+
     public function setCacheMaxAge(int $context)
     {
         $this->cache['max-age'] = $context;
@@ -166,12 +167,12 @@ class ViewBuilder
             $templateDir = $this->templateDir ? $this->templateDir . '.' : '';
             $view['#theme'] = $templateDir . $this->template;
         }
-    
+
         if (count($this->headElements) > 0) {
             if (!isset($view['#attached']['html_head'])) {
                 $view['#attached']['html_head'] = [];
             }
-        
+
             $view['#attached']['html_head'] = array_merge(
                 $view['#attached']['html_head'],
                 $this->headElements
@@ -184,29 +185,32 @@ class ViewBuilder
             $this->getHooks()
         );
         $view['#_data'] = $this->data;
-        
+
         // Add cache tags
         if (empty($view['#cache'])) {
             $view['#cache'] = $this->cache;
-        } else {
-            foreach (['tags', 'contexts', 'max-age'] as $key) {
-                if (isset($this->cache[$key])) {
-                    $value = $this->cache[$key];
-                    
-                    if (is_array($this->cache[$key])) {
-                        $value = array_unique(
-                            array_merge(
-                                $view['#cache'][$key] ?: [],
-                                $this->cache[$key]
-                            )
-                        );
-                    }
-                    
-                    $view['#cache'][$key] = $value;
-                }
-            }
+            return $view;
         }
-        
+
+        foreach (['tags', 'contexts', 'max-age'] as $key) {
+            if (!isset($this->cache[$key])) {
+                continue;
+            }
+
+            if (!is_array($this->cache[$key])) {
+                $view['#cache'][$key] = $this->cache[$key];
+                continue;
+            }
+
+            $view['#cache'] += [$key => []];
+            $view['#cache'][$key] = array_unique(
+                array_merge(
+                    $view['#cache'][$key],
+                    $this->cache[$key]
+                )
+            );
+        }
+
         return $view;
     }
 
@@ -218,3 +222,4 @@ class ViewBuilder
         return array_keys($array) !== range(0, count($array) - 1);
     }
 }
+
