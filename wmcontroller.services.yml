@@ -61,12 +61,16 @@ services:
 
     wmcontroller.renderer.viewbuilder:
         class: Drupal\wmcontroller\EventSubscriber\ViewRendererSubscriber
-        arguments: ['@entity_type.manager']
         tags: [{ name: event_subscriber }]
 
     wmcontroller.service.templatelocator:
         class: Drupal\wmcontroller\Service\TemplateLocator
         arguments: ['@wmcontroller.config']
+
+    wmcontroller.viewbuilder:
+        class: Drupal\wmcontroller\ViewBuilder\ViewBuilder
+        arguments: ['@wmcontroller.cache.dispatcher', '@entity_type.manager']
+        shared: false
 
     wmcontroller.cache.dispatcher:
         class: Drupal\wmcontroller\Service\Cache\Dispatcher

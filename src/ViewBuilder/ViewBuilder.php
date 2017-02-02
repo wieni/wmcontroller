@@ -4,9 +4,16 @@ namespace Drupal\wmcontroller\ViewBuilder;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\wmcontroller\Service\Cache\Dispatcher;
 
 class ViewBuilder
 {
+    /** @var Dispatcher */
+    private $dispatcher;
+
+    /**  @var EntityTypeManagerInterface */
+    private $entityTypeManager;
+
     protected $viewMode = 'full';
 
     protected $langCode = null;
@@ -28,6 +35,12 @@ class ViewBuilder
         'tags' => [],
         'contexts' => [],
     ];
+
+    public function __construct(Dispatcher $dispatcher, EntityTypeManagerInterface $entityTypeManager)
+    {
+        $this->dispatcher = $dispatcher;
+        $this->entityTypeManager = $entityTypeManager;
+    }
 
     public function setTemplateDir($templateDir)
     {
@@ -153,11 +166,11 @@ class ViewBuilder
         return $this;
     }
 
-    public function render(EntityTypeManagerInterface $typeManager)
+    public function render()
     {
         $view = [];
         if ($this->entity) {
-            $render_controller = $typeManager->getViewBuilder($this->entity->getEntityTypeId());
+            $render_controller = $this->entityTypeManager->getViewBuilder($this->entity->getEntityTypeId());
             $view = $render_controller->view($this->entity, $this->viewMode, $this->langCode);
         }
 
@@ -205,6 +218,10 @@ class ViewBuilder
                     $view['#cache'][$key] = $value;
                 }
             }
+        }
+
+        if ($view['#cache']['tags']) {
+            $this->dispatcher->dispatchTags($view['#cache']['tags']);
         }
         
         return $view;
