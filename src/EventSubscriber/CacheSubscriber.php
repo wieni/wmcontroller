@@ -259,7 +259,9 @@ class CacheSubscriber implements EventSubscriberInterface
         // Can be fixed from WmcontrollerServiceProvider using
         // $container->removeDefinition('http_middleware.page_cache');
 
-        // $response->headers->remove('expires');
+        if ($this->store && $this->tags) {
+            $response->headers->remove('expires');
+        }
 
         if (!empty($definition['maxage'])) {
             $response->setMaxAge($definition['maxage']);
