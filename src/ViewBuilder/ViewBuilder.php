@@ -71,7 +71,7 @@ class ViewBuilder
     }
 
     /**
-     * @param  array  $headElement
+     * @param  array $headElement
      * @param  string $key
      * @return $this
      */
@@ -171,16 +171,41 @@ class ViewBuilder
     {
         $view = [];
         if ($this->entity) {
-            $render_controller = $this->entityTypeManager->getViewBuilder($this->entity->getEntityTypeId());
-            $view = $render_controller->view($this->entity, $this->viewMode, $this->langCode);
+            $view = $this->createOriginalRenderArrayFromEntity($this->entity);
         }
 
-        // Overwrite default template when wanted
+        $this->addThemeToRenderArray($view);
+        $this->addHeadElementsToRenderArray($view);
+        $this->addCustomHooksToRenderArray($view);
+        $this->addCacheTagsToRenderArray($view);
+        $this->dispatchCacheTags($view);
+
+        $view['#_data'] = $this->data;
+
+        return $view;
+    }
+
+    private function createOriginalRenderArrayFromEntity(EntityInterface $entity)
+    {
+        $render_controller = $this->entityTypeManager->getViewBuilder($entity->getEntityTypeId());
+        $view = $render_controller->view($entity, $this->viewMode, $this->langCode);
+        return $view;
+    }
+
+    /**
+     * @param $view
+     * @return mixed
+     */
+    private function addThemeToRenderArray(&$view)
+    {
         if ($this->template) {
             $templateDir = $this->templateDir ? $this->templateDir . '.' : '';
             $view['#theme'] = $templateDir . $this->template;
         }
+    }
 
+    private function addHeadElementsToRenderArray(&$view)
+    {
         if (count($this->headElements) > 0) {
             if (!isset($view['#attached']['html_head'])) {
                 $view['#attached']['html_head'] = [];
@@ -190,19 +215,26 @@ class ViewBuilder
                 $view['#attached']['html_head'],
                 $this->headElements
             );
+            return $view;
         }
+        return $view;
+    }
 
-        // Add custom hooks
+    private function addCustomHooksToRenderArray(&$view)
+    {
         $view['#pre_render'] = array_merge(
             $view['#pre_render'] ?? [],
             $this->getHooks()
         );
-        $view['#_data'] = $this->data;
+        return $view;
+    }
 
+    private function addCacheTagsToRenderArray(&$view)
+    {
         // Add cache tags
         if (empty($view['#cache'])) {
             $view['#cache'] = $this->cache;
-            return $view;
+            return;
         }
 
         foreach (['tags', 'contexts', 'max-age'] as $key) {
@@ -223,12 +255,16 @@ class ViewBuilder
                 )
             );
         }
+    }
 
+    /**
+     * @param $view
+     */
+    private function dispatchCacheTags($view)
+    {
         if ($view['#cache']['tags']) {
             $this->dispatcher->dispatchTags($view['#cache']['tags']);
         }
-
-        return $view;
     }
 
     private function isAssociativeArray(array $array)
