@@ -37,8 +37,8 @@ class CacheSubscriber implements EventSubscriberInterface
 
     protected $presentedEntityTags = [];
 
-    // Store a map of requests that can be cached during Kernel::TERMINATE.
-    protected $cachability = [];
+    // Store a map of requests that should be ignored during Kernel::TERMINATE.
+    protected $ignores = [];
 
     /** @var EntityInterface */
     protected $mainEntity;
@@ -206,11 +206,11 @@ class CacheSubscriber implements EventSubscriberInterface
     protected function ignore(Request $request)
     {
         $uri = $this->getRequestUri($request);
-        if (isset($this->cachability[$uri])) {
-            return $this->cachability[$uri];
+        if (isset($this->ignores[$uri])) {
+            return $this->ignores[$uri];
         }
 
-        return $this->cachability[$uri] = $request->hasSession()
+        return $this->ignores[$uri] = $request->hasSession()
             && $request->getSession()->get('uid') != 0;
     }
 
