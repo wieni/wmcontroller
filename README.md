@@ -61,7 +61,7 @@ To enable: set `wmcontroller.cache.store` and `wmcontroller.cache.tags` to true.
 
 *Note*: we currently only disable the page_cache middleware if you're allowing
 wmcontroller to handle page cache. Render cache on the other hand we don't
-interfere with as it's up to you assess whether there's a need for it or not.
+interfere with as it's up to you to assess whether there's a need for it or not.
 
 Disabling the entire render cache is a simple as setting
 `$settings['cache']['bins']['render']` to a noop backend in settings.php.
