@@ -72,6 +72,8 @@ in the root of the array you pass to twig's include call.
 This seems a natural/logical way to structure you templates anyway,
 so pretty minor issue imo.
 
+*Note3*: to mitigate query param 'attacks' they are ignored.
+
 
 ```twig
 {{ article.getTitle() }}
