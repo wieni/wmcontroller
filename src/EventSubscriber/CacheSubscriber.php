@@ -202,8 +202,7 @@ class CacheSubscriber implements EventSubscriberInterface
 
     protected function ignore(Request $request)
     {
-        return $request->hasSession()
-            && $request->getSession()->get('uid') != 0;
+        return $request->hasSession();
     }
 
     /**
