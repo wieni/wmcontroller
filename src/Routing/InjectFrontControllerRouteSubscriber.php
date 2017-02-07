@@ -36,8 +36,13 @@ class InjectFrontControllerRouteSubscriber extends RouteSubscriberBase
             );
             return;
         }
-        $this->alterNodeRoutes($collection);
-        $this->alterTaxonomyRoutes($collection);
+    
+        if ($this->getModuleHandler()->moduleExists('node')) {
+            $this->alterNodeRoutes($collection);
+        }
+        if ($this->getModuleHandler()->moduleExists('taxonomy')) {
+            $this->alterTaxonomyRoutes($collection);
+        }
     }
 
     /**
@@ -121,5 +126,10 @@ class InjectFrontControllerRouteSubscriber extends RouteSubscriberBase
     private function getConfig()
     {
         return \Drupal::service('wmcontroller.config');
+    }
+    
+    private function getModuleHandler()
+    {
+        return \Drupal::service('module_handler');
     }
 }
