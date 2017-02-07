@@ -11,11 +11,10 @@ use RecursiveDirectoryIterator;
 
 class TemplateLocator
 {
+    const TWIG_EXT = '.html.twig';
 
     /** @var ConfigBase */
     protected $config;
-
-    protected $twigExtension = '.html.twig';
 
     public function __construct(ConfigBase $config)
     {
@@ -32,13 +31,14 @@ class TemplateLocator
         if ($location = $this->getTheme()) {
             return $this->getThemeFiles('theme', $location);
         }
+
         if ($location = $this->getModule()) {
             return $this->getThemeFiles('module', $location);
         }
 
         return [];
     }
-    
+
     /**
      * Get the configured path
      * @see /admin/config/services/wmcontroller
@@ -60,7 +60,7 @@ class TemplateLocator
     {
         return $this->config->get('module');
     }
-    
+
     /**
      * Get the configured theme, if any
      * @see /admin/config/services/wmcontroller
@@ -83,11 +83,10 @@ class TemplateLocator
      */
     private function getThemeFiles($type, $location)
     {
-        
         if (!$directory = $this->getPath()) {
             $directory = '/templates';
         }
-        
+
         $themes = [];
         $dir = drupal_get_path($type, $location) . $directory;
 
@@ -108,7 +107,7 @@ class TemplateLocator
                 ),
                 'path' => $dir,
                 'template' => $fileName,
-                'preprocess functions' => ['template_preprocess', 'wmcontroller_theme_set_variables']
+                'preprocess functions' => ['template_preprocess', 'wmcontroller_theme_set_variables'],
             );
         }
 
@@ -118,14 +117,14 @@ class TemplateLocator
     /**
      * Find all twig files recursively in a directory
      *
-     * @param string $directory
+     * @param  string   $directory
      * @return string[]
      */
     private function findTwigFiles($directory)
     {
         $fileIterator = $this->createRecursiveFileIterator($directory);
 
-        $twigFileRegex = '#.*' . preg_quote($this->twigExtension) . '$#';
+        $twigFileRegex = '#.*' . preg_quote(static::TWIG_EXT) . '$#';
         $matches = new RegexIterator(
             $fileIterator,
             $twigFileRegex,
@@ -162,7 +161,11 @@ class TemplateLocator
         // Strip out the module path
         $file = str_replace($templatePath . '/', '', $file);
         // Strip out extension
-        return $file = preg_replace('#' . preg_quote($this->twigExtension) . '$#', '', $file);
+        return preg_replace(
+            '#' . preg_quote(static::TWIG_EXT) . '$#',
+            '',
+            $file
+        );
     }
 
     /**
@@ -176,5 +179,5 @@ class TemplateLocator
     {
         return preg_replace('/\/|\\\/', '.', $fileName);
     }
-
 }
+

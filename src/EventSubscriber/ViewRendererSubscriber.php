@@ -19,6 +19,7 @@ class ViewRendererSubscriber implements EventSubscriberInterface
     {
         // Just make sure i'm run before the MainContentViewSubscriber
         $events[KernelEvents::VIEW][] = ['renderView', 99];
+
         return $events;
     }
 
@@ -27,9 +28,7 @@ class ViewRendererSubscriber implements EventSubscriberInterface
         $result = $event->getControllerResult();
         if ($result instanceof ViewBuilder) {
             // Replace the controller result with a render-array
-            $event->setControllerResult(
-                $result->render()
-            );
+            $event->setControllerResult($result->render());
         }
     }
 }

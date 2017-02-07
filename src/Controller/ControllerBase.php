@@ -18,18 +18,10 @@ abstract class ControllerBase extends DrupalControllerBase
      */
     protected function view($template = '', $data = [])
     {
-        return $this->getNewViewBuilderInstance()
+        return \Drupal::service('wmcontroller.viewbuilder')
             ->setTemplateDir($this->templateDir)
             ->setData($data)
             ->setTemplate($template);
-    }
-
-    /**
-     * @return ViewBuilder
-     */
-    private function getNewViewBuilderInstance()
-    {
-        return \Drupal::service('wmcontroller.viewbuilder');
     }
 }
 

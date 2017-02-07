@@ -1,17 +1,31 @@
 <?php
 
-namespace Drupal\wmcontroller\Routing;
+namespace Drupal\wmcontroller\EventSubscriber;
 
 use Drupal\Core\Config\Config;
 use Drupal\wmcontroller\Controller\FrontController;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 use Drupal\Core\Routing\RoutingEvents;
 use Drupal\Core\Routing\RouteSubscriberBase;
+use Psr\Log\LoggerInterface;
 
 class InjectFrontControllerRouteSubscriber extends RouteSubscriberBase
 {
+
+    /** @var LoggerInterface */
+    protected $logger;
+
+    /** @var ImmutableConfig */
+    protected $config;
+
+    public function __construct(
+        Config $config,
+        LoggerInterface $logger
+    ) {
+        $this->logger = $logger;
+        $this->config = $config;
+    }
 
     /**
      * @inheritdoc
@@ -30,38 +44,29 @@ class InjectFrontControllerRouteSubscriber extends RouteSubscriberBase
     protected function alterRoutes(RouteCollection $collection)
     {
         if (!$this->getControllerModule()) {
-            $this->getLogger()->notice(
+            $this->logger->notice(
                 'No "wmcontroller.settings.module" config set. Aborting altering routes' . PHP_EOL
                 . 'Please visit /admin/config/services/wmcontroller'
             );
             return;
         }
-        $this->alterNodeRoutes($collection);
-        $this->alterTaxonomyRoutes($collection);
-    }
 
-    /**
-     * Change node routes
-     *
-     * @param RouteCollection $collection
-     */
-    protected function alterNodeRoutes(RouteCollection $collection)
-    {
-        $detailRoute = $collection->get('entity.node.canonical');
-        $this->alterRoute($detailRoute, 'node');
-        // todo: Alter other node routes?
-    }
+        $routes = [
+            'node' => [
+                'entity.node.canonical',
+            ],
+            'term' => [
+                'entity.taxonomy_term.canonical',
+            ],
+        ];
 
-    /**
-     * Change taxonomy routes
-     *
-     * @param RouteCollection $collection
-     */
-    protected function alterTaxonomyRoutes(RouteCollection $collection)
-    {
-        $detailRoute = $collection->get('entity.taxonomy_term.canonical');
-        $this->alterRoute($detailRoute, 'term');
-        // todo: Alter other term routes?
+        foreach ($routes as $methodName => $routeNames) {
+            foreach ($routeNames as $routeName) {
+                if ($detailRoute = $collection->get($routeName)) {
+                    $this->alterRoute($detailRoute, $methodName);
+                }
+            }
+        }
     }
 
     /**
@@ -104,22 +109,7 @@ class InjectFrontControllerRouteSubscriber extends RouteSubscriberBase
      */
     protected function getControllerModule()
     {
-        return $this->getConfig()->get('module') ?: '';
-    }
-
-    /**
-     * @return LoggerInterface
-     */
-    private function getLogger()
-    {
-        return \Drupal::service('wmcontroller.logger');
-    }
-
-    /**
-     * @return Config
-     */
-    private function getConfig()
-    {
-        return \Drupal::service('wmcontroller.config');
+        return $this->config->get('module') ?: '';
     }
 }
+
