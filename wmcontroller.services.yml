@@ -1,7 +1,16 @@
+parameters:
+    wmcontroller.cache.config:
+        expiry:
+            '^/$':           250
+            '^/node/\d+$':   1200
+            '^/admin/.*$':   0
+            '^/user(/.*)?$': 0
+
 services:
     wmcontroller.logger:
       parent: logger.channel_base
       arguments: ['wmcontroller']
+
     wmcontroller.config:
       class: Drupal\Core\Config\ImmutableConfig
       factory: config.factory:get
@@ -11,10 +20,17 @@ services:
         class:  Drupal\wmcontroller\Routing\InjectFrontControllerRouteSubscriber
         arguments: ['@wmcontroller.config', '@wmcontroller.logger']
         tags: [{ name: event_subscriber }]
+
     wmcontroller.renderer.viewbuilder:
         class: Drupal\wmcontroller\EventSubscriber\ViewRendererSubscriber
         arguments: ['@entity_type.manager']
         tags: [{ name: event_subscriber }]
+
     wmcontroller.service.templatelocator:
         class: Drupal\wmcontroller\Service\TemplateLocator
         arguments: ['@wmcontroller.config']
+
+    wmcontroller.subscriber.cache:
+        class: Drupal\wmcontroller\EventSubscriber\CacheSubscriber
+        arguments: ['%wmcontroller.cache.config%']
+        tags: [{ name: event_subscriber }]
