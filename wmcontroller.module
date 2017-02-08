@@ -25,6 +25,39 @@ function wmcontroller_theme_set_variables(&$variables)
 }
 
 /**
+ * Implements hook_theme_registry_alter().
+ */
+function wmcontroller_theme_registry_alter(&$registry)
+{
+    array_unshift(
+        $registry['pager']['preprocess functions'],
+        'wmcontroller_set_current_pager_route'
+    );
+}
+
+/**
+ * Set route_name and route_params so our OutboundProcessor\Pager
+ * can do its thang.
+ */
+function wmcontroller_set_current_pager_route(&$variables)
+{
+    if (
+        !empty($variables['pager']['#route_name'])
+        && $variables['pager']['#route_name'] !== '<none>'
+    ) {
+        return;
+    }
+
+    $routeInfo = \Drupal::service('current_route_match');
+    $variables['pager']['#route_name'] = $routeInfo->getRouteName();
+    if ($paramBag = $routeInfo->getRawParameters()) {
+        $all = $paramBag->all();
+        unset($all['wm_page']);
+        $variables['pager']['#route_parameters'] = $all;
+    }
+}
+
+/**
  * Implements hook_cron()
  */
 function wmcontroller_cron()

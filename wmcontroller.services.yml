@@ -115,5 +115,5 @@ services:
     wmcontroller.pager.outbound_processor:
         class: Drupal\wmcontroller\Path\OutboundProcessor\Pager
         tags:
-            - { name: path_processor_outbound }
+            - { name: path_processor_outbound, priority: 500 }
 
