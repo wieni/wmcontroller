@@ -74,6 +74,8 @@ so pretty minor issue imo.
 
 *Note3*: to mitigate query param 'attacks' they are ignored.
 
+*Note4*: since query params are ignored ?page= becomes meaningless, in order for
+paged routes to work you need to add em to `wmcontroller.pager_routes`.
 
 ```twig
 {{ article.getTitle() }}
@@ -140,10 +142,18 @@ parameters:
     # (Also implies wmcontroller.cache.store = false)
     wmcontroller.cache.tags: false
 
+    # Add the X-Wm-Cache: HIT/MISS header.
+    wmcontroller.cache.hitheader: true
+
     # Amount of items that should be purged during each cron run.
     # This also determines the amount of times the wmcontroller.purge event
     # is triggered.
     wmcontroller.cache.purge_per_cron: 100
+
+    # List of routes that need to have their ?page= query param rewritten to a
+    # route param.
+    wmcontroller.pager_routes:
+        - 'entity.node.canonical'
 
 ```
 
