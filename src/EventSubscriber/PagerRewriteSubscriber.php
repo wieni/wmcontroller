@@ -14,7 +14,7 @@ class PagerRewriteSubscriber extends RouteSubscriberBase
 
     public static function getSubscribedEvents()
     {
-        $events[RoutingEvents::ALTER] = ['onAlterRoutes', -10];
+        $events[RoutingEvents::ALTER] = ['onAlterRoutes', -200];
         $events[KernelEvents::CONTROLLER][] = ['onController', 0];
 
         return $events;
