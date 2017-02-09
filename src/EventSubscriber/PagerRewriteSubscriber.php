@@ -10,6 +10,8 @@ use Symfony\Component\Routing\RouteCollection;
 
 class PagerRewriteSubscriber extends RouteSubscriberBase
 {
+    const ROUTE_PARAM = 'wm_page';
+
     protected $routes;
 
     public static function getSubscribedEvents()
@@ -29,10 +31,12 @@ class PagerRewriteSubscriber extends RouteSubscriberBase
     {
         foreach ($this->routes as $route) {
             if ($route = $collection->get($route)) {
-                $route->setPath($route->getPath() . '/{wm_page}');
-                $route->addDefaults(['wm_page' => 0]);
+                $route->setPath(
+                    sprintf('%s/{%s}', $route->getPath(), self::ROUTE_PARAM)
+                );
+                $route->addDefaults([self::ROUTE_PARAM => 0]);
                 $route->setOption('wmcontroller.pager', true);
-                $route->addRequirements(['wm_page' => '\d+']);
+                $route->addRequirements([self::ROUTE_PARAM => '\d+']);
             }
         }
     }
@@ -40,7 +44,10 @@ class PagerRewriteSubscriber extends RouteSubscriberBase
     public function onController(FilterControllerEvent $event)
     {
         $request = $event->getRequest();
-        $request->query->set('page', $request->attributes->get('wm_page', 0));
+        $request->query->set(
+            'page',
+            $request->attributes->get(self::ROUTE_PARAM, 0)
+        );
     }
 }
 
