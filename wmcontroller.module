@@ -31,6 +31,10 @@ function wmcontroller_theme_set_variables(&$variables)
  */
 function wmcontroller_theme_registry_alter(&$registry)
 {
+    if (!isset($registry['pager']['preprocess function'])) {
+        return;
+    }
+
     foreach ($registry['pager']['preprocess function'] as $i => $cb) {
         if ($cb === 'template_preprocess_pager') {
             $registry['pager']['preprocess function'][$i] =
