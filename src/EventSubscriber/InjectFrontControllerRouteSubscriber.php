@@ -34,7 +34,7 @@ class InjectFrontControllerRouteSubscriber extends RouteSubscriberBase
     {
         // Default implementation (weight 0) doesn't suffice to
         // overwrite the defaults._controller of entity.taxonomy_term.canonical.
-        $events[RoutingEvents::ALTER] = ['onAlterRoutes', -9999];
+        $events[RoutingEvents::ALTER] = ['onAlterRoutes', -200];
         return $events;
     }
 
@@ -45,9 +45,12 @@ class InjectFrontControllerRouteSubscriber extends RouteSubscriberBase
     {
         if (!$this->getControllerModule()) {
             $this->logger->notice(
-                'No "wmcontroller.settings.module" config set. Aborting altering routes' . PHP_EOL
-                . 'Please visit /admin/config/services/wmcontroller'
+                'No "wmcontroller.settings.module" config set. ' .
+                'Aborting altering routes.' .
+                PHP_EOL .
+                'Please visit /admin/config/services/wmcontroller'
             );
+
             return;
         }
 
@@ -82,7 +85,9 @@ class InjectFrontControllerRouteSubscriber extends RouteSubscriberBase
 
         // Change the default controller to our own FrontController
         // The FrontController will delegate to a bundle-specific controller
-        $defaults['_controller'] = FrontController::class . '::' . $controllerMethod;
+        $defaults['_controller'] = FrontController::class .
+            '::' .
+            $controllerMethod;
 
         // Add the namespace of where the bundle-specific controllers live
         $defaults['_controller_namespace'] = $this->getControllerNamespace();

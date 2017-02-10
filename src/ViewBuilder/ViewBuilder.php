@@ -36,8 +36,10 @@ class ViewBuilder
         'contexts' => [],
     ];
 
-    public function __construct(Dispatcher $dispatcher, EntityTypeManagerInterface $entityTypeManager)
-    {
+    public function __construct(
+        Dispatcher $dispatcher,
+        EntityTypeManagerInterface $entityTypeManager
+    ) {
         $this->dispatcher = $dispatcher;
         $this->entityTypeManager = $entityTypeManager;
     }
@@ -45,18 +47,21 @@ class ViewBuilder
     public function setTemplateDir($templateDir)
     {
         $this->templateDir = $templateDir;
+
         return $this;
     }
 
     public function setTemplate($template)
     {
         $this->template = $template;
+
         return $this;
     }
 
     public function setEntity(EntityInterface $entity)
     {
         $this->entity = $entity;
+
         return $this;
     }
 
@@ -67,6 +72,7 @@ class ViewBuilder
     public function setHeadElements(array $headElements)
     {
         $this->headElements = $headElements;
+
         return $this;
     }
 
@@ -96,22 +102,22 @@ class ViewBuilder
      */
     public function setData(array $data)
     {
-        if ($data && !$this->isAssociativeArray($data)) {
-            throw new \RuntimeException("View data has to be an associative array");
-        }
         $this->data = $data;
+
         return $this;
     }
 
     public function setViewMode($viewMode)
     {
         $this->viewMode = $viewMode;
+
         return $this;
     }
 
     public function setLangCode($langCode)
     {
         $this->langCode = $langCode;
+
         return $this;
     }
 
@@ -130,6 +136,7 @@ class ViewBuilder
     public function setHooks(array $hooks)
     {
         $this->hooks = $hooks;
+
         return $this;
     }
 
@@ -140,30 +147,35 @@ class ViewBuilder
     public function setCache(array $cache)
     {
         $this->cache = $cache;
+
         return $this;
     }
 
     public function addCacheTag(string $tag)
     {
         $this->cache['tags'][] = $tag;
+
         return $this;
     }
 
     public function addCacheTags(array $tag)
     {
         $this->cache['tags'] = array_merge($this->cache['tags'], $tag);
+
         return $this;
     }
 
     public function addCacheContexts(string $context)
     {
         $this->cache['contexts'][] = $context;
+
         return $this;
     }
 
     public function setCacheMaxAge(int $context)
     {
         $this->cache['max-age'] = $context;
+
         return $this;
     }
 
@@ -187,20 +199,23 @@ class ViewBuilder
 
     private function createOriginalRenderArrayFromEntity(EntityInterface $entity)
     {
-        $render_controller = $this->entityTypeManager->getViewBuilder($entity->getEntityTypeId());
-        $view = $render_controller->view($entity, $this->viewMode, $this->langCode);
-        return $view;
+        $render_controller = $this->entityTypeManager->getViewBuilder(
+            $entity->getEntityTypeId()
+        );
+
+        return $render_controller->view(
+            $entity,
+            $this->viewMode,
+            $this->langCode
+        );
     }
 
-    /**
-     * @param $view
-     * @return mixed
-     */
     private function addThemeToRenderArray(&$view)
     {
         if ($this->template) {
-            $templateDir = $this->templateDir ? $this->templateDir . '.' : '';
-            $view['#theme'] = $templateDir . $this->template;
+            $view['#theme'] =
+                ($this->templateDir ? $this->templateDir . '.' : '') .
+                $this->template;
         }
     }
 
@@ -215,8 +230,8 @@ class ViewBuilder
                 $view['#attached']['html_head'],
                 $this->headElements
             );
-            return $view;
         }
+
         return $view;
     }
 
@@ -226,6 +241,7 @@ class ViewBuilder
             $view['#pre_render'] ?? [],
             $this->getHooks()
         );
+
         return $view;
     }
 
@@ -257,22 +273,11 @@ class ViewBuilder
         }
     }
 
-    /**
-     * @param $view
-     */
     private function dispatchCacheTags($view)
     {
         if ($view['#cache']['tags']) {
             $this->dispatcher->dispatchTags($view['#cache']['tags']);
         }
-    }
-
-    private function isAssociativeArray(array $array)
-    {
-        if ([] === $array) {
-            return false;
-        }
-        return array_keys($array) !== range(0, count($array) - 1);
     }
 }
 

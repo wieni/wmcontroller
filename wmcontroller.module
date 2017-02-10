@@ -7,7 +7,8 @@ use Drupal\wmcontroller\EventSubscriber\PagerRewriteSubscriber;
  */
 function wmcontroller_theme()
 {
-    return \Drupal::service('wmcontroller.service.templatelocator')->getThemes();
+    return \Drupal::service('wmcontroller.service.templatelocator')
+        ->getThemes();
 }
 
 /**
@@ -24,6 +25,36 @@ function wmcontroller_theme_set_variables(&$variables)
     }
     $variables = array_merge($variables, $variables['_data']);
     unset($variables['_data']);
+}
+
+/**
+ * Implements hook_cron()
+ */
+function wmcontroller_cron()
+{
+    wmcontroller_cron_purge_expired();
+}
+
+/**
+ * Purge expired wmcontroller_cache items.
+ */
+function wmcontroller_cron_purge_expired()
+{
+    $ctr = Drupal::getContainer();
+
+    $items = $ctr->get('wmcontroller.cache.manager')
+        ->purge($ctr->getParameter('wmcontroller.cache.purge_per_cron'));
+}
+
+/**
+ * Implements hook_entity_update()
+ */
+function wmcontroller_entity_update(\Drupal\Core\Entity\EntityInterface $entity)
+{
+    $manager = \Drupal::service('wmcontroller.cache.manager');
+    foreach ($entity->getCacheTagsToInvalidate() as $tag) {
+        $manager->purgeByTag($tag);
+    }
 }
 
 /**
@@ -107,7 +138,7 @@ function wmcontroller_preprocess_pager(&$variables)
         $i = 1;
     }
 
-    $moveQueryToParam = function (&$options) use (&$route_parameters, $route_name) {
+    $moveQueryToParam = function (&$options) use (&$route_parameters) {
         $route_parameters[PagerRewriteSubscriber::ROUTE_PARAM] = 0;
         if (!empty($options['query']['page'])) {
             $route_parameters[PagerRewriteSubscriber::ROUTE_PARAM] =
@@ -224,35 +255,5 @@ function wmcontroller_preprocess_pager(&$variables)
 
     $variables['items'] = $items;
     $variables['#cache']['contexts'][] = 'url.query_args';
-}
-
-/**
- * Implements hook_cron()
- */
-function wmcontroller_cron()
-{
-    wmcontroller_cron_purge_expired();
-}
-
-/**
- * Purge expired wmcontroller_cache items.
- */
-function wmcontroller_cron_purge_expired()
-{
-    $ctr = Drupal::getContainer();
-
-    $items = $ctr->get('wmcontroller.cache.manager')
-        ->purge($ctr->getParameter('wmcontroller.cache.purge_per_cron'));
-}
-
-/**
- * Implements hook_entity_update()
- */
-function wmcontroller_entity_update(\Drupal\Core\Entity\EntityInterface $entity)
-{
-    $manager = \Drupal::service('wmcontroller.cache.manager');
-    foreach ($entity->getCacheTagsToInvalidate() as $tag) {
-        $manager->purgeByTag($tag);
-    }
 }
 
