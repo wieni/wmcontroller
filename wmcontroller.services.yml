@@ -44,6 +44,10 @@ parameters:
     # is triggered.
     wmcontroller.cache.purge_per_cron: 100
 
+    # List of routes that need to have their ?page= query param rewritten to a
+    # route param.
+    wmcontroller.pager_routes: []
+
 services:
     wmcontroller.logger:
       parent: logger.channel_base
@@ -102,4 +106,9 @@ services:
         arguments: ['@event_dispatcher', '@page_cache_request_policy']
         tags:
             - { name: http_middleware, priority: 250, responder: true }
+
+    wmcontroller.pager.subscriber:
+        class: Drupal\wmcontroller\EventSubscriber\PagerRewriteSubscriber
+        arguments: ['%wmcontroller.pager_routes%']
+        tags: [{ name: event_subscriber }]
 

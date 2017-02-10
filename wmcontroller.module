@@ -1,5 +1,7 @@
 <?php
 
+use Drupal\wmcontroller\EventSubscriber\PagerRewriteSubscriber;
+
 /**
  * Implements hook_theme().
  */
@@ -22,6 +24,206 @@ function wmcontroller_theme_set_variables(&$variables)
     }
     $variables = array_merge($variables, $variables['_data']);
     unset($variables['_data']);
+}
+
+/**
+ * Implements hook_theme_registry_alter().
+ */
+function wmcontroller_theme_registry_alter(&$registry)
+{
+    if (!isset($registry['pager']['preprocess function'])) {
+        return;
+    }
+
+    foreach ($registry['pager']['preprocess function'] as $i => $cb) {
+        if ($cb === 'template_preprocess_pager') {
+            $registry['pager']['preprocess function'][$i] =
+                'wmcontroller_preprocess_pager';
+            break;
+        }
+    }
+}
+
+/**
+ * Shameless copy of template_preprocess_pager().
+ *
+ * @see $moveQueryToParam
+ * @see #route_name
+ *
+ * succinct docs ftw.
+ */
+function wmcontroller_preprocess_pager(&$variables)
+{
+    global $pager_page_array, $pager_total;
+
+    $routeName = $variables['pager']['#route_name'] ?? '';
+
+    // yeh '<none>', not kidding.
+    if (empty($routeName) || $routeName === '<none>') {
+        $routeInfo = \Drupal::service('current_route_match');
+        $routeName = $routeInfo->getRouteName();
+        $variables['pager']['#route_name'] = $routeName;
+        if ($paramBag = $routeInfo->getRawParameters()) {
+            $all = $paramBag->all();
+            $variables['pager']['#route_parameters'] = $all;
+        }
+    }
+
+    $routes = Drupal::getContainer()->getParameter('wmcontroller.pager_routes');
+
+    if (!in_array($routeName, $routes)) {
+        // Let's defer back to the original preprocessor
+        // so we can avoid some ugly ifs.
+        return template_preprocess_pager($variables);
+    }
+
+    $element = $variables['pager']['#element'];
+    $parameters = $variables['pager']['#parameters'];
+    $quantity = $variables['pager']['#quantity'];
+    $route_name = $variables['pager']['#route_name'];
+    $route_parameters = isset($variables['pager']['#route_parameters']) ?
+        $variables['pager']['#route_parameters'] : [];
+
+    if ($pager_total[$element] <= 1) {
+        return;
+    }
+
+    $tags = $variables['pager']['#tags'];
+
+    $pager_middle = ceil($quantity / 2);
+    $pager_current = $pager_page_array[$element] + 1;
+    $pager_first = $pager_current - $pager_middle + 1;
+    $pager_last = $pager_current + $quantity - $pager_middle;
+    $pager_max = $pager_total[$element];
+
+    $i = $pager_first;
+    if ($pager_last > $pager_max) {
+        $i = $i + ($pager_max - $pager_last);
+        $pager_last = $pager_max;
+    }
+
+    if ($i <= 0) {
+        $pager_last = $pager_last + (1 - $i);
+        $i = 1;
+    }
+
+    $moveQueryToParam = function (&$options) use (&$route_parameters, $route_name) {
+        $route_parameters[PagerRewriteSubscriber::ROUTE_PARAM] = 0;
+        if (!empty($options['query']['page'])) {
+            $route_parameters[PagerRewriteSubscriber::ROUTE_PARAM] =
+                $options['query']['page'];
+        }
+
+        unset($options['query']['page']);
+    };
+
+    if ($pager_page_array[$element] > 0) {
+        $items['first'] = [];
+        $options = [
+            'query' => pager_query_add_page($parameters, $element, 0),
+        ];
+
+        $moveQueryToParam($options);
+        $items['first']['href'] = \Drupal::url(
+            $route_name,
+            $route_parameters,
+            $options
+        );
+
+        if (isset($tags[0])) {
+            $items['first']['text'] = $tags[0];
+        }
+
+        $items['previous'] = [];
+        $options = [
+            'query' => pager_query_add_page(
+                $parameters,
+                $element,
+                $pager_page_array[$element] - 1
+            ),
+        ];
+
+        $moveQueryToParam($options);
+        $items['previous']['href'] = \Drupal::url(
+            $route_name,
+            $route_parameters,
+            $options
+        );
+        if (isset($tags[1])) {
+            $items['previous']['text'] = $tags[1];
+        }
+    }
+
+    if ($i != $pager_max) {
+        if ($i > 1) {
+            $variables['ellipses']['previous'] = true;
+        }
+
+        for (; $i <= $pager_last && $i <= $pager_max; $i++) {
+            $options = [
+                'query' => pager_query_add_page($parameters, $element, $i - 1),
+            ];
+
+            $moveQueryToParam($options);
+            $items['pages'][$i]['href'] = \Drupal::url(
+                $route_name,
+                $route_parameters,
+                $options
+            );
+
+            if ($i == $pager_current) {
+                $variables['current'] = $i;
+            }
+        }
+
+        if ($i < $pager_max + 1) {
+            $variables['ellipses']['next'] = true;
+        }
+    }
+
+    if ($pager_page_array[$element] < ($pager_max - 1)) {
+        $items['next'] = [];
+        $options = [
+            'query' => pager_query_add_page(
+                $parameters,
+                $element,
+                $pager_page_array[$element] + 1
+            ),
+        ];
+
+        $moveQueryToParam($options);
+        $items['next']['href'] = \Drupal::url(
+            $route_name,
+            $route_parameters,
+            $options
+        );
+        if (isset($tags[3])) {
+            $items['next']['text'] = $tags[3];
+        }
+
+        $items['last'] = [];
+        $options = [
+            'query' => pager_query_add_page(
+                $parameters,
+                $element,
+                $pager_max - 1
+            ),
+        ];
+
+        $moveQueryToParam($options);
+        $items['last']['href'] = \Drupal::url(
+            $route_name,
+            $route_parameters,
+            $options
+        );
+
+        if (isset($tags[4])) {
+            $items['last']['text'] = $tags[4];
+        }
+    }
+
+    $variables['items'] = $items;
+    $variables['#cache']['contexts'][] = 'url.query_args';
 }
 
 /**
