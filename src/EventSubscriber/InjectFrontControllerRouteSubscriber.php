@@ -2,34 +2,31 @@
 
 namespace Drupal\wmcontroller\EventSubscriber;
 
-use Drupal\Core\Config\Config;
 use Drupal\wmcontroller\Controller\FrontController;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 use Drupal\Core\Routing\RoutingEvents;
 use Drupal\Core\Routing\RouteSubscriberBase;
-use Psr\Log\LoggerInterface;
 
+/**
+ * Alter entity.{node,taxonomy_term}.canonical routes to use bundle-specific
+ * controllers.
+ */
 class InjectFrontControllerRouteSubscriber extends RouteSubscriberBase
 {
+    protected $settings;
 
-    /** @var LoggerInterface */
-    protected $logger;
+    public function __construct(array $settings)
+    {
+        if (empty($settings['module'])) {
+            throw new \Exception(
+                'wmcontroller requires a non-empty module entry in wmcontroller.settings'
+            );
+        }
 
-    /** @var ImmutableConfig */
-    protected $config;
-
-    public function __construct(
-        Config $config,
-        LoggerInterface $logger
-    ) {
-        $this->logger = $logger;
-        $this->config = $config;
+        $this->settings = $settings;
     }
 
-    /**
-     * @inheritdoc
-     */
     public static function getSubscribedEvents()
     {
         // Default implementation (weight 0) doesn't suffice to
@@ -38,22 +35,8 @@ class InjectFrontControllerRouteSubscriber extends RouteSubscriberBase
         return $events;
     }
 
-    /**
-     * @inheritdoc
-     */
     protected function alterRoutes(RouteCollection $collection)
     {
-        if (!$this->getControllerModule()) {
-            $this->logger->notice(
-                'No "wmcontroller.settings.module" config set. ' .
-                'Aborting altering routes.' .
-                PHP_EOL .
-                'Please visit /admin/config/services/wmcontroller'
-            );
-
-            return;
-        }
-
         $routes = [
             'node' => [
                 'entity.node.canonical',
@@ -90,6 +73,7 @@ class InjectFrontControllerRouteSubscriber extends RouteSubscriberBase
             $controllerMethod;
 
         // Add the namespace of where the bundle-specific controllers live
+        // so the delegating FrontController has all the information it needs.
         $defaults['_controller_namespace'] = $this->getControllerNamespace();
 
         $route->setDefaults($defaults);
@@ -103,18 +87,8 @@ class InjectFrontControllerRouteSubscriber extends RouteSubscriberBase
      */
     protected function getControllerNamespace()
     {
-        $moduleName = $this->getControllerModule();
+        $moduleName = $this->settings['module'];
         return "Drupal\\$moduleName\\Controller";
-    }
-
-    /**
-     * Get the module name where the bundle-specific controllers live
-     *
-     * @return string
-     */
-    protected function getControllerModule()
-    {
-        return $this->config->get('module') ?: '';
     }
 }
 
