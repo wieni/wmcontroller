@@ -44,6 +44,9 @@ parameters:
     # is triggered.
     wmcontroller.cache.purge_per_cron: 100
 
+    # Flush all entries on `drush cr` or require `drush cc wmcontroller`
+    wmcontroller.cache.flush_on_cache_rebuild: false
+
     # List of routes that need to have their ?page= query param rewritten to a
     # route param.
     wmcontroller.pager_routes: []

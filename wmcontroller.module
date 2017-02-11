@@ -27,6 +27,18 @@ function wmcontroller_theme_set_variables(&$variables)
 }
 
 /**
+ * Implements hook_cache_flush().
+ */
+function wmcontroller_cache_flush()
+{
+    $ctr = \Drupal::getContainer();
+    if ($ctr->getParameter('wmcontroller.cache.flush_on_cache_rebuild'))
+    {
+        $ctr->get('wmcontroller.cache.manager')->flush();
+    }
+}
+
+/**
  * Implements hook_theme_registry_alter().
  */
 function wmcontroller_theme_registry_alter(&$registry)

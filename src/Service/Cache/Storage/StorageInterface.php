@@ -40,4 +40,9 @@ interface StorageInterface {
      * @return Cache[] The purged cache entries.
      */
     public function purgeByTag($tag);
+
+    /**
+     * Remove all cached entries.
+     */
+    public function flush();
 }
