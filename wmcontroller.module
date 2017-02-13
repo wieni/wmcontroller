@@ -244,14 +244,3 @@ function wmcontroller_cron_purge_expired()
         ->purge($ctr->getParameter('wmcontroller.cache.purge_per_cron'));
 }
 
-/**
- * Implements hook_entity_update()
- */
-function wmcontroller_entity_update(\Drupal\Core\Entity\EntityInterface $entity)
-{
-    $manager = \Drupal::service('wmcontroller.cache.manager');
-    foreach ($entity->getCacheTagsToInvalidate() as $tag) {
-        $manager->purgeByTag($tag);
-    }
-}
-
