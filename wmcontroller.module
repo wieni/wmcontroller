@@ -64,8 +64,7 @@ function wmcontroller_preprocess_pager(&$variables)
         $routeName = $routeInfo->getRouteName();
         $variables['pager']['#route_name'] = $routeName;
         if ($paramBag = $routeInfo->getRawParameters()) {
-            $all = $paramBag->all();
-            $variables['pager']['#route_parameters'] = $all;
+            $variables['pager']['#route_parameters'] = $paramBag->all();
         }
     }
 

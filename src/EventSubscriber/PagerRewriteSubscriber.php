@@ -24,12 +24,15 @@ class PagerRewriteSubscriber extends RouteSubscriberBase
 
     public function __construct(array $routes)
     {
-        $this->routes = $routes;
+        $this->routes = [];
+        foreach ($routes as $route) {
+            $this->routes[$route] = true;
+        };
     }
 
     protected function alterRoutes(RouteCollection $collection)
     {
-        foreach ($this->routes as $route) {
+        foreach ($this->routes as $route => $_) {
             if ($route = $collection->get($route)) {
                 $route->setPath(
                     sprintf('%s/{%s}', $route->getPath(), self::ROUTE_PARAM)
@@ -44,6 +47,11 @@ class PagerRewriteSubscriber extends RouteSubscriberBase
     public function onController(FilterControllerEvent $event)
     {
         $request = $event->getRequest();
+
+        if (!isset($this->routes[$request->attributes->get('_route')])) {
+            return;
+        }
+
         $request->query->set(
             'page',
             $request->attributes->get(self::ROUTE_PARAM, 0)
