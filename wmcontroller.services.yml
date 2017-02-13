@@ -1,4 +1,21 @@
 parameters:
+
+    # Main wmcontroller settings
+    wmcontroller.settings:
+
+        # The module that has controllers for your entities
+        # and if theme (below) is left empty also where your templates ought
+        # to be.
+        module: ''
+
+        # The theme where your templates can be found
+        # (if applicable)
+        theme: ''
+
+        # The relative path your template reside in.
+        # (relative to your module / theme dir)
+        path: 'templates'
+
     # Expiry rules.
     # maxage = client side caching duration
     # s-maxage = server side caching duration (this can be drupal db or a cdn)
@@ -52,18 +69,9 @@ parameters:
     wmcontroller.pager_routes: []
 
 services:
-    wmcontroller.logger:
-      parent: logger.channel_base
-      arguments: ['wmcontroller']
-
-    wmcontroller.config:
-      class: Drupal\Core\Config\ImmutableConfig
-      factory: config.factory:get
-      arguments: ['wmcontroller.settings']
-
     wmcontroller.routing.injectfrontcontroller:
         class:  Drupal\wmcontroller\EventSubscriber\InjectFrontControllerRouteSubscriber
-        arguments: ['@wmcontroller.config', '@wmcontroller.logger']
+        arguments: ['%wmcontroller.settings%']
         tags: [{ name: event_subscriber }]
 
     wmcontroller.renderer.viewbuilder:
@@ -72,7 +80,7 @@ services:
 
     wmcontroller.service.templatelocator:
         class: Drupal\wmcontroller\Service\TemplateLocator
-        arguments: ['@wmcontroller.config']
+        arguments: ['%wmcontroller.settings%']
 
     wmcontroller.viewbuilder:
         class: Drupal\wmcontroller\ViewBuilder\ViewBuilder

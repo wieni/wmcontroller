@@ -9,7 +9,7 @@ composer require wieni\wmcontroller
 drush en wmcontroller
 ```
 
-Visit `/admin/config/services/wmcontroller` and tell wmcontroller in which module it has to look for bundle-specific controllers.
+configure wmcontroller in your services.yml (see config below)
 
 ### Controllers
 
@@ -102,6 +102,23 @@ e.g.: `public/sites/default/services.yml`
 e.g.:
 ```yaml
 parameters:
+
+    # Main wmcontroller settings
+    wmcontroller.settings:
+
+        # The module that has controllers for your entities
+        # and if theme (below) is left empty also where your templates ought
+        # to be.
+        module: 'my_module'
+
+        # The theme where your templates can be found
+        # (if applicable)
+        theme: ''
+
+        # The relative path your template reside in.
+        # (relative to your module / theme dir)
+        path: 'templates'
+
     # Expiry rules
     # maxage = client side caching duration
     # s-maxage = server side caching duration (this can be drupal db or a cdn)
