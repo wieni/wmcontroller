@@ -99,6 +99,16 @@ class Manager implements StorageInterface
         return $results;
     }
 
+    /**
+     * Remove all cached entries.
+     *
+     * No events will be dispatched!
+     */
+    public function flush()
+    {
+        $this->storage->flush();
+    }
+
     protected function dispatch(array $items, $expired = false)
     {
         foreach ($items as $item) {

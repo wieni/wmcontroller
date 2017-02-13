@@ -150,6 +150,18 @@ class Database implements StorageInterface
         return $items;
     }
 
+    public function flush()
+    {
+        // Keep it transactional or risk a race with truncate?
+        $ids = $this->db->select(self::TABLE_ENTRIES, 'c')
+            ->fields('c', ['id'])
+            ->execute()->fetchCol();
+
+        while (!empty($ids)) {
+            $this->delete(array_splice($ids, 0, 50));
+        }
+    }
+
     protected function delete(array $ids)
     {
         if (empty($ids)) {
