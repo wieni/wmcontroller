@@ -43,6 +43,11 @@ class CacheSubscriber implements EventSubscriberInterface
     /** @var EntityInterface */
     protected $mainEntity;
 
+    protected $cacheableStatusCodes = [
+        Response::HTTP_OK => true,
+        Response::HTTP_NON_AUTHORITATIVE_INFORMATION => true,
+    ];
+
     public function __construct(
         Manager $manager,
         array $expiries,
@@ -116,6 +121,10 @@ class CacheSubscriber implements EventSubscriberInterface
             $response->headers->hasCacheControlDirective('s-maxage')
             || $response->headers->hasCacheControlDirective('maxage')
         ) {
+            return;
+        }
+
+        if (!isset($this->cacheableStatusCodes[$response->getStatusCode()])) {
             return;
         }
 
