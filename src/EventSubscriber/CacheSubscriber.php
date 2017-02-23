@@ -133,6 +133,15 @@ class CacheSubscriber implements EventSubscriberInterface
             return;
         }
 
+        $smax = $request->attributes->get('_smaxage', 0);
+        $max = $request->attributes->get('_maxage', 0);
+        if ($smax || $max) {
+            $this->setMaxAge(
+                $response,
+                ['s-maxage' => $smax, 'maxage' => $max]
+            );
+        }
+
         $path = $request->getPathInfo();
         foreach ($this->expiries['paths'] as $re => $definition) {
             // # should be safe... I guess
