@@ -174,6 +174,20 @@ parameters:
 
 ```
 
+your-module.routing.yml: adding _smaxage and/or _maxage to the route defaults
+will add these max-ages if no entity specific rules where found in the config
+above.
+
+```yaml
+
+wmcustom.search:
+    path: 'search'
+    defaults:
+        _controller: '\Drupal\wmcustom\Controller\SearchController::index'
+        _smaxage: 1234
+        _maxage: 123
+```
+
 ### API
 
 #### custom route / controller that renders an entity
