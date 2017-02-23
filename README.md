@@ -175,7 +175,7 @@ parameters:
 ```
 
 your-module.routing.yml: adding _smaxage and/or _maxage to the route defaults
-will add these max-ages if no entity specific rules where found in the config
+will add these max-ages if no entity specific rules were found in the config
 above.
 
 ```yaml
