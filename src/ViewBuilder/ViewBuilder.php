@@ -2,8 +2,12 @@
 
 namespace Drupal\wmcontroller\ViewBuilder;
 
+use Symfony\Component\HttpFoundation\RequestStack;
+
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Render\MainContent\HtmlRenderer;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\wmcontroller\Service\Cache\Dispatcher;
 
 class ViewBuilder
@@ -13,6 +17,17 @@ class ViewBuilder
 
     /**  @var EntityTypeManagerInterface */
     private $entityTypeManager;
+
+    /** @var HtmlRenderer */
+    private $renderer;
+
+    /** @var RequestStack */
+    private $requestStack;
+
+    /** @var RouteMatchInterface */
+    private $routeMatch;
+
+    protected $renderArray;
 
     protected $viewMode = 'full';
 
@@ -38,10 +53,16 @@ class ViewBuilder
 
     public function __construct(
         Dispatcher $dispatcher,
-        EntityTypeManagerInterface $entityTypeManager
+        EntityTypeManagerInterface $entityTypeManager,
+        HtmlRenderer $renderer,
+        RequestStack $requestStack,
+        RouteMatchInterface $routeMatch
     ) {
         $this->dispatcher = $dispatcher;
         $this->entityTypeManager = $entityTypeManager;
+        $this->renderer = $renderer;
+        $this->requestStack = $requestStack;
+        $this->routeMatch = $routeMatch;
     }
 
     public function setTemplateDir($templateDir)
@@ -181,6 +202,10 @@ class ViewBuilder
 
     public function render()
     {
+        if (isset($this->renderArray)) {
+            return $this->renderArray;
+        }
+
         $view = [];
         if ($this->entity) {
             $view = $this->createOriginalRenderArrayFromEntity($this->entity);
@@ -194,7 +219,19 @@ class ViewBuilder
 
         $view['#_data'] = $this->data;
 
-        return $view;
+        return $this->renderArray = $view;
+    }
+
+    /**
+     * @return Symfony\Component\HttpFoundation\Response.
+     */
+    public function toResponse()
+    {
+        return $this->renderer->renderResponse(
+            $this->render(),
+            $this->requestStack->getCurrentRequest(),
+            $this->routeMatch
+        );
     }
 
     private function createOriginalRenderArrayFromEntity(EntityInterface $entity)
