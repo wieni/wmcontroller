@@ -11,7 +11,7 @@ class ViewBuilder
     /** @var Dispatcher */
     private $dispatcher;
 
-    /**  @var EntityTypeManagerInterface */
+    /** @var EntityTypeManagerInterface */
     private $entityTypeManager;
 
     protected $viewMode = 'full';
@@ -151,16 +151,19 @@ class ViewBuilder
         return $this;
     }
 
-    public function addCacheTag(string $tag)
+    public function addCacheTag($tag)
     {
+        if ($tag instanceof EntityInterface) {
+            return $this->addCacheTags($tag->getCacheTagsToInvalidate());
+        }
         $this->cache['tags'][] = $tag;
 
         return $this;
     }
 
-    public function addCacheTags(array $tag)
+    public function addCacheTags(array $tags)
     {
-        $this->cache['tags'] = array_merge($this->cache['tags'], $tag);
+        array_walk($tags, [$this, 'addCacheTag']);
 
         return $this;
     }
@@ -280,4 +283,3 @@ class ViewBuilder
         }
     }
 }
-
