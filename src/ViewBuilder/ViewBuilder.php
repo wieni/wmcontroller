@@ -4,9 +4,16 @@ namespace Drupal\wmcontroller\ViewBuilder;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\wmcontroller\Service\Cache\Dispatcher;
 
 class ViewBuilder
 {
+    /** @var Dispatcher */
+    private $dispatcher;
+
+    /**  @var EntityTypeManagerInterface */
+    private $entityTypeManager;
+
     protected $viewMode = 'full';
 
     protected $langCode = null;
@@ -29,21 +36,32 @@ class ViewBuilder
         'contexts' => [],
     ];
 
+    public function __construct(
+        Dispatcher $dispatcher,
+        EntityTypeManagerInterface $entityTypeManager
+    ) {
+        $this->dispatcher = $dispatcher;
+        $this->entityTypeManager = $entityTypeManager;
+    }
+
     public function setTemplateDir($templateDir)
     {
         $this->templateDir = $templateDir;
+
         return $this;
     }
 
     public function setTemplate($template)
     {
         $this->template = $template;
+
         return $this;
     }
 
     public function setEntity(EntityInterface $entity)
     {
         $this->entity = $entity;
+
         return $this;
     }
 
@@ -54,6 +72,7 @@ class ViewBuilder
     public function setHeadElements(array $headElements)
     {
         $this->headElements = $headElements;
+
         return $this;
     }
 
@@ -83,22 +102,22 @@ class ViewBuilder
      */
     public function setData(array $data)
     {
-        if ($data && !$this->isAssociativeArray($data)) {
-            throw new \RuntimeException("View data has to be an associative array");
-        }
         $this->data = $data;
+
         return $this;
     }
 
     public function setViewMode($viewMode)
     {
         $this->viewMode = $viewMode;
+
         return $this;
     }
 
     public function setLangCode($langCode)
     {
         $this->langCode = $langCode;
+
         return $this;
     }
 
@@ -117,6 +136,7 @@ class ViewBuilder
     public function setHooks(array $hooks)
     {
         $this->hooks = $hooks;
+
         return $this;
     }
 
@@ -127,47 +147,80 @@ class ViewBuilder
     public function setCache(array $cache)
     {
         $this->cache = $cache;
+
         return $this;
     }
 
     public function addCacheTag(string $tag)
     {
         $this->cache['tags'][] = $tag;
+
         return $this;
     }
 
     public function addCacheTags(array $tag)
     {
         $this->cache['tags'] = array_merge($this->cache['tags'], $tag);
+
         return $this;
     }
 
     public function addCacheContexts(string $context)
     {
         $this->cache['contexts'][] = $context;
+
         return $this;
     }
 
     public function setCacheMaxAge(int $context)
     {
         $this->cache['max-age'] = $context;
+
         return $this;
     }
 
-    public function render(EntityTypeManagerInterface $typeManager)
+    public function render()
     {
         $view = [];
         if ($this->entity) {
-            $render_controller = $typeManager->getViewBuilder($this->entity->getEntityTypeId());
-            $view = $render_controller->view($this->entity, $this->viewMode, $this->langCode);
+            $view = $this->createOriginalRenderArrayFromEntity($this->entity);
         }
 
-        // Overwrite default template when wanted
+        $this->addThemeToRenderArray($view);
+        $this->addHeadElementsToRenderArray($view);
+        $this->addCustomHooksToRenderArray($view);
+        $this->addCacheTagsToRenderArray($view);
+        $this->dispatchCacheTags($view);
+
+        $view['#_data'] = $this->data;
+
+        return $view;
+    }
+
+    private function createOriginalRenderArrayFromEntity(EntityInterface $entity)
+    {
+        $render_controller = $this->entityTypeManager->getViewBuilder(
+            $entity->getEntityTypeId()
+        );
+
+        return $render_controller->view(
+            $entity,
+            $this->viewMode,
+            $this->langCode
+        );
+    }
+
+    private function addThemeToRenderArray(&$view)
+    {
         if ($this->template) {
-            $templateDir = $this->templateDir ? $this->templateDir . '.' : '';
-            $view['#theme'] = $templateDir . $this->template;
+            $view['#theme'] =
+                ($this->templateDir ? $this->templateDir . '.' : '') .
+                $this->template;
         }
+    }
 
+    private function addHeadElementsToRenderArray(&$view)
+    {
         if (count($this->headElements) > 0) {
             if (!isset($view['#attached']['html_head'])) {
                 $view['#attached']['html_head'] = [];
@@ -179,17 +232,25 @@ class ViewBuilder
             );
         }
 
-        // Add custom hooks
+        return $view;
+    }
+
+    private function addCustomHooksToRenderArray(&$view)
+    {
         $view['#pre_render'] = array_merge(
             $view['#pre_render'] ?? [],
             $this->getHooks()
         );
-        $view['#_data'] = $this->data;
 
+        return $view;
+    }
+
+    private function addCacheTagsToRenderArray(&$view)
+    {
         // Add cache tags
         if (empty($view['#cache'])) {
             $view['#cache'] = $this->cache;
-            return $view;
+            return;
         }
 
         foreach (['tags', 'contexts', 'max-age'] as $key) {
@@ -210,16 +271,13 @@ class ViewBuilder
                 )
             );
         }
-
-        return $view;
     }
 
-    private function isAssociativeArray(array $array)
+    private function dispatchCacheTags($view)
     {
-        if ([] === $array) {
-            return false;
+        if ($view['#cache']['tags']) {
+            $this->dispatcher->dispatchTags($view['#cache']['tags']);
         }
-        return array_keys($array) !== range(0, count($array) - 1);
     }
 }
 

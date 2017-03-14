@@ -2,6 +2,7 @@
 
 namespace Drupal\wmcontroller\Twig;
 
+use Drupal\wmcontroller\WmcontrollerEvents;
 use Drupal\wmcontroller\Event\EntityPresentedEvent;
 
 abstract class Template extends \Twig_Template
@@ -26,10 +27,8 @@ abstract class Template extends \Twig_Template
             }
 
             self::$dispatched[$key] = true;
-            \Drupal::service('event_dispatcher')->dispatch(
-                'entity.presented',
-                new EntityPresentedEvent($var)
-            );
+            \Drupal::service('wmcontroller.cache.dispatcher')
+                ->dispatchPresented($var);
         }
 
         return parent::display($context, $blocks);

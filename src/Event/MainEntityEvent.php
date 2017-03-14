@@ -5,7 +5,7 @@ namespace Drupal\wmcontroller\Event;
 use Symfony\Component\EventDispatcher\Event;
 use Drupal\Core\Entity\EntityInterface;
 
-class EntityPresentedEvent extends Event
+class MainEntityEvent extends Event
 {
     /** @var EntityInterface */
     protected $entity;
@@ -21,14 +21,6 @@ class EntityPresentedEvent extends Event
     public function getEntity()
     {
         return $this->entity;
-    }
-
-    /**
-     * @return string[]
-     */
-    public function getCacheTags()
-    {
-        return $this->entity->getCacheTagsToInvalidate();
     }
 }
 

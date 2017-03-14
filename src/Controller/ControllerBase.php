@@ -7,22 +7,21 @@ use Drupal\wmcontroller\ViewBuilder\ViewBuilder;
 
 abstract class ControllerBase extends DrupalControllerBase
 {
-
     protected $templateDir = '';
 
     /**
      * Return a new view from the application.
      *
-     * @param string $template
-     * @param array $data
+     * @param  string      $template
+     * @param  array       $data
      * @return ViewBuilder
      */
     protected function view($template = '', $data = [])
     {
-        return (new ViewBuilder())
+        return \Drupal::service('wmcontroller.viewbuilder')
             ->setTemplateDir($this->templateDir)
             ->setData($data)
             ->setTemplate($template);
     }
-
 }
+

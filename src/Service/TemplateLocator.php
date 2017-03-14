@@ -2,7 +2,6 @@
 
 namespace Drupal\wmcontroller\Service;
 
-use Drupal\Core\Config\ConfigBase;
 use FilesystemIterator;
 use RecursiveIteratorIterator;
 use RecursiveRegexIterator;
@@ -11,15 +10,23 @@ use RecursiveDirectoryIterator;
 
 class TemplateLocator
 {
+    const TWIG_EXT = '.html.twig';
 
-    /** @var ConfigBase */
-    protected $config;
+    protected $settings;
 
-    protected $twigExtension = '.html.twig';
-
-    public function __construct(ConfigBase $config)
+    public function __construct(array $settings)
     {
-        $this->config = $config;
+        if (empty($settings['module'])) {
+            throw new \Exception(
+                'wmcontroller requires a non-empty module entry in wmcontroller.settings'
+            );
+        }
+
+        if (empty($settings['path'])) {
+            $settings['path'] = 'templates';
+        }
+
+        $this->settings = $settings;
     }
 
     /**
@@ -29,47 +36,12 @@ class TemplateLocator
      */
     public function getThemes()
     {
-        if ($location = $this->getTheme()) {
-            return $this->getThemeFiles('theme', $location);
-        }
-        if ($location = $this->getModule()) {
-            return $this->getThemeFiles('module', $location);
+        $type = 'module';
+        if (!empty($this->settings['theme'])) {
+            $type = 'theme';
         }
 
-        return [];
-    }
-    
-    /**
-     * Get the configured path
-     * @see /admin/config/services/wmcontroller
-     *
-     * @return string
-     */
-    private function getPath()
-    {
-        return $this->config->get('path');
-    }
-
-    /**
-     * Get the configured module
-     * @see /admin/config/services/wmcontroller
-     *
-     * @return string
-     */
-    private function getModule()
-    {
-        return $this->config->get('module');
-    }
-    
-    /**
-     * Get the configured theme, if any
-     * @see /admin/config/services/wmcontroller
-     *
-     * @return string
-     */
-    private function getTheme()
-    {
-        return $this->config->get('theme');
+        return $this->getThemeFiles($type, $this->settings[$type]);
     }
 
     /**
@@ -83,13 +55,10 @@ class TemplateLocator
      */
     private function getThemeFiles($type, $location)
     {
-        
-        if (!$directory = $this->getPath()) {
-            $directory = '/templates';
-        }
-        
         $themes = [];
-        $dir = drupal_get_path($type, $location) . $directory;
+        $dir = drupal_get_path($type, $location) .
+            DIRECTORY_SEPARATOR .
+            $this->settings['path'];
 
         if (!file_exists($dir)) {
             return $themes;
@@ -101,14 +70,17 @@ class TemplateLocator
             $fileName = $this->stripOutTemplatePathAndExtension($dir, $file);
             // Transform the filename to a template name
             // node/article/index.html.twig => node.article.index
-            $templateName = $this->createTemplateNameFromFilename($fileName);
+            $templateName = preg_replace('/\/|\\\/', '.', $fileName);
             $themes[$templateName] = array(
                 'variables' => array(
                     '_data' => array(),
                 ),
                 'path' => $dir,
                 'template' => $fileName,
-                'preprocess functions' => ['template_preprocess', 'wmcontroller_theme_set_variables']
+                'preprocess functions' => [
+                    'template_preprocess',
+                    'wmcontroller_theme_set_variables',
+                ],
             );
         }
 
@@ -118,63 +90,45 @@ class TemplateLocator
     /**
      * Find all twig files recursively in a directory
      *
-     * @param string $directory
+     * @param  string   $directory
      * @return string[]
      */
     private function findTwigFiles($directory)
     {
-        $fileIterator = $this->createRecursiveFileIterator($directory);
+        $fileIterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator(
+                $directory,
+                FilesystemIterator::SKIP_DOTS | FilesystemIterator::UNIX_PATHS
+            )
+        );
 
-        $twigFileRegex = '#.*' . preg_quote($this->twigExtension) . '$#';
         $matches = new RegexIterator(
             $fileIterator,
-            $twigFileRegex,
+            '#^.*' . preg_quote(static::TWIG_EXT, '#') . '$#',
             RecursiveRegexIterator::GET_MATCH
         );
 
         // Weed out non-matches
         $files = [];
         foreach ($matches as $match) {
-            if (empty($match[0])) {
-                continue;
+            if (!empty($match[0])) {
+                $files[] = $match[0];
             }
-            $files[] = $match[0];
         }
 
         return $files;
     }
 
-    /**
-     * @param $dir
-     * @return RecursiveIteratorIterator
-     */
-    private function createRecursiveFileIterator($dir)
-    {
-        $dirIterator = new RecursiveDirectoryIterator(
-            $dir,
-            FilesystemIterator::SKIP_DOTS | FilesystemIterator::UNIX_PATHS
-        );
-        return new RecursiveIteratorIterator($dirIterator);
-    }
-
     private function stripOutTemplatePathAndExtension($templatePath, $file)
     {
         // Strip out the module path
-        $file = str_replace($templatePath . '/', '', $file);
+        $file = str_replace($templatePath . DIRECTORY_SEPARATOR, '', $file);
         // Strip out extension
-        return $file = preg_replace('#' . preg_quote($this->twigExtension) . '$#', '', $file);
+        return preg_replace(
+            '#' . preg_quote(static::TWIG_EXT, '#') . '$#',
+            '',
+            $file
+        );
     }
-
-    /**
-     * Transform a filename to a template name
-     * node/article/index.html.twig => node.article.index
-     *
-     * @param $fileName
-     * @return mixed
-     */
-    private function createTemplateNameFromFilename($fileName)
-    {
-        return preg_replace('/\/|\\\/', '.', $fileName);
-    }
-
 }
+

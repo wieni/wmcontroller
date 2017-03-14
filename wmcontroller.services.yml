@@ -1,20 +1,131 @@
-services:
-    wmcontroller.logger:
-      parent: logger.channel_base
-      arguments: ['wmcontroller']
-    wmcontroller.config:
-      class: Drupal\Core\Config\ImmutableConfig
-      factory: config.factory:get
-      arguments: ['wmcontroller.settings']
+parameters:
 
+    # Main wmcontroller settings
+    wmcontroller.settings:
+
+        # The module that has controllers for your entities
+        # and if theme (below) is left empty also where your templates ought
+        # to be.
+        module: ''
+
+        # The theme where your templates can be found
+        # (if applicable)
+        theme: ''
+
+        # The relative path your template reside in.
+        # (relative to your module / theme dir)
+        path: 'templates'
+
+    # Expiry rules.
+    # maxage = client side caching duration
+    # s-maxage = server side caching duration (this can be drupal db or a cdn)
+    wmcontroller.cache.expiry:
+        # Determine max and s-max based on content-type and/or bundle.
+        # _default is used when no definition is available for any given bundle.
+        entities:
+            node:
+                _default: { maxage: 120, s-maxage: 300 }
+            taxonomy_term:
+                _default: { maxage: 120, s-maxage: 300 }
+
+        # If the current page isn't rendering some kind of entity these regexes
+        # will determine which maxage will be set.
+        # The paths these regexes are matched against are the actual request paths,
+        # not the route name or route path.
+        paths:
+            '^/$':           { maxage: 120, s-maxage: 300 }
+            # '^/admin/.*$':   { maxage: 0, s-maxage: 0 }
+            # '^/user(/.*)?$': { maxage: 0, s-maxage: 0 }
+            '.':             { maxage: 0, s-maxage: 0 }
+
+
+    # Ignore purges for tags that match these regexes.
+    wmcontroller.cache.ignored_tags:
+        - 'config:block.*'
+
+
+    # Store the contents of the response and serve it.
+    # If disabled, only tags will be stored.
+    # This could be useful if the site is proxied by a cdn.
+    wmcontroller.cache.store: false
+
+    # Disables caching in its entirety, only add s-maxage and maxage headers.
+    # (Also implies wmcontroller.cache.store = false)
+    wmcontroller.cache.tags: false
+
+    # Add the X-Wm-Cache: HIT/MISS header.
+    wmcontroller.cache.hitheader: true
+
+    # Amount of items that should be purged during each cron run.
+    # This also determines the amount of times the wmcontroller.purge event
+    # is triggered.
+    wmcontroller.cache.purge_per_cron: 100
+
+    # Flush all entries on `drush cr` or require `drush cc wmcontroller`
+    wmcontroller.cache.flush_on_cache_rebuild: false
+
+    # List of routes that need to have their ?page= query param rewritten to a
+    # route param.
+    wmcontroller.pager_routes: []
+
+services:
     wmcontroller.routing.injectfrontcontroller:
-        class:  Drupal\wmcontroller\Routing\InjectFrontControllerRouteSubscriber
-        arguments: ['@wmcontroller.config', '@wmcontroller.logger']
+        class:  Drupal\wmcontroller\EventSubscriber\InjectFrontControllerRouteSubscriber
+        arguments: ['%wmcontroller.settings%']
         tags: [{ name: event_subscriber }]
+
     wmcontroller.renderer.viewbuilder:
         class: Drupal\wmcontroller\EventSubscriber\ViewRendererSubscriber
-        arguments: ['@entity_type.manager']
         tags: [{ name: event_subscriber }]
+
     wmcontroller.service.templatelocator:
         class: Drupal\wmcontroller\Service\TemplateLocator
-        arguments: ['@wmcontroller.config']
+        arguments: ['%wmcontroller.settings%']
+
+    wmcontroller.viewbuilder:
+        class: Drupal\wmcontroller\ViewBuilder\ViewBuilder
+        arguments: ['@wmcontroller.cache.dispatcher', '@entity_type.manager']
+        shared: false
+
+    wmcontroller.cache.dispatcher:
+        class: Drupal\wmcontroller\Service\Cache\Dispatcher
+        arguments: ['@event_dispatcher']
+
+    wmcontroller.cache.manager:
+        class: Drupal\wmcontroller\Service\Cache\Manager
+        arguments:
+            - '@wmcontroller.cache.storage.mysql'
+            - '@event_dispatcher'
+            - '%wmcontroller.cache.ignored_tags%'
+
+    wmcontroller.cache.subscriber:
+        class: Drupal\wmcontroller\EventSubscriber\CacheSubscriber
+        arguments:
+            - '@wmcontroller.cache.manager'
+            - '%wmcontroller.cache.expiry%'
+            - '%wmcontroller.cache.store%'
+            - '%wmcontroller.cache.tags%'
+            - '%wmcontroller.cache.hitheader%'
+        tags: [{ name: event_subscriber }]
+
+    wmcontroller.cache.storage.mysql:
+        class: Drupal\wmcontroller\Service\Cache\Storage\Database
+        arguments: ['@database']
+
+    wmcontroller.cache.middleware:
+        class: Drupal\wmcontroller\Http\Middleware\Cache
+        arguments: ['@event_dispatcher', '@page_cache_request_policy']
+        tags:
+            - { name: http_middleware, priority: 250, responder: true }
+
+    wmcontroller.cache.invalidator:
+        class: Drupal\wmcontroller\Service\Cache\Invalidator
+        arguments: ['@wmcontroller.cache.manager']
+        tags:
+            - { name: cache_tags_invalidator }
+
+    wmcontroller.pager.subscriber:
+        class: Drupal\wmcontroller\EventSubscriber\PagerRewriteSubscriber
+        arguments: ['%wmcontroller.pager_routes%']
+        tags: [{ name: event_subscriber }]
+
