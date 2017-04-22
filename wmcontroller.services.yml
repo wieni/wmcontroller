@@ -84,7 +84,12 @@ services:
 
     wmcontroller.viewbuilder:
         class: Drupal\wmcontroller\ViewBuilder\ViewBuilder
-        arguments: ['@wmcontroller.cache.dispatcher', '@entity_type.manager']
+        arguments:
+            - '@wmcontroller.cache.dispatcher'
+            - '@entity_type.manager'
+            - '@main_content_renderer.html'
+            - '@request_stack'
+            - '@current_route_match'
         shared: false
 
     wmcontroller.cache.dispatcher:
