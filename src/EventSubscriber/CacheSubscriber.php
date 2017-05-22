@@ -2,6 +2,7 @@
 
 namespace Drupal\wmcontroller\EventSubscriber;
 
+use Drupal\Core\Cache\CacheableResponseInterface;
 use Drupal\wmcontroller\Exception\NoSuchCacheEntryException;
 use Drupal\wmcontroller\Entity\Cache;
 use Drupal\wmcontroller\Http\CachedResponse;
@@ -116,6 +117,10 @@ class CacheSubscriber implements EventSubscriberInterface
             $response->headers->set(self::CACHE_HEADER, 'MISS');
         }
 
+        if (!$response instanceof CacheableResponseInterface) {
+            return;
+        }
+
         // Don't override explicitly set maxage headers.
         if (
             $response->headers->hasCacheControlDirective('s-maxage')
@@ -125,6 +130,16 @@ class CacheSubscriber implements EventSubscriberInterface
         }
 
         if (!isset($this->cacheableStatusCodes[$response->getStatusCode()])) {
+            return;
+        }
+
+        // Get max-age set in controller
+        $smax = $max = $response->getCacheableMetadata()->getCacheMaxAge();
+        if ($max !== -1) {
+            $this->setMaxAge(
+                $response,
+                ['s-maxage' => $smax, 'maxage' => $max]
+            );
             return;
         }
 
