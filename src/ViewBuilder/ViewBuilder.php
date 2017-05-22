@@ -188,14 +188,14 @@ class ViewBuilder
         if ($this->entity) {
             $view = $this->createOriginalRenderArrayFromEntity($this->entity);
         }
+        $view['#_data'] = $this->data;
 
         $this->addThemeToRenderArray($view);
         $this->addHeadElementsToRenderArray($view);
         $this->addCustomHooksToRenderArray($view);
         $this->addCacheTagsToRenderArray($view);
         $this->dispatchCacheTags($view);
-
-        $view['#_data'] = $this->data;
+        $this->dispatchCacheTagsOfPassedEntities($view);
 
         return $view;
     }
@@ -280,6 +280,15 @@ class ViewBuilder
     {
         if ($view['#cache']['tags']) {
             $this->dispatcher->dispatchTags($view['#cache']['tags']);
+        }
+    }
+
+    private function dispatchCacheTagsOfPassedEntities($view)
+    {
+        foreach ($view['#_data'] as $entity) {
+            if ($entity instanceof EntityInterface) {
+                $this->dispatcher->dispatchPresented($entity);
+            }
         }
     }
 }
