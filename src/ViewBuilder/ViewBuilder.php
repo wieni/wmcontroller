@@ -9,10 +9,10 @@ use Drupal\wmcontroller\Service\Cache\Dispatcher;
 class ViewBuilder
 {
     /** @var Dispatcher */
-    private $dispatcher;
+    protected $dispatcher;
 
     /** @var EntityTypeManagerInterface */
-    private $entityTypeManager;
+    protected $entityTypeManager;
 
     protected $viewMode = 'full';
 
