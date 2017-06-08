@@ -5,6 +5,7 @@ namespace Drupal\wmcontroller\ViewBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\wmcontroller\Service\Cache\Dispatcher;
+use Drupal\wmcontroller\Service\ResponseBuilder;
 
 class ViewBuilder
 {
@@ -13,6 +14,9 @@ class ViewBuilder
 
     /** @var EntityTypeManagerInterface */
     protected $entityTypeManager;
+
+    /** @var \Drupal\wmcontroller\Service\ResponseBuilder */
+    protected $responseBuilder;
 
     protected $viewMode = 'full';
 
@@ -40,10 +44,12 @@ class ViewBuilder
 
     public function __construct(
         Dispatcher $dispatcher,
-        EntityTypeManagerInterface $entityTypeManager
+        EntityTypeManagerInterface $entityTypeManager,
+        ResponseBuilder $responseBuilder
     ) {
         $this->dispatcher = $dispatcher;
         $this->entityTypeManager = $entityTypeManager;
+        $this->responseBuilder = $responseBuilder;
     }
 
     public function setTemplateDir($templateDir)
@@ -199,7 +205,13 @@ class ViewBuilder
         return $this;
     }
 
+    /** @deprecated Use the toRenderArray() method */
     public function render()
+    {
+        return $this->toRenderArray();
+    }
+
+    public function toRenderArray()
     {
         $view = [];
         if ($this->entity) {
@@ -216,6 +228,11 @@ class ViewBuilder
         $this->dispatchCacheTagsOfPassedEntities($view);
 
         return $view;
+    }
+
+    public function toResponse()
+    {
+        return $this->responseBuilder->createResponse($this->toRenderArray());
     }
 
     private function createOriginalRenderArrayFromEntity(EntityInterface $entity)

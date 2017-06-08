@@ -22,7 +22,7 @@ class ViewRendererSubscriber implements EventSubscriberInterface
         $result = $event->getControllerResult();
         if ($result instanceof ViewBuilder) {
             // Replace the controller result with a render-array
-            $event->setControllerResult($result->render());
+            $event->setControllerResult($result->toRenderArray());
         }
     }
 }
