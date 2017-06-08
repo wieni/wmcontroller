@@ -117,10 +117,6 @@ class CacheSubscriber implements EventSubscriberInterface
             $response->headers->set(self::CACHE_HEADER, 'MISS');
         }
 
-        if (!$response instanceof CacheableResponseInterface) {
-            return;
-        }
-
         // Don't override explicitly set maxage headers.
         if (
             $response->headers->hasCacheControlDirective('s-maxage')
@@ -133,14 +129,16 @@ class CacheSubscriber implements EventSubscriberInterface
             return;
         }
 
-        // Get max-age set in controller
-        $smax = $max = $response->getCacheableMetadata()->getCacheMaxAge();
-        if ($max !== -1) {
-            $this->setMaxAge(
-                $response,
-                ['s-maxage' => $smax, 'maxage' => $max]
-            );
-            return;
+        if ($response instanceof CacheableResponseInterface) {
+            // Get max-age defined in render array
+            $smax = $max = $response->getCacheableMetadata()->getCacheMaxAge();
+            if ($max !== -1) {
+                $this->setMaxAge(
+                    $response,
+                    ['s-maxage' => $smax, 'maxage' => $max]
+                );
+                return;
+            }
         }
 
         if ($entityExpiry = $this->getMaxAgesForMainEntity()) {
