@@ -79,7 +79,7 @@ class ViewBuilder
     }
 
     /**
-     * @param  array  $headElement
+     * @param  array $headElement
      * @param  string $key
      * @return $this
      */
