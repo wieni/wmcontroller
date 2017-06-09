@@ -129,18 +129,6 @@ class CacheSubscriber implements EventSubscriberInterface
             return;
         }
 
-        if ($response instanceof CacheableResponseInterface) {
-            // Get max-age defined in render array
-            $smax = $max = $response->getCacheableMetadata()->getCacheMaxAge();
-            if ($max !== -1) {
-                $this->setMaxAge(
-                    $response,
-                    ['s-maxage' => $smax, 'maxage' => $max]
-                );
-                return;
-            }
-        }
-
         if ($entityExpiry = $this->getMaxAgesForMainEntity()) {
             $this->setMaxAge($response, $entityExpiry);
             return;

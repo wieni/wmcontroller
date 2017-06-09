@@ -183,17 +183,6 @@ class ViewBuilder
         return $this;
     }
 
-    /**
-     * @deprecated
-     *     Use ->toResponse()->setMaxAge($value)->setSharedMaxAge($value)
-     */
-    public function setCacheMaxAge(int $context)
-    {
-        $this->cache['max-age'] = $context;
-
-        return $this;
-    }
-
     public function &getDrupalSetting()
     {
         return $this->drupalSetting;
