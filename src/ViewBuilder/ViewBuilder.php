@@ -5,14 +5,18 @@ namespace Drupal\wmcontroller\ViewBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\wmcontroller\Service\Cache\Dispatcher;
+use Drupal\wmcontroller\Service\ResponseBuilder;
 
 class ViewBuilder
 {
     /** @var Dispatcher */
-    private $dispatcher;
+    protected $dispatcher;
 
     /** @var EntityTypeManagerInterface */
-    private $entityTypeManager;
+    protected $entityTypeManager;
+
+    /** @var \Drupal\wmcontroller\Service\ResponseBuilder */
+    protected $responseBuilder;
 
     protected $viewMode = 'full';
 
@@ -38,10 +42,12 @@ class ViewBuilder
 
     public function __construct(
         Dispatcher $dispatcher,
-        EntityTypeManagerInterface $entityTypeManager
+        EntityTypeManagerInterface $entityTypeManager,
+        ResponseBuilder $responseBuilder
     ) {
         $this->dispatcher = $dispatcher;
         $this->entityTypeManager = $entityTypeManager;
+        $this->responseBuilder = $responseBuilder;
     }
 
     public function setTemplateDir($templateDir)
@@ -77,7 +83,7 @@ class ViewBuilder
     }
 
     /**
-     * @param  array  $headElement
+     * @param  array $headElement
      * @param  string $key
      * @return $this
      */
@@ -175,29 +181,33 @@ class ViewBuilder
         return $this;
     }
 
-    public function setCacheMaxAge(int $context)
+    /** @deprecated Use the toRenderArray() method */
+    public function render()
     {
-        $this->cache['max-age'] = $context;
-
-        return $this;
+        return $this->toRenderArray();
     }
 
-    public function render()
+    public function toRenderArray()
     {
         $view = [];
         if ($this->entity) {
             $view = $this->createOriginalRenderArrayFromEntity($this->entity);
         }
+        $view['#_data'] = $this->data;
 
         $this->addThemeToRenderArray($view);
         $this->addHeadElementsToRenderArray($view);
         $this->addCustomHooksToRenderArray($view);
         $this->addCacheTagsToRenderArray($view);
         $this->dispatchCacheTags($view);
-
-        $view['#_data'] = $this->data;
+        $this->dispatchCacheTagsOfPassedEntities($view);
 
         return $view;
+    }
+
+    public function toResponse()
+    {
+        return $this->responseBuilder->createResponse($this->toRenderArray());
     }
 
     private function createOriginalRenderArrayFromEntity(EntityInterface $entity)
@@ -280,6 +290,15 @@ class ViewBuilder
     {
         if ($view['#cache']['tags']) {
             $this->dispatcher->dispatchTags($view['#cache']['tags']);
+        }
+    }
+
+    private function dispatchCacheTagsOfPassedEntities($view)
+    {
+        foreach ($view['#_data'] as $entity) {
+            if ($entity instanceof EntityInterface) {
+                $this->dispatcher->dispatchPresented($entity);
+            }
         }
     }
 }

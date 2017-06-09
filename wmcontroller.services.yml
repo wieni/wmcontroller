@@ -74,6 +74,10 @@ services:
         arguments: ['%wmcontroller.settings%']
         tags: [{ name: event_subscriber }]
 
+    wmcontroller.service.responsebuilder:
+        class: Drupal\wmcontroller\Service\ResponseBuilder
+        arguments: ['@main_content_renderer.html', '@request_stack', '@current_route_match']
+
     wmcontroller.renderer.viewbuilder:
         class: Drupal\wmcontroller\EventSubscriber\ViewRendererSubscriber
         tags: [{ name: event_subscriber }]
@@ -84,8 +88,11 @@ services:
 
     wmcontroller.viewbuilder:
         class: Drupal\wmcontroller\ViewBuilder\ViewBuilder
-        arguments: ['@wmcontroller.cache.dispatcher', '@entity_type.manager']
         shared: false
+        arguments:
+            - '@wmcontroller.cache.dispatcher'
+            - '@entity_type.manager'
+            - '@wmcontroller.service.responsebuilder'
 
     wmcontroller.cache.dispatcher:
         class: Drupal\wmcontroller\Service\Cache\Dispatcher
