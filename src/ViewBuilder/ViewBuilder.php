@@ -35,8 +35,6 @@ class ViewBuilder
 
     protected $headElements = [];
 
-    protected $drupalSetting = [];
-
     protected $cache = [
         'tags' => [],
         'contexts' => [],
@@ -183,21 +181,6 @@ class ViewBuilder
         return $this;
     }
 
-    public function &getDrupalSetting()
-    {
-        return $this->drupalSetting;
-    }
-
-    public function addDrupalSetting(string $key, $value)
-    {
-        if (!is_array($value) && $value instanceof \Serializable) {
-            $value = $value->serialize();
-        }
-        $this->drupalSetting[$key] = $value;
-
-        return $this;
-    }
-
     /** @deprecated Use the toRenderArray() method */
     public function render()
     {
@@ -214,7 +197,6 @@ class ViewBuilder
 
         $this->addThemeToRenderArray($view);
         $this->addHeadElementsToRenderArray($view);
-        $this->addDrupalSettingsToRenderArray($view);
         $this->addCustomHooksToRenderArray($view);
         $this->addCacheTagsToRenderArray($view);
         $this->dispatchCacheTags($view);
@@ -302,14 +284,6 @@ class ViewBuilder
                 )
             );
         }
-    }
-
-    private function addDrupalSettingsToRenderArray(&$view)
-    {
-        $view['#attached']['drupalSettings'] = array_merge(
-            $view['#attached']['drupalSettings'] ?? [],
-            $this->drupalSetting
-        );
     }
 
     private function dispatchCacheTags($view)
