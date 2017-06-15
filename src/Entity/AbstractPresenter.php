@@ -13,11 +13,8 @@ abstract class AbstractPresenter implements PresenterInterface
 
     protected function methodNames($methodName)
     {
-        return [
-            $methodName,
-            'is' . ucfirst($methodName),
-            'get' . ucfirst($methodName),
-        ];
+        $uc = ucfirst($methodName);
+        return [$methodName, 'is' . $uc, 'get' . $uc, 'has' . $uc];
     }
 
     public function __isset($prop)
