@@ -46,6 +46,59 @@ class ArticleController extends ControllerBase
 }
 ```
 
+## Presenters
+
+Auto convert models into presenters when they are `@included`.
+
+### Config
+
+Add `\Drupal\wmcontroller\Entity\AbstractPresenter::class` to
+`$settings['twig_sandbox_whitelisted_classes']`
+
+e.g.:
+```php
+$settings['twig_sandbox_whitelisted_classes'] = [
+    \Drupal\wmcontroller\Entity\AbstractPresenter::class,
+    \Drupal\Core\Template\Attribute::class,
+];
+```
+
+### Usage
+
+Model.php:
+
+```php
+class Model ... implements \Drupal\wmcontroller\Entity\HasPresenterInterface
+{
+    public function getPresenterService()
+    {
+        return 'mymodule.presenter.entity_type.model';
+    }
+}
+```
+
+ModelPresenter.php:
+
+```php
+class ModelPresenter extends \Drupal\wmcontroller\Entity\AbstractPresenter
+{
+    public function language()
+    {
+        return $this->entity->language()->getName();
+    }
+}
+```
+
+mymodule.services.yml:
+
+```yaml
+services:
+    mymodule.presenter.entity_type.model:
+        class: Drupal\mymodule\Entity\Presenter\EntityType\ModelPresenter
+        parent: wmcontroller.presenter
+        shared: false # !
+```
+
 ## Caching
 
 Handles full page cache for anonymous users.

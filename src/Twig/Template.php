@@ -16,7 +16,7 @@ abstract class Template extends \Twig_Template
             printf('<!-- Template: %s -->', $this->getTemplateName());
         }
 
-        foreach ($context as $var) {
+        foreach ($context as $k => $var) {
             if (!($var instanceof \Drupal\Core\Entity\EntityInterface)) {
                 continue;
             }
@@ -27,8 +27,10 @@ abstract class Template extends \Twig_Template
             }
 
             self::$dispatched[$key] = true;
-            \Drupal::service('wmcontroller.cache.dispatcher')
+            $event = \Drupal::service('wmcontroller.cache.dispatcher')
                 ->dispatchPresented($var);
+
+            $context[$k] = $event->getEntity();
         }
 
         return parent::display($context, $blocks);
