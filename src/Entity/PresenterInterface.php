@@ -2,11 +2,9 @@
 
 namespace Drupal\wmcontroller\Entity;
 
-use Drupal\Core\Entity\EntityInterface;
-
-interface PresenterInterface extends EntityInterface
+interface PresenterInterface
 {
-    public function setEntity(EntityInterface $entity);
+    public function setEntity($entity);
 
     /**
      * @return EntityInterface
