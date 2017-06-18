@@ -4,7 +4,6 @@ namespace Drupal\wmcontroller\Entity;
 
 abstract class AbstractPresenter implements PresenterInterface
 {
-    /** @var EntityInterface */
     protected $entity;
 
     protected function methodNames($methodName)

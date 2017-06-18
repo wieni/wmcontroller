@@ -23,11 +23,6 @@ class EntityPresentedEvent extends Event
         return $this->entity;
     }
 
-    public function setEntity(EntityInterface $entity)
-    {
-        $this->entity = $entity;
-    }
-
     /**
      * @return string[]
      */
