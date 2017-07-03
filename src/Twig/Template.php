@@ -35,8 +35,7 @@ abstract class Template extends \Twig_Template
                 $event
             );
 
-            $var = $event->getItem();
-            $context[$k] = $var;
+            $context[$k] = $event->getItem();
 
             if (!($var instanceof \Drupal\Core\Entity\EntityInterface)) {
                 continue;
