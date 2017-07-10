@@ -94,6 +94,21 @@ services:
             - '@entity_type.manager'
             - '@wmcontroller.service.responsebuilder'
 
+    wmcontroller.presenter.factory:
+        class: Drupal\wmcontroller\Service\PresenterFactory
+        arguments: ['@service_container']
+
+    wmcontroller.presenter.subscriber:
+        class: Drupal\wmcontroller\EventSubscriber\PresenterSubscriber
+        arguments:
+            - '@wmcontroller.presenter.factory'
+        tags: [{ name: event_subscriber }]
+
+    wmcontroller.presenter:
+        class: Drupal\wmcontroller\Entity\AbstractPresenter
+        abstract: true
+        shared: false  # has no effect on children, leaving for future reference
+
     wmcontroller.cache.dispatcher:
         class: Drupal\wmcontroller\Service\Cache\Dispatcher
         arguments: ['@event_dispatcher']

@@ -22,28 +22,46 @@ class Dispatcher
         $this->dispatcher = $dispatcher;
     }
 
+    /**
+     * @return MainEntityEvent
+     */
     public function dispatchMainEntity(EntityInterface $entity)
     {
+        $event = new MainEntityEvent($entity);
         $this->dispatcher->dispatch(
             WmcontrollerEvents::MAIN_ENTITY_RENDER,
-            new MainEntityEvent($entity)
+            $event
         );
+
+        return $event;
     }
 
+    /**
+     * @return EntityPresentedEvent
+     */
     public function dispatchPresented(EntityInterface $entity)
     {
+        $event = new EntityPresentedEvent($entity);
         $this->dispatcher->dispatch(
             WmcontrollerEvents::ENTITY_PRESENTED,
-            new EntityPresentedEvent($entity)
+            $event
         );
+
+        return $event;
     }
 
+    /**
+     * @return CacheTagsEvent
+     */
     public function dispatchTags(array $tags)
     {
+        $event = new CacheTagsEvent($tags);
         $this->dispatcher->dispatch(
             WmcontrollerEvents::CACHE_TAGS,
-            new CacheTagsEvent($tags)
+            $event
         );
+
+        return $event;
     }
 }
 

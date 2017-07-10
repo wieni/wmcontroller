@@ -4,10 +4,22 @@ namespace Drupal\wmcontroller\Twig;
 
 use Drupal\wmcontroller\WmcontrollerEvents;
 use Drupal\wmcontroller\Event\EntityPresentedEvent;
+use Drupal\wmcontroller\Event\PresentedEvent;
 
 abstract class Template extends \Twig_Template
 {
     protected static $dispatched = [];
+
+    protected static $dispatcher;
+
+    protected function getDispatcher()
+    {
+        if (isset(static::$dispatcher)) {
+            return static::$dispatcher;
+        }
+
+        return static::$dispatcher = \Drupal::service('event_dispatcher');
+    }
 
     public function display(array $context, array $blocks = array())
     {
@@ -16,7 +28,15 @@ abstract class Template extends \Twig_Template
             printf('<!-- Template: %s -->', $this->getTemplateName());
         }
 
-        foreach ($context as $var) {
+        foreach ($context as $k => $var) {
+            $event = new PresentedEvent($var);
+            $this->getDispatcher()->dispatch(
+                WmcontrollerEvents::PRESENTED,
+                $event
+            );
+
+            $context[$k] = $event->getItem();
+
             if (!($var instanceof \Drupal\Core\Entity\EntityInterface)) {
                 continue;
             }
@@ -34,4 +54,3 @@ abstract class Template extends \Twig_Template
         return parent::display($context, $blocks);
     }
 }
-

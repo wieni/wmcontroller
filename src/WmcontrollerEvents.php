@@ -4,6 +4,15 @@ namespace Drupal\wmcontroller;
 
 final class WmcontrollerEvents {
     /**
+     * Will be triggered whenever a variable is injected into
+     * a template.
+     *
+     * The event object is an instance of
+     * Drupal\wmcontroller\Event\PresentedEvent
+     */
+    const PRESENTED = 'item.presented';
+
+    /**
      * Will be triggered whenever a Drupal EntityInterface is injected into
      * a template.
      *
