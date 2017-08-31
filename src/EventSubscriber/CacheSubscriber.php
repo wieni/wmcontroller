@@ -2,15 +2,13 @@
 
 namespace Drupal\wmcontroller\EventSubscriber;
 
-use Drupal\Core\Cache\CacheableResponseInterface;
 use Drupal\wmcontroller\Exception\NoSuchCacheEntryException;
 use Drupal\wmcontroller\Entity\Cache;
 use Drupal\wmcontroller\Http\CachedResponse;
-use Drupal\wmcontroller\Service\Cache\Manager;
 use Drupal\wmcontroller\Event\EntityPresentedEvent;
-use Drupal\wmcontroller\Event\CachePurgeEvent;
 use Drupal\wmcontroller\Event\MainEntityEvent;
 use Drupal\wmcontroller\Event\CacheTagsEvent;
+use Drupal\wmcontroller\Service\Cache\Storage\StorageInterface;
 use Drupal\wmcontroller\WmcontrollerEvents;
 use Drupal\Core\Entity\EntityInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,8 +23,8 @@ class CacheSubscriber implements EventSubscriberInterface
 {
     const CACHE_HEADER = 'X-Wm-Cache';
 
-    /** @var Manager */
-    protected $manager;
+    /** @var StorageInterface */
+    protected $storage;
 
     protected $expiries;
 
@@ -50,13 +48,13 @@ class CacheSubscriber implements EventSubscriberInterface
     ];
 
     public function __construct(
-        Manager $manager,
+        StorageInterface $storage,
         array $expiries,
         $store = false,
         $tags = false,
         $addHeader = false
     ) {
-        $this->manager = $manager;
+        $this->storage = $storage;
         $this->expiries = $expiries + ['paths' => [], 'entities' => []];
         $this->store = $store;
         $this->tags = $tags;
@@ -210,7 +208,7 @@ class CacheSubscriber implements EventSubscriberInterface
 
         // TODO find a way to handle exceptions thrown from this point on.
         // (we're in the kernel::TERMINATE phase)
-        $this->manager->set(
+        $this->storage->set(
             new Cache(
                 $this->getRequestUri($request),
                 $request->getMethod(),
@@ -240,7 +238,7 @@ class CacheSubscriber implements EventSubscriberInterface
      */
     protected function getCache(Request $request)
     {
-        return $this->manager->get(
+        return $this->storage->get(
             $this->getRequestUri($request),
             $request->getMethod()
         );

@@ -5,8 +5,9 @@ namespace Drupal\wmcontroller\Service\Cache\Storage;
 use Drupal\wmcontroller\Entity\Cache;
 use Drupal\wmcontroller\Exception\NoSuchCacheEntryException;
 use Drupal\Core\Database\Connection;
+use Drupal\wmcontroller\Service\Cache\Purger\PurgerInterface;
 
-class Database implements StorageInterface
+class Database implements StorageInterface, PurgerInterface
 {
     const TX = 'wmcontroller_cache';
     const TABLE_ENTRIES = 'wmcontroller_cache';
@@ -19,18 +20,36 @@ class Database implements StorageInterface
         $this->db = $db;
     }
 
-    public function getByTag($tag)
+    public function getExpired($amount)
     {
+        $stmt = $this->db->select(self::TABLE_ENTRIES, 'c')
+            ->fields('c', ['id', 'uri', 'method', 'expiry'])
+            ->condition('expiry', time(), '<')
+            ->range(0, (int)$amount)
+            ->execute();
+
+        $items = [];
+
+        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+            $items[] = $this->assocRowToEntry($row);
+        }
+
+        return $items;
+    }
+
+    public function getByTags(array $tags)
+    {
+        if (!$tags) {
+            return [];
+        }
+
         $q = $this->db->select(self::TABLE_ENTRIES, 'c')
-            ->fields(
-                'c',
-                ['id', 'uri', 'method', 'expiry']
-            )
+            ->fields('c', ['id', 'uri', 'method', 'expiry'])
             ->condition('c.expiry', time(), '>=');
 
         $q->innerJoin(self::TABLE_TAGS, 't', 't.id = c.id');
 
-        $stmt = $q->condition('t.tag', $tag)
+        $stmt = $q->condition('t.tag', $tags, 'IN')
             ->execute();
 
         $items = [];
@@ -41,11 +60,6 @@ class Database implements StorageInterface
         return $items;
     }
 
-    /**
-     * @return Cache
-     *
-     * @throws NoSuchCacheEntryException;
-     */
     public function get($uri, $method = 'GET')
     {
         $method = strtoupper($method);
@@ -53,8 +67,8 @@ class Database implements StorageInterface
 
         $raw = $this->db->select(self::TABLE_ENTRIES, 'c')
             ->fields('c', ['uri', 'method',  'headers', 'content', 'expiry'])
-            ->condition('c.expiry', time(), '>=')
             ->condition('c.id', $id)
+            ->condition('c.expiry', time(), '>=')
             ->execute()->fetch(\PDO::FETCH_ASSOC);
 
         if (!$raw) {
@@ -64,9 +78,9 @@ class Database implements StorageInterface
         return $this->assocRowToEntry($raw);
     }
 
-    public function set(Cache $cache, array $tags)
+    public function set(Cache $item, array $tags)
     {
-        $id = $this->cacheId($cache->getUri(), $cache->getMethod());
+        $id = $this->getCacheId($item);
         $tx = $this->db->startTransaction(self::TX);
 
         try {
@@ -76,11 +90,11 @@ class Database implements StorageInterface
                 ->fields(
                     [
                         'id' => $id,
-                        'method' => $cache->getMethod(),
-                        'uri' => $cache->getUri(),
-                        'headers' => serialize($cache->getHeaders()),
-                        'content' => $cache->getBody(),
-                        'expiry' => $cache->getExpiry(),
+                        'method' => $item->getMethod(),
+                        'uri' => $item->getUri(),
+                        'headers' => serialize($item->getHeaders()),
+                        'content' => $item->getBody(),
+                        'expiry' => $item->getExpiry(),
                     ]
                 )
                 ->execute();
@@ -108,46 +122,22 @@ class Database implements StorageInterface
         unset($tx); // commit, btw this is marginaal AS FUCK.
     }
 
-    public function purge($amount)
+    public function expire(array $items)
     {
-        $stmt = $this->db->select(self::TABLE_ENTRIES, 'c')
-            ->fields('c', ['id', 'uri', 'method', 'expiry'])
-            ->condition('expiry', time(), '<')
-            ->range(0, (int) $amount)
-            ->execute();
-
-        $items = [];
-        $ids = [];
-        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-            $items[] = $this->assocRowToEntry($row);
-            $ids[] = $row['id'];
-        }
-
-        $this->delete($ids);
-
-        return $items;
+        $this->expireIds(
+            array_map([$this, 'getCacheId'], $items)
+        );
     }
 
-    public function purgeByTag($tag)
+    public function remove(array $items)
     {
-        $q = $this->db->select(self::TABLE_ENTRIES, 'c')
-            ->fields('c', ['id', 'uri', 'method', 'expiry']);
-
-        $q->innerJoin(self::TABLE_TAGS, 't', 't.id = c.id');
-
-        $stmt = $q->condition('t.tag', $tag)
-            ->execute();
-
-        $items = [];
-        $ids = [];
-        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-            $items[] = $this->assocRowToEntry($row);
-            $ids[] = $row['id'];
-        }
-
+        $ids = array_map(
+            function(Cache $item) {
+                return $this->cacheId($item->getUri(), $item->getMethod());
+            },
+            $items
+        );
         $this->delete($ids);
-
-        return $items;
     }
 
     public function flush()
@@ -162,7 +152,13 @@ class Database implements StorageInterface
         }
     }
 
-    protected function delete(array $ids)
+    public function purge(array $items)
+    {
+        $this->remove($items);
+        return true;
+    }
+
+    private function delete(array $ids)
     {
         if (empty($ids)) {
             return;
@@ -187,7 +183,7 @@ class Database implements StorageInterface
         unset($tx); // commit, btw this is marginaal AS FUCK.
     }
 
-    protected function assocRowToEntry(array $row)
+    private function assocRowToEntry(array $row)
     {
         return new Cache(
             $row['uri'],
@@ -198,9 +194,37 @@ class Database implements StorageInterface
         );
     }
 
-    protected function cacheId($uri, $method)
+    private function getCacheId(Cache $item)
+    {
+        return $this->cacheId($item->getUri(), $item->getMethod());
+    }
+
+    private function cacheId($uri, $method)
     {
         return sha1($method . ':' . $uri);
     }
-}
 
+    private function expireIds(array $ids)
+    {
+        if (empty($ids)) {
+            return;
+        }
+
+        $tx = $this->db->startTransaction(self::TX);
+
+        try {
+            $this->db->update(static::TABLE_ENTRIES)
+                ->fields([
+                    'expire' => time()
+                ])
+                ->condition('id', $ids, 'IN')
+                ->execute();
+        } catch (\Exception $e) {
+            $tx->rollback();
+            // TODO add the fact that we rollbacked to the exception.
+            throw $e;
+        }
+
+        unset($tx); // commit, btw this is marginaal AS FUCK.
+    }
+}

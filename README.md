@@ -25,7 +25,7 @@ For example:
 
 We will call the `show()` method on your controller, so make sure your controller has this method.
 
-```
+```php
 // src/Controller/Node/ArticleController.php
 <?php
 
@@ -215,6 +215,12 @@ parameters:
     # Add the X-Wm-Cache: HIT/MISS header.
     wmcontroller.cache.hitheader: true
 
+    # The service responsable for storing cache entries
+    wmcontroller.cache.storage: wmcontroller.cache.storage.mysql
+
+    # The service responsable for purging cache entries
+    wmcontroller.cache.purger: wmcontroller.cache.storage.mysql
+
     # Amount of items that should be purged during each cron run.
     # This also determines the amount of times the wmcontroller.purge event
     # is triggered.
@@ -233,10 +239,10 @@ above.
 
 ```yaml
 
-wmcustom.search:
+module.search:
     path: 'search'
     defaults:
-        _controller: '\Drupal\wmcustom\Controller\SearchController::index'
+        _controller: '\Drupal\module\Controller\SearchController::index'
         _smaxage: 1234
         _maxage: 123
 ```
@@ -271,14 +277,33 @@ $dispatcher = injectedService('wmcontroller.cache.dispatcher');
 $dispatcher->dispatchTags(['front', 'article:list']);
 ```
 
-#### purge a tag
+#### expire a tag
+
+```php
+/** @var Drupal\wmcontroller\Service\Cache\Storage\StorageInterface; */
+$storage = injectedService('wmcontroller.cache.storage');
+$storage->expireTags($tags);
+```
+
+During the next cron job expired pages will be purged
+
+#### a full purge
 
 ```php
 /** @var Drupal\wmcontroller\Service\Cache\Manager; */
 $manager = injectedService('wmcontroller.cache.manager');
-$manager->purgeByTag($tag);
+$manager->purge();
 ```
 
 #### purge your cdn
 
-Listen for the `Drupal\wmcontroller\WmcontrollerEvents::CACHE_PURGE` event. Your listener will receive an instance of `Drupal\wmcontroller\Event\CachePurgeEvent`
+Create your own purger that implements `Drupal\wmcontroller\Service\Cache\Purger\PurgerInterface` and register it as a service.
+
+Then set `wmcontroller.cache.purger` to it's service name.
+
+A CloudFront purger is available at [wieni/wmcontroller_cloudfront](https://github.com/wieni/wmcontroller_cloudfront)
+
+```
+// services.yml
+wmcontroller.cache.purger: module.cdn.purger
+```

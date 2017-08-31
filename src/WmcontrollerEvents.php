@@ -45,15 +45,6 @@ final class WmcontrollerEvents {
     const MAIN_ENTITY_RENDER = 'entity.main.render';
 
     /**
-     * Will be triggered when a cache entry is removed and ought to be
-     * purged from a e.g.: a cdn if applicable.
-     *
-     * The event object is an instance of
-     * Drupal\wmcontroller\Event\CachePurgeEvent
-     */
-    const CACHE_PURGE = 'cache.purge';
-
-    /**
      * Will be triggered from the Cache http middleware when a request
      * is suited for a cached response.
      *

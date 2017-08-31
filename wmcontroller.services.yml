@@ -57,12 +57,16 @@ parameters:
     wmcontroller.cache.hitheader: true
 
     # Amount of items that should be purged during each cron run.
-    # This also determines the amount of times the wmcontroller.purge event
-    # is triggered.
     wmcontroller.cache.purge_per_cron: 100
 
     # Flush all entries on `drush cr` or require `drush cc wmcontroller`
     wmcontroller.cache.flush_on_cache_rebuild: false
+
+    # The service responsable for storing cache entries
+    wmcontroller.cache.storage: wmcontroller.cache.storage.mysql
+
+    # The service responsable for purging cache entries
+    wmcontroller.cache.purger: wmcontroller.cache.storage.mysql
 
     # List of routes that need to have their ?page= query param rewritten to a
     # route param.
@@ -113,17 +117,30 @@ services:
         class: Drupal\wmcontroller\Service\Cache\Dispatcher
         arguments: ['@event_dispatcher']
 
+    wmcontroller.cache.storage:
+        class: Drupal\wmcontroller\Service\Cache\Storage\StorageInterface
+        factory: Drupal\wmcontroller\Service\Factory::create
+        arguments:
+            - '@service_container'
+            - '%wmcontroller.cache.storage%'
+
+    wmcontroller.cache.purger:
+        class: Drupal\wmcontroller\Service\Cache\Purger\PurgerInterface
+        factory: Drupal\wmcontroller\Service\Factory::create
+        arguments:
+            - '@service_container'
+            - '%wmcontroller.cache.purger%'
+
     wmcontroller.cache.manager:
         class: Drupal\wmcontroller\Service\Cache\Manager
         arguments:
-            - '@wmcontroller.cache.storage.mysql'
-            - '@event_dispatcher'
-            - '%wmcontroller.cache.ignored_tags%'
+            - '@wmcontroller.cache.storage'
+            - '@wmcontroller.cache.purger'
 
     wmcontroller.cache.subscriber:
         class: Drupal\wmcontroller\EventSubscriber\CacheSubscriber
         arguments:
-            - '@wmcontroller.cache.manager'
+            - '@wmcontroller.cache.storage'
             - '%wmcontroller.cache.expiry%'
             - '%wmcontroller.cache.store%'
             - '%wmcontroller.cache.tags%'
@@ -142,7 +159,9 @@ services:
 
     wmcontroller.cache.invalidator:
         class: Drupal\wmcontroller\Service\Cache\Invalidator
-        arguments: ['@wmcontroller.cache.manager']
+        arguments:
+            - '@wmcontroller.cache.storage'
+            - '%wmcontroller.cache.ignored_tags%'
         tags:
             - { name: cache_tags_invalidator }
 
