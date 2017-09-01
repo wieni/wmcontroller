@@ -8,41 +8,42 @@ use Drupal\wmcontroller\Exception\NoSuchCacheEntryException;
 interface StorageInterface {
 
     /**
+     * Get expired items, limited by $amount.
+     *
+     * Note: Content nor headers will be hydrated.
+     *
+     * @return Cache[] The expired cache entries.
+     */
+    public function getExpired($amount);
+
+    /**
      * @return Cache
      *
      * @throws NoSuchCacheEntryException;
      */
     public function get($uri, $method = 'GET');
 
+    public function set(Cache $item, array $tags);
+
     /**
      * Note: Content nor headers will be hydrated.
      *
      * @return Cache[]
      */
-    public function getByTag($tag);
-
-    public function set(Cache $cache, array $tags);
+    public function getByTags(array $tags);
 
     /**
-     * Purge expired items, limited by $amount.
-     *
-     * Note: Content nor headers will be hydrated.
-     *
-     * @return Cache[] The purged cache entries.
+     * @param Cache[] $items
      */
-    public function purge($amount);
+    public function expire(array $items);
 
     /**
-     * Purge items tagged with $tag.
-     *
-     * Note: Content nor headers will be hydrated.
-     *
-     * @return Cache[] The purged cache entries.
+     * @param Cache[] $items
      */
-    public function purgeByTag($tag);
+    public function remove(array $items);
 
     /**
-     * Remove all cached entries.
+     * Remove all cache entries.
      */
     public function flush();
 }
