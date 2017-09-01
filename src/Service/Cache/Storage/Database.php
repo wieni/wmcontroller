@@ -215,7 +215,7 @@ class Database implements StorageInterface, PurgerInterface
         try {
             $this->db->update(static::TABLE_ENTRIES)
                 ->fields([
-                    'expire' => time()
+                    'expiry' => time()
                 ])
                 ->condition('id', $ids, 'IN')
                 ->execute();
