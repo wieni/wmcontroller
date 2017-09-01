@@ -39,8 +39,12 @@ class CacheSubscriber implements EventSubscriberInterface
     // Store a map of requests that should be ignored during Kernel::TERMINATE.
     protected $ignores = [];
 
+    protected $ignoreAuthenticatedUsers;
+
     /** @var EntityInterface */
     protected $mainEntity;
+
+    protected $explicitMaxAges;
 
     protected $cacheableStatusCodes = [
         Response::HTTP_OK => true,
@@ -52,19 +56,22 @@ class CacheSubscriber implements EventSubscriberInterface
         array $expiries,
         $store = false,
         $tags = false,
-        $addHeader = false
+        $addHeader = false,
+        $ignoreAuthenticatedUsers = true
     ) {
         $this->storage = $storage;
         $this->expiries = $expiries + ['paths' => [], 'entities' => []];
         $this->store = $store;
         $this->tags = $tags;
         $this->addHeader = $addHeader;
+        $this->ignoreAuthenticatedUsers = $ignoreAuthenticatedUsers;
     }
 
     public static function getSubscribedEvents()
     {
         $events[WmcontrollerEvents::CACHE_HANDLE][] = ['onCachedResponse', 10000];
         $events[KernelEvents::RESPONSE][] = ['onResponse', -255];
+        $events[KernelEvents::RESPONSE][] = ['onResponseEarly', 255];
         $events[KernelEvents::TERMINATE][] = ['onTerminate', 0];
         $events[WmcontrollerEvents::ENTITY_PRESENTED][] = ['onEntityPresented', 0];
         $events[WmcontrollerEvents::CACHE_TAGS][] = ['onTags', 0];
@@ -103,8 +110,38 @@ class CacheSubscriber implements EventSubscriberInterface
         }
     }
 
+    public function onResponseEarly(FilterResponseEvent $event)
+    {
+        if (!$event->isMasterRequest()) {
+            return;
+        }
+
+        $request = $event->getRequest();
+        if ($this->ignore($request)) {
+            return;
+        }
+
+        $response = $event->getResponse();
+        if (
+            $response->headers->hasCacheControlDirective('maxage')
+            || $response->headers->hasCacheControlDirective('s-maxage')
+        ) {
+            $this->explicitMaxAges = [
+                'maxage' => $response->headers
+                    ->getCacheControlDirective('maxage'),
+                's-maxage' => $response->headers
+                    ->getCacheControlDirective('s-maxage'),
+            ];
+        }
+
+    }
+
     public function onResponse(FilterResponseEvent $event)
     {
+        if (!$event->isMasterRequest()) {
+            return;
+        }
+
         $request = $event->getRequest();
         if ($this->ignore($request)) {
             return;
@@ -117,13 +154,18 @@ class CacheSubscriber implements EventSubscriberInterface
 
         // Don't override explicitly set maxage headers.
         if (
-            $response->headers->hasCacheControlDirective('s-maxage')
-            || $response->headers->hasCacheControlDirective('maxage')
+            $response->headers->hasCacheControlDirective('maxage')
+            || $response->headers->hasCacheControlDirective('s-maxage')
         ) {
             return;
         }
 
         if (!isset($this->cacheableStatusCodes[$response->getStatusCode()])) {
+            return;
+        }
+
+        if (!empty($this->explicitMaxAges)) {
+            $this->setMaxAge($response, $this->explicitMaxAges);
             return;
         }
 
@@ -227,8 +269,11 @@ class CacheSubscriber implements EventSubscriberInterface
             return $this->ignores[$uri];
         }
 
-        return $this->ignores[$uri] = $request->hasSession()
-            && $request->getSession()->get('uid') != 0;
+        return $this->ignores[$uri] = (
+            $this->ignoreAuthenticatedUsers
+            && $request->hasSession()
+            && $request->getSession()->get('uid') != 0
+        );
     }
 
     /**
@@ -304,4 +349,3 @@ class CacheSubscriber implements EventSubscriberInterface
         }
     }
 }
-

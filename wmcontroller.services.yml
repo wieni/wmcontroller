@@ -56,6 +56,9 @@ parameters:
     # Add the X-Wm-Cache: HIT/MISS header.
     wmcontroller.cache.hitheader: true
 
+    # Disable caching for authenticated users.
+    wmcontroller.cache.ignore_authenticated_users: true
+
     # Amount of items that should be purged during each cron run.
     wmcontroller.cache.purge_per_cron: 100
 
@@ -145,7 +148,14 @@ services:
             - '%wmcontroller.cache.store%'
             - '%wmcontroller.cache.tags%'
             - '%wmcontroller.cache.hitheader%'
+            - '%wmcontroller.cache.ignore_authenticated_users%'
         tags: [{ name: event_subscriber }]
+
+    wmcontroller.cache.policy:
+        class: Drupal\wmcontroller\Http\Policy\OverrideSessionPolicy
+        arguments: ['%wmcontroller.cache.ignore_authenticated_users%']
+        tags:
+            - { name: page_cache_request_policy }
 
     wmcontroller.cache.storage.mysql:
         class: Drupal\wmcontroller\Service\Cache\Storage\Database
