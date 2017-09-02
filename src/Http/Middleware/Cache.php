@@ -8,7 +8,6 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Drupal\wmcontroller\WmcontrollerEvents;
-use Drupal\Core\PageCache\RequestPolicyInterface;
 
 class Cache implements HttpKernelInterface
 {
@@ -18,17 +17,12 @@ class Cache implements HttpKernelInterface
     /** @var EventDispatcherInterface */
     protected $dispatcher;
 
-    /** @var RequestPolicyInterface */
-    protected $policy;
-
     public function __construct(
         HttpKernelInterface $next,
-        EventDispatcherInterface $dispatcher,
-        RequestPolicyInterface $policy
+        EventDispatcherInterface $dispatcher
     ) {
         $this->next = $next;
         $this->dispatcher = $dispatcher;
-        $this->policy = $policy;
     }
 
     public function handle(
@@ -36,10 +30,7 @@ class Cache implements HttpKernelInterface
         $type = self::MASTER_REQUEST,
         $catch = true
     ) {
-        if (
-            $type !== static::MASTER_REQUEST
-            || $this->policy->check($request) !== RequestPolicyInterface::ALLOW
-        ) {
+        if ($type !== static::MASTER_REQUEST) {
             return $this->next->handle($request, $type, $catch);
         }
 

@@ -163,6 +163,7 @@ services:
         class: Drupal\wmcontroller\Http\Policy\OverrideSessionPolicy
         arguments:
             - '@current_user'
+            - '%wmcontroller.cache.tags%'
             - '%wmcontroller.cache.ignore_authenticated_users%'
             - '%wmcontroller.cache.ignore_roles%'
         tags:
@@ -174,7 +175,7 @@ services:
 
     wmcontroller.cache.middleware:
         class: Drupal\wmcontroller\Http\Middleware\Cache
-        arguments: ['@event_dispatcher', '@page_cache_request_policy']
+        arguments: ['@event_dispatcher']
         tags:
             - { name: http_middleware, priority: 250, responder: true }
 

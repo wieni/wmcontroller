@@ -13,12 +13,15 @@ class OverrideSessionPolicy implements RequestPolicyInterface
 
     protected $ignoreAuthenticatedUsers;
     protected $ignoredRoles;
+    protected $tags;
 
     public function __construct(
         AccountProxyInterface $account,
+        $tags,
         $ignoreAuthenticatedUsers,
         array $ignoredRoles = []
     ) {
+        $this->tags = $tags;
         $this->account = $account;
         $this->ignoreAuthenticatedUsers = $ignoreAuthenticatedUsers;
         $this->ignoredRoles = $ignoredRoles;
@@ -26,7 +29,7 @@ class OverrideSessionPolicy implements RequestPolicyInterface
 
     public function check(Request $request)
     {
-        if ($this->ignoreAuthenticatedUsers) {
+        if (!$this->tags || $this->ignoreAuthenticatedUsers) {
             return null;
         }
 

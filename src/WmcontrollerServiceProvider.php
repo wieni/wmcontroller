@@ -10,8 +10,7 @@ class WmcontrollerServiceProvider implements ServiceModifierInterface
     public function alter(ContainerBuilder $container)
     {
         if (
-            $container->getParameter('wmcontroller.cache.store')
-            && $container->getParameter('wmcontroller.cache.tags')
+            $container->getParameter('wmcontroller.cache.tags')
         ) {
             $container->removeDefinition('http_middleware.page_cache');
         }
