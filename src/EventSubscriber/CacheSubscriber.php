@@ -11,6 +11,7 @@ use Drupal\wmcontroller\Event\CacheTagsEvent;
 use Drupal\wmcontroller\Service\Cache\Storage\StorageInterface;
 use Drupal\wmcontroller\WmcontrollerEvents;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Session\AccountProxyInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -26,6 +27,9 @@ class CacheSubscriber implements EventSubscriberInterface
     /** @var StorageInterface */
     protected $storage;
 
+    /** @var AccountProxyInterface */
+    protected $account;
+
     protected $expiries;
 
     protected $store;
@@ -36,10 +40,8 @@ class CacheSubscriber implements EventSubscriberInterface
 
     protected $presentedEntityTags = [];
 
-    // Store a map of requests that should be ignored during Kernel::TERMINATE.
-    protected $ignores = [];
-
     protected $ignoreAuthenticatedUsers;
+    protected $ignoredRoles;
 
     /** @var EntityInterface */
     protected $mainEntity;
@@ -53,18 +55,22 @@ class CacheSubscriber implements EventSubscriberInterface
 
     public function __construct(
         StorageInterface $storage,
+        AccountProxyInterface $account,
         array $expiries,
         $store = false,
         $tags = false,
         $addHeader = false,
-        $ignoreAuthenticatedUsers = true
+        $ignoreAuthenticatedUsers = true,
+        array $ignoredRoles = []
     ) {
         $this->storage = $storage;
+        $this->account = $account;
         $this->expiries = $expiries + ['paths' => [], 'entities' => []];
         $this->store = $store;
         $this->tags = $tags;
         $this->addHeader = $addHeader;
         $this->ignoreAuthenticatedUsers = $ignoreAuthenticatedUsers;
+        $this->ignoredRoles = $ignoredRoles;
     }
 
     public static function getSubscribedEvents()
@@ -116,11 +122,6 @@ class CacheSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $request = $event->getRequest();
-        if ($this->ignore($request)) {
-            return;
-        }
-
         $response = $event->getResponse();
         if (
             $response->headers->hasCacheControlDirective('maxage')
@@ -133,7 +134,6 @@ class CacheSubscriber implements EventSubscriberInterface
                     ->getCacheControlDirective('s-maxage'),
             ];
         }
-
     }
 
     public function onResponse(FilterResponseEvent $event)
@@ -143,7 +143,7 @@ class CacheSubscriber implements EventSubscriberInterface
         }
 
         $request = $event->getRequest();
-        if ($this->ignore($request)) {
+        if ($this->ignore($request, true)) {
             return;
         }
 
@@ -217,7 +217,7 @@ class CacheSubscriber implements EventSubscriberInterface
         }
 
         $request = $event->getRequest();
-        if ($this->ignore($request)) {
+        if ($this->ignore($request, true)) {
             return;
         }
 
@@ -262,18 +262,26 @@ class CacheSubscriber implements EventSubscriberInterface
         );
     }
 
-    protected function ignore(Request $request)
+    protected function ignore(Request $request, $setting = false)
     {
-        $uri = $this->getRequestUri($request);
-        if (isset($this->ignores[$uri])) {
-            return $this->ignores[$uri];
+        if ($this->ignoreAuthenticatedUsers) {
+            return $request->hasSession()
+                && $request->getSession()->get('uid') != 0;
         }
 
-        return $this->ignores[$uri] = (
-            $this->ignoreAuthenticatedUsers
-            && $request->hasSession()
-            && $request->getSession()->get('uid') != 0
-        );
+        if ($setting) {
+            if ((int) $this->account->id() === 1) {
+                return true;
+            }
+
+            $account = $this->account->getAccount();
+            $has = array_intersect($this->ignoredRoles, $account->getRoles());
+            if (!empty($has)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

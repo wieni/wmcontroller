@@ -59,6 +59,12 @@ parameters:
     # Disable caching for authenticated users.
     wmcontroller.cache.ignore_authenticated_users: true
 
+    # If wmcontroller.cache.ignore_authenticated_users = false
+    # don't set max-ages for these roles:
+    wmcontroller.cache.ignore_roles:
+        - 'admin'
+        - 'editor'
+
     # Amount of items that should be purged during each cron run.
     wmcontroller.cache.purge_per_cron: 100
 
@@ -144,16 +150,21 @@ services:
         class: Drupal\wmcontroller\EventSubscriber\CacheSubscriber
         arguments:
             - '@wmcontroller.cache.storage'
+            - '@current_user'
             - '%wmcontroller.cache.expiry%'
             - '%wmcontroller.cache.store%'
             - '%wmcontroller.cache.tags%'
             - '%wmcontroller.cache.hitheader%'
             - '%wmcontroller.cache.ignore_authenticated_users%'
+            - '%wmcontroller.cache.ignore_roles%'
         tags: [{ name: event_subscriber }]
 
     wmcontroller.cache.policy:
         class: Drupal\wmcontroller\Http\Policy\OverrideSessionPolicy
-        arguments: ['%wmcontroller.cache.ignore_authenticated_users%']
+        arguments:
+            - '@current_user'
+            - '%wmcontroller.cache.ignore_authenticated_users%'
+            - '%wmcontroller.cache.ignore_roles%'
         tags:
             - { name: page_cache_request_policy }
 
