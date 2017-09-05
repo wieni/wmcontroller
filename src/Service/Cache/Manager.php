@@ -16,10 +16,22 @@ class Manager
     public function __construct(
         StorageInterface $storage,
         PurgerInterface $purger
-    )
-    {
+    ) {
         $this->storage = $storage;
         $this->purger = $purger;
+    }
+
+    public function purgeByTags(array $tags)
+    {
+        $items = $this->storage->getByTags($tags);
+        if ($this->purger->purge($items)) {
+            $this->storage->remove($items);
+        }
+    }
+
+    public function expireTags(array $tags)
+    {
+        $this->storage->expire($this->storage->getByTags($tags));
     }
 
     public function purge($amount)
