@@ -53,6 +53,8 @@ class CacheSubscriber implements EventSubscriberInterface
         Response::HTTP_NON_AUTHORITATIVE_INFORMATION => true,
     ];
 
+    protected $ignores = [];
+
     public function __construct(
         StorageInterface $storage,
         AccountProxyInterface $account,
@@ -264,24 +266,29 @@ class CacheSubscriber implements EventSubscriberInterface
 
     protected function ignore(Request $request, $setting = false)
     {
+        $uri = $this->getRequestUri($request);
+        if (isset($this->ignores[$uri][$setting])) {
+            return $this->ignores[$uri][$setting];
+        }
+
         if ($this->ignoreAuthenticatedUsers) {
-            return $request->hasSession()
+            return $this->ignores[$uri][$setting] = $request->hasSession()
                 && $request->getSession()->get('uid') != 0;
         }
 
         if ($setting) {
             if ((int) $this->account->id() === 1) {
-                return true;
+                return $this->ignores[$uri][$setting] = true;
             }
 
             $account = $this->account->getAccount();
             $has = array_intersect($this->ignoredRoles, $account->getRoles());
             if (!empty($has)) {
-                return true;
+                return $this->ignores[$uri][$setting] = true;
             }
         }
 
-        return false;
+        return $this->ignores[$uri][$setting] = false;
     }
 
     /**
