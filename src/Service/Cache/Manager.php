@@ -36,10 +36,9 @@ class Manager
 
     public function purge($amount)
     {
-        $expiredItems = $this->storage->getExpired($amount);
-        if ($this->purger->purge($expiredItems)) {
-            $this->storage->remove($expiredItems);
-        }
+        $this->storage->remove(
+            $this->storage->getExpired($amount)
+        );
     }
 
     public function flush()
