@@ -182,7 +182,7 @@ services:
     wmcontroller.cache.invalidator:
         class: Drupal\wmcontroller\Service\Cache\Invalidator
         arguments:
-            - '@wmcontroller.cache.storage'
+            - '@wmcontroller.cache.manager'
             - '%wmcontroller.cache.ignored_tags%'
         tags:
             - { name: cache_tags_invalidator }
