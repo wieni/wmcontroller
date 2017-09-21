@@ -3,27 +3,24 @@
 namespace Drupal\wmcontroller\Service\Cache;
 
 use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
-use Drupal\wmcontroller\Service\Cache\Storage\StorageInterface;
 
 class Invalidator implements CacheTagsInvalidatorInterface
 {
-    /** @var StorageInterface */
-    protected $storage;
+    /** @var Manager */
+    protected $manager;
     /** @var array */
     protected $ignores;
 
-    public function __construct(StorageInterface $storage, $ignoredTags = [])
+    public function __construct(Manager $manager, $ignoredTags = [])
     {
-        $this->storage = $storage;
+        $this->manager = $manager;
         $this->ignores = $ignoredTags;
     }
 
     public function invalidateTags(array $tags)
     {
-        $tags = array_filter($tags, [$this, 'filterIgnored']);
-
-        $this->storage->expire(
-            $this->storage->getByTags($tags)
+        $this->manager->purgeByTags(
+            array_filter($tags, [$this, 'filterIgnored'])
         );
     }
 

@@ -277,22 +277,22 @@ $dispatcher = injectedService('wmcontroller.cache.dispatcher');
 $dispatcher->dispatchTags(['front', 'article:list']);
 ```
 
-#### expire a tag
+#### purge a tag
 
 ```php
-/** @var Drupal\wmcontroller\Service\Cache\Storage\StorageInterface; */
-$storage = injectedService('wmcontroller.cache.storage');
-$storage->expireTags($tags);
+/** @var Drupal\wmcontroller\Service\Cache\Manager; */
+$manager = injectedService('wmcontroller.cache.manager');
+$manager->purgeByTags($tags);
 ```
 
-During the next cron job expired pages will be purged
+All items associated to one of those tags will be purged immediately.
 
 #### a full purge
 
 ```php
 /** @var Drupal\wmcontroller\Service\Cache\Manager; */
 $manager = injectedService('wmcontroller.cache.manager');
-$manager->purge();
+$manager->flush();
 ```
 
 #### purge your cdn
