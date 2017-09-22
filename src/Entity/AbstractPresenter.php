@@ -27,7 +27,7 @@ abstract class AbstractPresenter implements PresenterInterface
         foreach ($this->methodNames($method) as $method) {
             $call = [$this->entity, $method];
             if (is_callable($call)) {
-                return call_user_func($call);
+                return call_user_func_array($call, $args);
             }
         }
 
