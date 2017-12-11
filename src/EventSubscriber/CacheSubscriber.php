@@ -183,6 +183,7 @@ class CacheSubscriber implements EventSubscriberInterface
                 $response,
                 ['s-maxage' => $smax, 'maxage' => $max]
             );
+            return;
         }
 
         $path = $request->getPathInfo();
