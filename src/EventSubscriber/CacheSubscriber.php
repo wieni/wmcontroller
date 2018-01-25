@@ -2,6 +2,7 @@
 
 namespace Drupal\wmcontroller\EventSubscriber;
 
+use Drupal\Core\PageCache\ResponsePolicyInterface;
 use Drupal\wmcontroller\Exception\NoSuchCacheEntryException;
 use Drupal\wmcontroller\Entity\Cache;
 use Drupal\wmcontroller\Http\CachedResponse;
@@ -29,6 +30,9 @@ class CacheSubscriber implements EventSubscriberInterface
 
     /** @var AccountProxyInterface */
     protected $account;
+
+    /** @var ResponsePolicyInterface */
+    protected $responseCachePolicy;
 
     protected $expiries;
 
@@ -58,6 +62,7 @@ class CacheSubscriber implements EventSubscriberInterface
     public function __construct(
         StorageInterface $storage,
         AccountProxyInterface $account,
+        ResponsePolicyInterface $responseCachePolicy,
         array $expiries,
         $store = false,
         $tags = false,
@@ -73,6 +78,7 @@ class CacheSubscriber implements EventSubscriberInterface
         $this->addHeader = $addHeader;
         $this->ignoreAuthenticatedUsers = $ignoreAuthenticatedUsers;
         $this->ignoredRoles = $ignoredRoles;
+        $this->responseCachePolicy = $responseCachePolicy;
     }
 
     public static function getSubscribedEvents()
@@ -159,6 +165,15 @@ class CacheSubscriber implements EventSubscriberInterface
             $response->headers->hasCacheControlDirective('maxage')
             || $response->headers->hasCacheControlDirective('s-maxage')
         ) {
+            return;
+        }
+
+        // If this response is deemed uncacheable, don't cache it
+        if (
+            !($response instanceof CachedResponse)
+            && !$this->isCacheable($response, $request)
+        ) {
+            $this->setResponseNotCacheable($response);
             return;
         }
 
@@ -363,5 +378,18 @@ class CacheSubscriber implements EventSubscriberInterface
         if (!empty($definition['s-maxage'])) {
             $response->setSharedMaxAge($definition['s-maxage']);
         }
+    }
+
+    protected function isCacheable(Response $response, Request $request)
+    {
+        return $this->responseCachePolicy->check($response, $request) !== ResponsePolicyInterface::DENY;
+    }
+
+    protected function setResponseNotCacheable(Response $response) {
+        $response->headers->set('Cache-Control', 'no-cache, must-revalidate');
+        $response->setExpires(\DateTime::createFromFormat('j-M-Y H:i:s T', '19-Nov-1978 05:00:00 UTC'));
+        $response->setEtag(NULL);
+        $response->setLastModified(NULL);
+        $response->setVary(NULL);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Drupal\wmcontroller\Controller;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Controller\ControllerResolverInterface;
 use Drupal\Core\Entity\EntityInterface;
@@ -23,19 +24,25 @@ class FrontController extends ControllerBase
     /** @var Dispatcher */
     protected $dispatcher;
 
+    /** @var \Drupal\Core\Config\Config */
+    protected $config;
+
     public function __construct(
         ControllerResolverInterface $controllerResolver,
-        Dispatcher $dispatcher
+        Dispatcher $dispatcher,
+        ConfigFactoryInterface $configFactory
     ) {
         $this->dispatcher = $dispatcher;
         $this->controllerResolver = $controllerResolver;
+        $this->config = $configFactory->get('wmcontroller');
     }
 
     public static function create(ContainerInterface $container)
     {
         return new static(
             $container->get('controller_resolver'),
-            $container->get('wmcontroller.cache.dispatcher')
+            $container->get('wmcontroller.cache.dispatcher'),
+            $container->get('config.factory')
         );
     }
 
@@ -68,6 +75,21 @@ class FrontController extends ControllerBase
         }
 
         $this->dispatcher->dispatchMainEntity($entity);
+
+        $language = $this->languageManager()->getCurrentLanguage();
+
+        $redirectUntranslated = $this->config->get('redirect_untranslated') ?: false;
+        $redirectPath = $this->config->get('redirect_untranslated_path') ?: '<front>';
+
+        if ($redirectUntranslated && $entity->language()->getId() !== $language->getId()) {
+            return $this->redirect(
+                $redirectPath,
+                [],
+                [
+                    'language' => $language
+                ]
+            );
+        }
 
         return call_user_func_array(
             $controller,
