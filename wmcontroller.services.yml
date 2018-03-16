@@ -71,11 +71,14 @@ parameters:
     # Flush all entries on `drush cr` or require `drush cc wmcontroller`
     wmcontroller.cache.flush_on_cache_rebuild: false
 
-    # The service responsable for storing cache entries
+    # The service responsible for storing cache entries
     wmcontroller.cache.storage: wmcontroller.cache.storage.mysql
 
-    # The service responsable for purging cache entries
+    # The service responsible for purging cache entries
     wmcontroller.cache.purger: wmcontroller.cache.storage.mysql
+
+    # The service responsible for deciding the max-age
+    wmcontroller.maxage.service: wmcontroller.maxage.default
 
     # List of routes that need to have their ?page= query param rewritten to a
     # route param.
@@ -151,7 +154,7 @@ services:
         arguments:
             - '@wmcontroller.cache.storage'
             - '@current_user'
-            - '%wmcontroller.cache.expiry%'
+            - '@wmcontroller.maxage'
             - '%wmcontroller.cache.store%'
             - '%wmcontroller.cache.tags%'
             - '%wmcontroller.cache.hitheader%'
@@ -192,3 +195,11 @@ services:
         arguments: ['%wmcontroller.pager_routes%']
         tags: [{ name: event_subscriber }]
 
+    wmcontroller.maxage:
+        class: Drupal\wmcontroller\Service\Maxage\MaxAgeManager
+        arguments: ['@service_container', '%wmcontroller.maxage.service%']
+
+    wmcontroller.maxage.default:
+        class: Drupal\wmcontroller\Service\Maxage\DefaultMaxAge
+        arguments: ['%wmcontroller.cache.expiry%']
+        tags: [{ name: event_subscriber }]

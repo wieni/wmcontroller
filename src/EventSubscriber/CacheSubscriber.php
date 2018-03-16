@@ -6,12 +6,11 @@ use Drupal\wmcontroller\Exception\NoSuchCacheEntryException;
 use Drupal\wmcontroller\Entity\Cache;
 use Drupal\wmcontroller\Http\CachedResponse;
 use Drupal\wmcontroller\Event\EntityPresentedEvent;
-use Drupal\wmcontroller\Event\MainEntityEvent;
 use Drupal\wmcontroller\Event\CacheTagsEvent;
 use Drupal\wmcontroller\Service\Cache\Storage\StorageInterface;
 use Drupal\wmcontroller\WmcontrollerEvents;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\wmcontroller\Service\Maxage\MaxAgeInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -30,7 +29,8 @@ class CacheSubscriber implements EventSubscriberInterface
     /** @var AccountProxyInterface */
     protected $account;
 
-    protected $expiries;
+    /** @var MaxAgeInterface */
+    protected $maxAgeStrategy;
 
     protected $store;
 
@@ -43,11 +43,6 @@ class CacheSubscriber implements EventSubscriberInterface
     protected $ignoreAuthenticatedUsers;
     protected $ignoredRoles;
 
-    /** @var EntityInterface */
-    protected $mainEntity;
-
-    protected $explicitMaxAges;
-
     protected $cacheableStatusCodes = [
         Response::HTTP_OK => true,
         Response::HTTP_NON_AUTHORITATIVE_INFORMATION => true,
@@ -58,7 +53,7 @@ class CacheSubscriber implements EventSubscriberInterface
     public function __construct(
         StorageInterface $storage,
         AccountProxyInterface $account,
-        array $expiries,
+        MaxAgeInterface $maxAgeStrategy,
         $store = false,
         $tags = false,
         $addHeader = false,
@@ -67,7 +62,7 @@ class CacheSubscriber implements EventSubscriberInterface
     ) {
         $this->storage = $storage;
         $this->account = $account;
-        $this->expiries = $expiries + ['paths' => [], 'entities' => []];
+        $this->maxAgeStrategy = $maxAgeStrategy;
         $this->store = $store;
         $this->tags = $tags;
         $this->addHeader = $addHeader;
@@ -79,18 +74,11 @@ class CacheSubscriber implements EventSubscriberInterface
     {
         $events[WmcontrollerEvents::CACHE_HANDLE][] = ['onCachedResponse', 10000];
         $events[KernelEvents::RESPONSE][] = ['onResponse', -255];
-        $events[KernelEvents::RESPONSE][] = ['onResponseEarly', 255];
         $events[KernelEvents::TERMINATE][] = ['onTerminate', 0];
         $events[WmcontrollerEvents::ENTITY_PRESENTED][] = ['onEntityPresented', 0];
         $events[WmcontrollerEvents::CACHE_TAGS][] = ['onTags', 0];
-        $events[WmcontrollerEvents::MAIN_ENTITY_RENDER][] = ['onMainEntity', 0];
 
         return $events;
-    }
-
-    public function onMainEntity(MainEntityEvent $event)
-    {
-        $this->mainEntity = $event->getEntity();
     }
 
     public function onCachedResponse(GetResponseEvent $event)
@@ -115,26 +103,6 @@ class CacheSubscriber implements EventSubscriberInterface
             }
             $event->setResponse($response);
         } catch (NoSuchCacheEntryException $e) {
-        }
-    }
-
-    public function onResponseEarly(FilterResponseEvent $event)
-    {
-        if (!$event->isMasterRequest()) {
-            return;
-        }
-
-        $response = $event->getResponse();
-        if (
-            $response->headers->hasCacheControlDirective('maxage')
-            || $response->headers->hasCacheControlDirective('s-maxage')
-        ) {
-            $this->explicitMaxAges = [
-                'maxage' => $response->headers
-                    ->getCacheControlDirective('maxage'),
-                's-maxage' => $response->headers
-                    ->getCacheControlDirective('s-maxage'),
-            ];
         }
     }
 
@@ -166,37 +134,10 @@ class CacheSubscriber implements EventSubscriberInterface
             return;
         }
 
-        if (!empty($this->explicitMaxAges)) {
-            $this->setMaxAge($response, $this->explicitMaxAges);
-            return;
-        }
-
-        if ($entityExpiry = $this->getMaxAgesForMainEntity()) {
-            $this->setMaxAge($response, $entityExpiry);
-            return;
-        }
-
-        $smax = $request->attributes->get('_smaxage', 0);
-        $max = $request->attributes->get('_maxage', 0);
-        if ($smax || $max) {
-            $this->setMaxAge(
-                $response,
-                ['s-maxage' => $smax, 'maxage' => $max]
-            );
-            return;
-        }
-
-        $path = $request->getPathInfo();
-        foreach ($this->expiries['paths'] as $re => $definition) {
-            // # should be safe... I guess
-            if (!preg_match('#' . $re . '#', $path)) {
-                continue;
-            }
-
-            $this->setMaxAge($response, $definition);
-
-            return;
-        }
+        $this->setMaxAge(
+            $response,
+            $this->maxAgeStrategy->getMaxAge($request)
+        );
     }
 
     public function onEntityPresented(EntityPresentedEvent $event)
@@ -310,28 +251,6 @@ class CacheSubscriber implements EventSubscriberInterface
         return $request->getSchemeAndHttpHost() .
             $request->getBaseUrl() .
             $request->getPathInfo();
-    }
-
-    protected function getMaxAgesForMainEntity()
-    {
-        if (!isset($this->mainEntity)) {
-            return null;
-        }
-
-        $type = $this->mainEntity->getEntityTypeId();
-        if (!isset($this->expiries['entities'][$type])) {
-            return null;
-        }
-
-        $bundleDefs = $this->expiries['entities'][$type];
-
-        $bundle = $this->mainEntity->bundle();
-
-        if (isset($bundleDefs['_default'])) {
-            $bundleDefs += [$bundle => $bundleDefs['_default']];
-        }
-
-        return $bundleDefs[$bundle];
     }
 
     protected function setMaxAge(Response $response, array $definition)
