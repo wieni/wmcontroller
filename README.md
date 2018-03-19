@@ -1,6 +1,15 @@
-# Wieni Controller
+<a href="https://www.wieni.be">
+    <img src="https://www.wieni.be/themes/custom/drupack/logo.svg" alt="Wieni logo" title="Wieni" align="right" height="60" />
+</a>
 
-Use bundle-specific controllers for nodes and taxonomies.
+Wieni Controller
+======================
+
+[![Latest Stable Version](https://poser.pugx.org/wieni/wmcontroller/v/stable)](https://packagist.org/packages/wieni/wmcontroller)
+[![Total Downloads](https://poser.pugx.org/wieni/wmcontroller/downloads)](https://packagist.org/packages/wieni/wmcontroller)
+[![License](https://poser.pugx.org/wieni/wmcontroller/license)](https://packagist.org/packages/wieni/wmcontroller)
+
+> Use bundle-specific controllers for nodes and taxonomies.
 
 ## Installation
 
