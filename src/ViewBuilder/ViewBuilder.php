@@ -68,6 +68,8 @@ class ViewBuilder
     {
         $this->entity = $entity;
 
+        $this->dispatcher->dispatchMainEntity($entity);
+
         return $this;
     }
 
