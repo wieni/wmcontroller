@@ -48,6 +48,12 @@ class CacheSubscriber implements EventSubscriberInterface
         Response::HTTP_NON_AUTHORITATIVE_INFORMATION => true,
     ];
 
+    protected $cacheableMethods = [
+        Request::METHOD_GET => true,
+        Request::METHOD_HEAD => true,
+        Request::METHOD_OPTIONS => true,
+    ];
+
     protected $ignores = [];
 
     public function __construct(
@@ -211,6 +217,10 @@ class CacheSubscriber implements EventSubscriberInterface
         $uri = $this->getRequestUri($request);
         if (isset($this->ignores[$uri][$setting])) {
             return $this->ignores[$uri][$setting];
+        }
+
+        if (!isset($this->cacheableMethods[$request->getMethod()])) {
+            return $this->ignores[$uri][$setting] = true;
         }
 
         if ($this->ignoreAuthenticatedUsers) {
