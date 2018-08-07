@@ -2,6 +2,8 @@
 
 namespace Drupal\wmcontroller\EventSubscriber;
 
+use Drupal\Core\PageCache\ResponsePolicyInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\wmcontroller\Exception\NoSuchCacheEntryException;
 use Drupal\wmcontroller\Entity\Cache;
 use Drupal\wmcontroller\Http\CachedResponse;
@@ -32,6 +34,9 @@ class CacheSubscriber implements EventSubscriberInterface
     /** @var MaxAgeInterface */
     protected $maxAgeStrategy;
 
+    /** @var ResponsePolicyInterface */
+    protected $cacheResponsePolicy;
+
     protected $store;
 
     protected $tags;
@@ -42,6 +47,8 @@ class CacheSubscriber implements EventSubscriberInterface
 
     protected $ignoreAuthenticatedUsers;
     protected $ignoredRoles;
+    protected $groupedRoles;
+    protected $whitelistedQueryParams;
 
     protected $cacheableStatusCodes = [
         Response::HTTP_OK => true,
@@ -60,11 +67,14 @@ class CacheSubscriber implements EventSubscriberInterface
         StorageInterface $storage,
         AccountProxyInterface $account,
         MaxAgeInterface $maxAgeStrategy,
+        ResponsePolicyInterface $cacheResponsePolicy,
         $store = false,
         $tags = false,
         $addHeader = false,
         $ignoreAuthenticatedUsers = true,
-        array $ignoredRoles = []
+        array $ignoredRoles = [],
+        array $groupedRoles = [],
+        array $whitelistedQueryParams = []
     ) {
         $this->storage = $storage;
         $this->account = $account;
@@ -74,6 +84,9 @@ class CacheSubscriber implements EventSubscriberInterface
         $this->addHeader = $addHeader;
         $this->ignoreAuthenticatedUsers = $ignoreAuthenticatedUsers;
         $this->ignoredRoles = $ignoredRoles;
+        $this->groupedRoles = $groupedRoles;
+        $this->cacheResponsePolicy = $cacheResponsePolicy;
+        $this->whitelistedQueryParams = $whitelistedQueryParams;
     }
 
     public static function getSubscribedEvents()
@@ -140,9 +153,29 @@ class CacheSubscriber implements EventSubscriberInterface
             return;
         }
 
+        $definition = [
+            'maxage' => 0,
+            's-maxage' => 0,
+        ];
+
+        $cacheable = $this->cacheResponsePolicy->check(
+            $event->getResponse(),
+            $event->getRequest()
+        );
+
+        // Don't cache if Drupal thinks it's a bad idea to cache.
+        // The cacheResponsePolicy by default has a few rules:
+        // - page_cache_kill_switch triggers when drupal_get_message is used
+        // - page_cache_no_cache_routes looks for the 'no_cache' route option
+        // - page_cache_no_server_error makes sure we don't cache server errors
+        // ...
+        if ($cacheable !== ResponsePolicyInterface::DENY) {
+            $definition = $this->maxAgeStrategy->getMaxAge($request);
+        }
+
         $this->setMaxAge(
             $response,
-            $this->maxAgeStrategy->getMaxAge($request)
+            $definition
         );
     }
 
@@ -202,7 +235,7 @@ class CacheSubscriber implements EventSubscriberInterface
         // (we're in the kernel::TERMINATE phase)
         $this->storage->set(
             new Cache(
-                $this->getRequestUri($request),
+                $this->getCacheKey($request, true),
                 $request->getMethod(),
                 $body,
                 $headers,
@@ -224,18 +257,22 @@ class CacheSubscriber implements EventSubscriberInterface
         }
 
         if ($this->ignoreAuthenticatedUsers) {
-            return $this->ignores[$uri][$setting] = $request->hasSession()
-                && $request->getSession()->get('uid') != 0;
+            $uid = $this->getUid($request, $setting);
+            return $this->ignores[$uri][$setting] = $uid != 0;
+        }
+
+        if ($this->ignoredRoles) {
+            $has = array_intersect(
+                $this->ignoredRoles,
+                $this->getRoles($request, $setting)
+            );
+            if (!empty($has)) {
+                return $this->ignores[$uri][$setting] = true;
+            }
         }
 
         if ($setting) {
             if ((int) $this->account->id() === 1) {
-                return $this->ignores[$uri][$setting] = true;
-            }
-
-            $account = $this->account->getAccount();
-            $has = array_intersect($this->ignoredRoles, $account->getRoles());
-            if (!empty($has)) {
                 return $this->ignores[$uri][$setting] = true;
             }
         }
@@ -251,21 +288,68 @@ class CacheSubscriber implements EventSubscriberInterface
     protected function getCache(Request $request)
     {
         return $this->storage->get(
-            $this->getRequestUri($request),
+            $this->getCacheKey($request, false),
             $request->getMethod()
+        );
+    }
+
+    protected function getCacheKey(Request $request, $setting)
+    {
+        return $this->appendRolesToCacheKey(
+            $request,
+            $this->getRequestUri($request),
+            $setting
         );
     }
 
     protected function getRequestUri(Request $request)
     {
-        return $request->getSchemeAndHttpHost() .
+        $uri = $request->getSchemeAndHttpHost() .
             $request->getBaseUrl() .
             $request->getPathInfo();
+
+        $query = [];
+        parse_str($request->getQueryString() ?: '', $query);
+        $query = array_intersect_key(
+            $query,
+            // Todo: whitelist-per request ( routing hasn't happened yet, so can't use route object )
+            // perhaps path-based regex like we do for max-ages
+            array_flip($this->whitelistedQueryParams)
+        );
+
+        $query = http_build_query($query);
+        if ($query) {
+            $uri .= '?' . $query;
+        }
+
+        return $uri;
+    }
+
+    protected function appendRolesToCacheKey(Request $request, string $key, bool $setting)
+    {
+        if ($this->ignoreAuthenticatedUsers) {
+            return $key;
+        }
+
+        $uid = $this->getUid($request, $setting);
+        $roles = $this->getRoles($request, $setting);
+
+        if ($uid === 1) {
+            $roles[] = 'administrator';
+        }
+
+        $roles = $this->getRoleGroups($roles);
+
+        if ($roles) {
+            $key .= '#cids=' . implode(',', $roles);
+        }
+
+        return $key;
     }
 
     protected function setMaxAge(Response $response, array $definition)
     {
-        if (empty($definition['maxage']) && empty($definition['s-maxage'])) {
+        if (!isset($definition['maxage']) && !isset($definition['s-maxage'])) {
             return;
         }
 
@@ -292,5 +376,45 @@ class CacheSubscriber implements EventSubscriberInterface
         if (!empty($definition['s-maxage'])) {
             $response->setSharedMaxAge($definition['s-maxage']);
         }
+    }
+
+    protected function getUid(Request $request, $setting)
+    {
+        if ($setting) {
+            return $this->account->id();
+        }
+        if (!$request->hasSession() || !$request->getSession()->isStarted()) {
+            return 0;
+        }
+
+        return $request->getSession()->get('uid', 0);
+    }
+
+    protected function getRoles(Request $request, $setting)
+    {
+        if ($setting) {
+            return $this->account->getRoles();
+        }
+        if (!$request->hasSession() || !$request->getSession()->isStarted()) {
+            return ['anonymous'];
+        }
+
+        return $request->getSession()->get('roles', ['anonymous']);
+    }
+
+    protected function getRoleGroups(array $roles = [])
+    {
+        $names = [];
+        foreach ($this->groupedRoles as $group) {
+            $strict = $group['strict'] ?? false;
+            $has = array_intersect($roles, $group['roles'] ?? []);
+            if (
+                (!$strict && $has)
+                || ($strict && count($has) === count($roles))
+            ) {
+                $names[] = $group['name'];
+            }
+        }
+        return $names;
     }
 }

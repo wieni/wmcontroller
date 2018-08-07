@@ -78,3 +78,14 @@ function wmcontroller_update_8001()
     drupal_install_schema('wmcontroller');
 }
 
+/**
+ * Logout all users by truncating the session table
+ * Note: HOOK_logout won't be called
+ */
+function wmcontroller_update_8002()
+{
+    $db = \Drupal::database();
+    if ($db->schema()->tableExists('sessions')) {
+        $db->truncate('sessions')->execute();
+    }
+}

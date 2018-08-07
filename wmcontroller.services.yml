@@ -38,11 +38,9 @@ parameters:
             # '^/user(/.*)?$': { maxage: 0, s-maxage: 0 }
             '.':             { maxage: 0, s-maxage: 0 }
 
-
     # Ignore purges for tags that match these regexes.
     wmcontroller.cache.ignored_tags:
         - 'config:block.*'
-
 
     # Store the contents of the response and serve it.
     # If disabled, only tags will be stored.
@@ -57,13 +55,38 @@ parameters:
     wmcontroller.cache.hitheader: true
 
     # Disable caching for authenticated users.
+    # Note: There is a small performance penalty when this is set to false.
     wmcontroller.cache.ignore_authenticated_users: true
 
     # If wmcontroller.cache.ignore_authenticated_users = false
-    # don't set max-ages for these roles:
+    # Skip cache entirely for these roles.
     wmcontroller.cache.ignore_roles:
         - 'admin'
         - 'editor'
+
+    # If wmcontroller.cache.ignore_authenticated_users = false
+    # Group cache entries for these roles.
+    # Note: This allows one path to cache different content based on roles.
+    # Make sure your caching layers ( CDN, Varnish, ... ) can handle this!
+    wmcontroller.cache.grouped_roles:
+          # The cache name.
+        - name: 'editors'
+
+          # Set strict to true if the user needs to have all roles to belong here.
+          strict: false
+
+          # The required role(s), if strict is true, the user needs to have all
+          # roles that are defined here to belong to this group.
+          roles:
+              - 'editor'
+
+        - name: 'anonymous'
+          roles:
+              - 'anonymous'
+
+    # Whitelisted query parameters
+    wmcontroller.cache.query.whitelist:
+        - 'page'
 
     # Amount of items that should be purged during each cron run.
     wmcontroller.cache.purge_per_cron: 100
@@ -155,11 +178,14 @@ services:
             - '@wmcontroller.cache.storage'
             - '@current_user'
             - '@wmcontroller.maxage'
+            - '@page_cache_response_policy'
             - '%wmcontroller.cache.store%'
             - '%wmcontroller.cache.tags%'
             - '%wmcontroller.cache.hitheader%'
             - '%wmcontroller.cache.ignore_authenticated_users%'
             - '%wmcontroller.cache.ignore_roles%'
+            - '%wmcontroller.cache.grouped_roles%'
+            - '%wmcontroller.cache.query.whitelist%'
         tags: [{ name: event_subscriber }]
 
     wmcontroller.cache.policy:

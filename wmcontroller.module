@@ -1,5 +1,6 @@
 <?php
 
+use Drupal\Core\Session\AccountInterface;
 use Drupal\wmcontroller\EventSubscriber\PagerRewriteSubscriber;
 
 /**
@@ -256,3 +257,14 @@ function wmcontroller_preprocess_pager(&$variables)
     $variables['#cache']['contexts'][] = 'url.query_args';
 }
 
+function wmcontroller_user_login(AccountInterface $account)
+{
+    // We store the user roles in session in order to apply different caching
+    // behaviours based on those roles.
+    \Drupal::getContainer()
+        ->get('session')
+        ->set(
+            'roles',
+            $account->getRoles()
+        );
+}
