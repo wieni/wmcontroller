@@ -28,8 +28,7 @@ class Database implements StorageInterface
 
     public function load($id, $includeBody = true)
     {
-        $item = $this->loadMultiple([$id], $includeBody);
-        $item = reset($item);
+        $item = $this->loadMultiple([$id], $includeBody)->current();
         if (!$item) {
             throw new NoSuchCacheEntryException($id);
         }
@@ -37,8 +36,12 @@ class Database implements StorageInterface
         return $item;
     }
 
-    public function loadMultiple(array $ids, $includeBody = true)
+    public function loadMultiple(array $ids, $includeBody = true): \Iterator
     {
+        if (empty($ids)) {
+            return;
+        }
+
         $fields = ['id', 'uri', 'method', 'expiry'];
         if ($includeBody) {
             $fields[] = 'content';
@@ -51,12 +54,9 @@ class Database implements StorageInterface
             ->condition('c.expiry', time(), '>=')
             ->execute();
 
-        $items = array_fill_keys($ids, null);
         while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-            $items[$row['id']] = $this->assocRowToEntry($row);
+            yield $this->assocRowToEntry($row);
         }
-
-        return array_filter($items);
     }
 
     public function set(Cache $item, array $tags)
@@ -117,7 +117,8 @@ class Database implements StorageInterface
         $q->innerJoin(self::TABLE_TAGS, 't', 't.id = c.id');
         $q->condition('t.tag', $tags, 'IN');
 
-        return $q->execute()->fetchAll(\PDO::FETCH_COLUMN);
+        $ids = $q->execute()->fetchAll(\PDO::FETCH_COLUMN);
+        return $ids;
     }
 
     public function remove(array $ids)

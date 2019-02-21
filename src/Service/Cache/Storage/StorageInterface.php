@@ -35,9 +35,9 @@ interface StorageInterface
      * @param bool $includeBody Whether or not the response body and headers
      *  should be included
      *
-     * @return Cache[]
+     * @return \Iterator An Iterator that contains Cache items
      */
-    public function loadMultiple(array $ids, $includeBody);
+    public function loadMultiple(array $ids, $includeBody): \Iterator; // I really want to enforce this
 
     /**
      * @param Cache $item
