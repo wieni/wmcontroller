@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\wmcontroller\Service\Maxage;
+namespace Drupal\wmcontroller\Service\Cache;
 
 use Drupal\wmcontroller\Event\MainEntityEvent;
 use Drupal\wmcontroller\WmcontrollerEvents;
@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
-class DefaultMaxAge implements EventSubscriberInterface, MaxAgeInterface
+class MaxAgeDecider implements EventSubscriberInterface, MaxAgeInterface
 {
     protected $expiries;
     /** @var \Drupal\Core\Entity\EntityInterface */

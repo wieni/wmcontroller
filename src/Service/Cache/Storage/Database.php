@@ -69,6 +69,8 @@ class Database implements StorageInterface
             // Add cache entry
             $this->db->upsert(self::TABLE_ENTRIES)
                 ->key($id)
+                // TODO: add validation that the serializer made an associative
+                // array with all the necessary fields.
                 ->fields($this->serializer->normalize($item))
                 ->execute();
 
@@ -95,14 +97,15 @@ class Database implements StorageInterface
         unset($tx); // commit, btw this is marginaal AS FUCK.
     }
 
-    public function getExpired($amount)
+    public function removeExpired($amount)
     {
         $q = $this->db->select(self::TABLE_ENTRIES, 'c')
             ->fields('c', ['id']);
         $q->condition('c.expiry', time(), '<');
         $q->range(0, (int) $amount);
 
-        return $q->execute()->fetchAll(\PDO::FETCH_COLUMN);
+        $ids = $q->execute()->fetchAll(\PDO::FETCH_COLUMN);
+        $this->remove($ids);
     }
 
     public function getByTags(array $tags)

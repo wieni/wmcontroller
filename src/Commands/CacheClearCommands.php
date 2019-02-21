@@ -2,18 +2,16 @@
 
 namespace Drupal\wmcontroller\Commands;
 
-use Drupal\wmcontroller\Service\Cache\Manager;
+use Drupal\wmcontroller\Service\Cache\Storage\StorageInterface;
 use Drush\Commands\DrushCommands;
 
 class CacheClearCommands extends DrushCommands
 {
-    /** @var Manager */
-    protected $manager;
+    /** @var \Drupal\wmcontroller\Service\Cache\Storage\StorageInterface */
+    protected $storage;
 
-    public function __construct(
-        Manager $manager
-    ) {
-        $this->manager = $manager;
+    public function __construct(StorageInterface $storage) {
+        $this->storage = $storage;
     }
 
     /**
@@ -27,6 +25,6 @@ class CacheClearCommands extends DrushCommands
             return;
         }
 
-        $types['wmcontroller'] = [$this->manager, 'flush'];
+        $types['wmcontroller'] = [$this->storage, 'flush'];
     }
 }

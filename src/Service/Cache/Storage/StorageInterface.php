@@ -8,17 +8,6 @@ use Drupal\wmcontroller\Exception\NoSuchCacheEntryException;
 interface StorageInterface
 {
     /**
-     * Get expired items, limited by $amount.
-     *
-     * Note: Content nor headers will be hydrated.
-     *
-     * @param int $amount
-     *
-     * @return string[] The expired cache ids
-     */
-    public function getExpired($amount);
-
-    /**
      * @param string $id
      *
      * @param bool $includeBody Whether or not the response body and headers
@@ -37,7 +26,7 @@ interface StorageInterface
      *
      * @return \Iterator An Iterator that contains Cache items
      */
-    public function loadMultiple(array $ids, $includeBody): \Iterator; // I really want to enforce this
+    public function loadMultiple(array $ids, $includeBody = true): \Iterator; // I really want to enforce this
 
     /**
      * @param Cache $item
@@ -55,7 +44,14 @@ interface StorageInterface
     public function getByTags(array $tags);
 
     /**
-     * @param string[] The expired cache ids
+     * Remove expired items from storage.
+     *
+     * @param int $amount
+     */
+    public function removeExpired($amount);
+
+    /**
+     * @param string[] The cache ids to remove
      */
     public function remove(array $ids);
 

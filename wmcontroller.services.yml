@@ -105,7 +105,21 @@ parameters:
     wmcontroller.cache.storage: wmcontroller.cache.storage.mysql
 
     # The service responsible for deciding the max-age
-    wmcontroller.maxage.service: wmcontroller.maxage.default
+    wmcontroller.cache.maxage: wmcontroller.cache.maxage.default
+
+    # The service responsible for building the cache item
+    wmcontroller.cache.builder: wmcontroller.cache.builder.default
+
+    # The service responsible for deciding the max-age
+    # Note: make sure the serializer returns a format that is expected by the
+    # cache storage.
+    wmcontroller.cache.serializer: wmcontroller.cache.builder.default
+
+    # The service responsible for invalidating tags
+    wmcontroller.cache.invalidator: wmcontroller.cache.invalidator.default
+
+    # The service responsible for building the cache key
+    wmcontroller.cache.keygenerator: wmcontroller.cache.keygenerator.default
 
     # List of routes that need to have their ?page= query param rewritten to a
     # route param.
@@ -115,15 +129,25 @@ parameters:
     wmcontroller.cache.stripped_headers:
         - 'x-ua-compatible'
 
+    # If an invalidation causes removal of more than this amount of pages
+    # a purge will be done instead. Useful if your CDN charges per path.
+    # Note: By default this number is set to an insanely high number. If you
+    # use a CDN that charges for invalidations. Set this number much lower.
+    wmcontroller.max_purges_per_invalidation: 100000
+
 services:
     wmcontroller.routing.injectfrontcontroller:
         class:  Drupal\wmcontroller\EventSubscriber\InjectFrontControllerRouteSubscriber
-        arguments: ['%wmcontroller.settings%']
+        arguments:
+            - '%wmcontroller.settings%'
         tags: [{ name: event_subscriber }]
 
     wmcontroller.service.responsebuilder:
         class: Drupal\wmcontroller\Service\ResponseBuilder
-        arguments: ['@main_content_renderer.html', '@request_stack', '@current_route_match']
+        arguments:
+            - '@main_content_renderer.html'
+            - '@request_stack'
+            - '@current_route_match'
 
     wmcontroller.renderer.viewbuilder:
         class: Drupal\wmcontroller\EventSubscriber\ViewRendererSubscriber
@@ -131,7 +155,8 @@ services:
 
     wmcontroller.service.templatelocator:
         class: Drupal\wmcontroller\Service\TemplateLocator
-        arguments: ['%wmcontroller.settings%']
+        arguments:
+             - '%wmcontroller.settings%'
 
     wmcontroller.viewbuilder:
         class: Drupal\wmcontroller\ViewBuilder\ViewBuilder
@@ -143,7 +168,8 @@ services:
 
     wmcontroller.presenter.factory:
         class: Drupal\wmcontroller\Service\PresenterFactory
-        arguments: ['@service_container']
+        arguments:
+            - '@service_container'
 
     wmcontroller.presenter.subscriber:
         class: Drupal\wmcontroller\EventSubscriber\PresenterSubscriber
@@ -158,7 +184,8 @@ services:
 
     wmcontroller.cache.dispatcher:
         class: Drupal\wmcontroller\Service\Cache\Dispatcher
-        arguments: ['@event_dispatcher']
+        arguments:
+            - '@event_dispatcher'
 
     wmcontroller.cache.storage:
         class: Drupal\wmcontroller\Service\Cache\Storage\StorageInterface
@@ -167,16 +194,54 @@ services:
             - '@service_container'
             - '%wmcontroller.cache.storage%'
 
+    wmcontroller.cache.serializer:
+        class: Drupal\wmcontroller\Service\Cache\CacheSerializerInterface
+        factory: Drupal\wmcontroller\Service\Factory::create
+        arguments:
+            - '@service_container'
+            - '%wmcontroller.cache.serializer%'
+
+    wmcontroller.cache.builder:
+        class: Drupal\wmcontroller\Service\Cache\CacheBuilderInterface
+        factory: Drupal\wmcontroller\Service\Factory::create
+        arguments:
+            - '@service_container'
+            - '%wmcontroller.cache.builder%'
+
+    wmcontroller.cache.invalidator:
+        class: Drupal\wmcontroller\Service\Cache\InvalidatorInterface
+        factory: Drupal\wmcontroller\Service\Factory::create
+        arguments:
+            - '@service_container'
+            - '%wmcontroller.cache.invalidator%'
+
+    wmcontroller.cache.maxage:
+        class: Drupal\wmcontroller\Service\Cache\MaxAgeInterface
+        factory: Drupal\wmcontroller\Service\Factory::create
+        arguments:
+            - '@service_container'
+            - '%wmcontroller.cache.maxage%'
+
+    wmcontroller.cache.keygenerator:
+        class: Drupal\wmcontroller\Service\Cache\CacheKeyGeneratorInterface
+        factory: Drupal\wmcontroller\Service\Factory::create
+        arguments:
+            - '@service_container'
+            - '%wmcontroller.cache.keygenerator%'
+
     wmcontroller.cache.manager:
         class: Drupal\wmcontroller\Service\Cache\Manager
         arguments:
             - '@wmcontroller.cache.dispatcher'
             - '@wmcontroller.cache.storage'
             - '@wmcontroller.cache.invalidator'
-            - '@wmcontroller.cache.cachekeygenerator'
-            - '@wmcontroller.cache.cachebuilder'
+            - '@wmcontroller.cache.keygenerator'
+            - '@wmcontroller.cache.builder'
             - '%wmcontroller.cache.store%'
             - '%wmcontroller.cache.tags%'
+            - '%wmcontroller.max_purges_per_invalidation%'
+            - '%wmcontroller.cache.ignored_tags%'
+        tags: [{ name: cache_tags_invalidator }]
 
     wmcontroller.cache.subscriber:
         class: Drupal\wmcontroller\EventSubscriber\CacheSubscriber
@@ -184,7 +249,7 @@ services:
             - '@wmcontroller.cache.manager'
             - '@wmcontroller.cache.validation'
             - '@wmcontroller.cache.enrich_request'
-            - '@wmcontroller.maxage'
+            - '@wmcontroller.cache.maxage'
             - '%wmcontroller.cache.hitheader%'
             - '%wmcontroller.cache.stripped_headers%'
         tags: [{ name: event_subscriber }]
@@ -197,47 +262,43 @@ services:
             - '@database'
             - '%wmcontroller.cache.ignore_authenticated_users%'
 
+    wmcontroller.cache.middleware:
+        class: Drupal\wmcontroller\Http\Middleware\Cache
+        arguments:
+            - '@event_dispatcher'
+        tags: [{ name: http_middleware, priority: 250, responder: true }]
+
+    wmcontroller.pager.subscriber:
+        class: Drupal\wmcontroller\EventSubscriber\PagerRewriteSubscriber
+        arguments:
+            - '%wmcontroller.pager_routes%'
+        tags: [{ name: event_subscriber }]
+
     wmcontroller.cache.storage.mysql:
         class: Drupal\wmcontroller\Service\Cache\Storage\Database
         arguments:
             - '@database'
-            - '@wmcontroller.cache.cachebuilder'
+            - '@wmcontroller.cache.serializer'
 
-    wmcontroller.cache.middleware:
-        class: Drupal\wmcontroller\Http\Middleware\Cache
-        arguments: ['@event_dispatcher']
-        tags:
-            - { name: http_middleware, priority: 250, responder: true }
-
-    wmcontroller.cache.invalidator:
+    wmcontroller.cache.invalidator.default:
         class: Drupal\wmcontroller\Service\Cache\Invalidator
         arguments:
-            - '%wmcontroller.cache.ignored_tags%'
-        tags:
-            - { name: cache_tags_invalidator }
+            - '@wmcontroller.cache.storage'
 
-    wmcontroller.pager.subscriber:
-        class: Drupal\wmcontroller\EventSubscriber\PagerRewriteSubscriber
-        arguments: ['%wmcontroller.pager_routes%']
+    wmcontroller.cache.maxage.default:
+        class: Drupal\wmcontroller\Service\Cache\MaxAgeDecider
+        arguments:
+            - '%wmcontroller.cache.expiry%'
         tags: [{ name: event_subscriber }]
 
-    wmcontroller.maxage:
-        class: Drupal\wmcontroller\Service\Maxage\MaxAgeManager
-        arguments: ['@service_container', '%wmcontroller.maxage.service%']
-
-    wmcontroller.maxage.default:
-        class: Drupal\wmcontroller\Service\Maxage\DefaultMaxAge
-        arguments: ['%wmcontroller.cache.expiry%']
-        tags: [{ name: event_subscriber }]
-
-    wmcontroller.cache.cachekeygenerator:
+    wmcontroller.cache.keygenerator.default:
         class: Drupal\wmcontroller\Service\Cache\CacheKeyGenerator
         arguments:
             - '%wmcontroller.cache.ignore_authenticated_users%'
             - '%wmcontroller.cache.grouped_roles%'
             - '%wmcontroller.cache.query.whitelist%'
 
-    wmcontroller.cache.cachebuilder:
+    wmcontroller.cache.builder.default:
         class: Drupal\wmcontroller\Service\Cache\CacheBuilder
         arguments:
             - '%wmcontroller.cache.store%'

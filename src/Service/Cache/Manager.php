@@ -2,12 +2,13 @@
 
 namespace Drupal\wmcontroller\Service\Cache;
 
+use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
 use Drupal\wmcontroller\Exception\NoSuchCacheEntryException;
 use Drupal\wmcontroller\Service\Cache\Storage\StorageInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class Manager
+class Manager implements CacheTagsInvalidatorInterface
 {
     /** @var \Drupal\wmcontroller\Service\Cache\Dispatcher */
     protected $eventDispatcher;
@@ -23,6 +24,10 @@ class Manager
     protected $storeCache;
     /** @var bool */
     protected $storeTags;
+    /** @var int */
+    protected $maxPurgesPerInvalidation;
+    /** @var string[] */
+    protected $ignoredCacheTags;
 
     public function __construct(
         Dispatcher $eventDispatcher,
@@ -31,7 +36,9 @@ class Manager
         CacheKeyGeneratorInterface $cacheKeyGenerator,
         CacheBuilderInterface $cacheBuilder,
         $storeCache,
-        $storeTags
+        $storeTags,
+        $maxPurgesPerInvalidation,
+        $ignoredCacheTags
     ) {
         $this->eventDispatcher = $eventDispatcher;
         $this->storage = $storage;
@@ -40,9 +47,8 @@ class Manager
         $this->cacheBuilder = $cacheBuilder;
         $this->storeCache = $storeCache && $storeTags;
         $this->storeTags = $storeTags;
-
-        // Circular dependency is shit
-        $invalidator->setManager($this);
+        $this->maxPurgesPerInvalidation = $maxPurgesPerInvalidation;
+        $this->ignoredCacheTags = $ignoredCacheTags;
     }
 
     public function get(Request $request)
@@ -81,35 +87,19 @@ class Manager
         }
     }
 
-    public function setInvalidator(InvalidatorInterface $invalidator)
+    public function invalidateTags(array $tags)
     {
-        $this->invalidator = $invalidator;
-    }
+        $filter = function ($tag) {
+            foreach ($this->ignoredCacheTags as $re) {
+                if (preg_match('#' . $re . '#', $tag)) {
+                    return false;
+                }
+            }
+            return true;
+        };
 
-    public function invalidateCacheTags(array $tags)
-    {
-        if (!$this->invalidator) {
-            return;
-        }
-        $this->invalidator->invalidateCacheTags($tags);
-    }
-
-    public function purgeByTags(array $tags)
-    {
-        $this->storage->remove(
-            $this->storage->getByTags($tags)
+        $this->invalidator->invalidateCacheTags(
+            array_filter($tags, $filter)
         );
-    }
-
-    public function purge($amount)
-    {
-        $this->storage->remove(
-            $this->storage->getExpired($amount)
-        );
-    }
-
-    public function flush()
-    {
-        $this->storage->flush();
     }
 }

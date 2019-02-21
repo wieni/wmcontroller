@@ -42,7 +42,7 @@ function wmcontroller_cron()
 function wmcontroller_cron_purge_expired()
 {
     $ctr = Drupal::getContainer();
-    $ctr->get('wmcontroller.cache.manager')->purge(
+    $ctr->get('wmcontroller.cache.storage')->removeExpired(
         $ctr->getParameter('wmcontroller.cache.purge_per_cron')
     );
 }
@@ -54,7 +54,7 @@ function wmcontroller_cache_flush()
 {
     $ctr = \Drupal::getContainer();
     if ($ctr->getParameter('wmcontroller.cache.flush_on_cache_rebuild')) {
-        $ctr->get('wmcontroller.cache.manager')->flush();
+        $ctr->get('wmcontroller.cache.storage')->flush();
     }
 }
 

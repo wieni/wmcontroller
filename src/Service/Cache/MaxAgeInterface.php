@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\wmcontroller\Service\Maxage;
+namespace Drupal\wmcontroller\Service\Cache;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;

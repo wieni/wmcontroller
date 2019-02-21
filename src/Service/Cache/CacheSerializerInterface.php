@@ -8,15 +8,16 @@ interface CacheSerializerInterface
 {
     /**
      * @param \Drupal\wmcontroller\Entity\Cache $cache
+     * @param bool $includeContent
      *
-     * @return array
+     * @return mixed
      */
-    public function normalize(Cache $cache);
+    public function normalize(Cache $cache, $includeContent = true);
 
     /**
-     * @param array $row
+     * @param mixed $row
      *
      * @return \Drupal\wmcontroller\Entity\Cache
      */
-    public function denormalize(array $row);
+    public function denormalize($row);
 }
