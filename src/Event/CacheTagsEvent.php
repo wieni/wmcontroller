@@ -3,7 +3,6 @@
 namespace Drupal\wmcontroller\Event;
 
 use Symfony\Component\EventDispatcher\Event;
-use Drupal\Core\Entity\EntityInterface;
 
 class CacheTagsEvent extends Event
 {

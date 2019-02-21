@@ -5,98 +5,71 @@ namespace Drupal\wmcontroller\Service\Cache\Storage;
 use Drupal\wmcontroller\Entity\Cache;
 use Drupal\wmcontroller\Exception\NoSuchCacheEntryException;
 use Drupal\Core\Database\Connection;
-use Drupal\wmcontroller\Service\Cache\Purger\PurgerInterface;
+use Drupal\wmcontroller\Service\Cache\CacheSerializerInterface;
 
-class Database implements StorageInterface, PurgerInterface
+class Database implements StorageInterface
 {
-    const TX = 'wmcontroller_cache';
+    const TX = 'wmcontroller_cache_storage';
     const TABLE_ENTRIES = 'wmcontroller_cache';
     const TABLE_TAGS = 'wmcontroller_cache_tags';
 
+    /** @var \Drupal\Core\Database\Connection */
     protected $db;
+    /** @var \Drupal\wmcontroller\Service\Cache\CacheSerializerInterface */
+    protected $serializer;
 
-    public function __construct(Connection $db)
-    {
+    public function __construct(
+        Connection $db,
+        CacheSerializerInterface $serializer
+    ) {
         $this->db = $db;
+        $this->serializer = $serializer;
     }
 
-    public function getExpired($amount)
+    public function load($id, $includeBody = true)
     {
+        $item = $this->loadMultiple([$id], $includeBody);
+        $item = reset($item);
+        if (!$item) {
+            throw new NoSuchCacheEntryException($id);
+        }
+
+        return $item;
+    }
+
+    public function loadMultiple(array $ids, $includeBody = true)
+    {
+        $fields = ['id', 'uri', 'method', 'expiry'];
+        if ($includeBody) {
+            $fields[] = 'content';
+            $fields[] = 'headers';
+        }
+
         $stmt = $this->db->select(self::TABLE_ENTRIES, 'c')
-            ->fields('c', ['id', 'uri', 'method', 'expiry'])
-            ->condition('expiry', time(), '<')
-            ->range(0, (int)$amount)
-            ->execute();
-
-        $items = [];
-
-        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-            $items[] = $this->assocRowToEntry($row);
-        }
-
-        return $items;
-    }
-
-    public function getByTags(array $tags)
-    {
-        if (!$tags) {
-            return [];
-        }
-
-        $q = $this->db->select(self::TABLE_ENTRIES, 'c')
-            ->fields('c', ['id', 'uri', 'method', 'expiry'])
-            ->condition('c.expiry', time(), '>=');
-
-        $q->innerJoin(self::TABLE_TAGS, 't', 't.id = c.id');
-
-        $stmt = $q->condition('t.tag', $tags, 'IN')
-            ->execute();
-
-        $items = [];
-        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-            $items[] = $this->assocRowToEntry($row);
-        }
-
-        return $items;
-    }
-
-    public function get($uri, $method = 'GET')
-    {
-        $method = strtoupper($method);
-        $id = $this->cacheId($uri, $method);
-
-        $raw = $this->db->select(self::TABLE_ENTRIES, 'c')
-            ->fields('c', ['uri', 'method',  'headers', 'content', 'expiry'])
-            ->condition('c.id', $id)
+            ->fields('c', $fields)
+            ->condition('c.id', $ids, 'IN')
             ->condition('c.expiry', time(), '>=')
-            ->execute()->fetch(\PDO::FETCH_ASSOC);
+            ->execute();
 
-        if (!$raw) {
-            throw new NoSuchCacheEntryException($method, $uri);
+        $items = array_fill_keys($ids, null);
+        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+            $items[$row['id']] = $this->assocRowToEntry($row);
         }
 
-        return $this->assocRowToEntry($raw);
+        return array_filter($items);
     }
 
     public function set(Cache $item, array $tags)
     {
-        $id = $this->getCacheId($item);
+        $id = $item->getId();
         $tx = $this->db->startTransaction(self::TX);
+        $tags = array_unique($tags);
 
         try {
             // Add cache entry
             $this->db->upsert(self::TABLE_ENTRIES)
                 ->key($id)
-                ->fields(
-                    [
-                        'id' => $id,
-                        'method' => $item->getMethod(),
-                        'uri' => $item->getUri(),
-                        'headers' => serialize($item->getHeaders()),
-                        'content' => $item->getBody(),
-                        'expiry' => $item->getExpiry(),
-                    ]
-                )
+                ->fields($this->serializer->normalize($item))
                 ->execute();
 
             // Delete old tags
@@ -122,43 +95,32 @@ class Database implements StorageInterface, PurgerInterface
         unset($tx); // commit, btw this is marginaal AS FUCK.
     }
 
-    public function expire(array $items)
+    public function getExpired($amount)
     {
-        $this->expireIds(
-            array_map([$this, 'getCacheId'], $items)
-        );
+        $q = $this->db->select(self::TABLE_ENTRIES, 'c')
+            ->fields('c', ['id']);
+        $q->condition('c.expiry', time(), '<');
+        $q->range(0, (int) $amount);
+
+        return $q->execute()->fetchAll(\PDO::FETCH_COLUMN);
     }
 
-    public function remove(array $items)
+    public function getByTags(array $tags)
     {
-        $ids = array_map(
-            function(Cache $item) {
-                return $this->cacheId($item->getUri(), $item->getMethod());
-            },
-            $items
-        );
-        $this->delete($ids);
-    }
-
-    public function flush()
-    {
-        // Keep it transactional or risk a race with truncate?
-        $ids = $this->db->select(self::TABLE_ENTRIES, 'c')
-            ->fields('c', ['id'])
-            ->execute()->fetchCol();
-
-        while (!empty($ids)) {
-            $this->delete(array_splice($ids, 0, 50));
+        if (!$tags) {
+            return [];
         }
+
+        $q = $this->db->select(self::TABLE_ENTRIES, 'c')
+            ->fields('c', ['id']);
+        $q->condition('c.expiry', time(), '>=');
+        $q->innerJoin(self::TABLE_TAGS, 't', 't.id = c.id');
+        $q->condition('t.tag', $tags, 'IN');
+
+        return $q->execute()->fetchAll(\PDO::FETCH_COLUMN);
     }
 
-    public function purge(array $items)
-    {
-        $this->remove($items);
-        return true;
-    }
-
-    private function delete(array $ids)
+    public function remove(array $ids)
     {
         if (empty($ids)) {
             return;
@@ -183,48 +145,20 @@ class Database implements StorageInterface, PurgerInterface
         unset($tx); // commit, btw this is marginaal AS FUCK.
     }
 
-    private function assocRowToEntry(array $row)
+    public function flush()
     {
-        return new Cache(
-            $row['uri'],
-            $row['method'],
-            empty($row['content']) ? null : $row['content'],
-            empty($row['headers']) ? [] : unserialize($row['headers']),
-            $row['expiry']
-        );
-    }
+        // Keep it transactional or risk a race with truncate?
+        $ids = $this->db->select(self::TABLE_ENTRIES, 'c')
+            ->fields('c', ['id'])
+            ->execute()->fetchCol();
 
-    private function getCacheId(Cache $item)
-    {
-        return $this->cacheId($item->getUri(), $item->getMethod());
-    }
-
-    private function cacheId($uri, $method)
-    {
-        return sha1($method . ':' . $uri);
-    }
-
-    private function expireIds(array $ids)
-    {
-        if (empty($ids)) {
-            return;
+        while (!empty($ids)) {
+            $this->remove(array_splice($ids, 0, 50));
         }
+    }
 
-        $tx = $this->db->startTransaction(self::TX);
-
-        try {
-            $this->db->update(static::TABLE_ENTRIES)
-                ->fields([
-                    'expiry' => time()
-                ])
-                ->condition('id', $ids, 'IN')
-                ->execute();
-        } catch (\Exception $e) {
-            $tx->rollback();
-            // TODO add the fact that we rollbacked to the exception.
-            throw $e;
-        }
-
-        unset($tx); // commit, btw this is marginaal AS FUCK.
+    protected function assocRowToEntry(array $row)
+    {
+        return $this->serializer->denormalize($row);
     }
 }

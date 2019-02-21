@@ -6,6 +6,7 @@ use Drupal\wmcontroller\Event\MainEntityEvent;
 use Drupal\wmcontroller\WmcontrollerEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
@@ -36,16 +37,21 @@ class DefaultMaxAge implements EventSubscriberInterface, MaxAgeInterface
 
         $headers = $event->getResponse()->headers;
         if (
-            !$headers->hasCacheControlDirective('maxage')
+            !$headers->hasCacheControlDirective('max-age')
             && !$headers->hasCacheControlDirective('s-maxage')
+            && !$headers->hasCacheControlDirective('wm-s-maxage')
         ) {
             return;
         }
 
-        $this->explicitMaxAges = [
-            'maxage' => $headers->getCacheControlDirective('maxage'),
-            's-maxage' => $headers->getCacheControlDirective('s-maxage'),
-        ];
+        $this->explicitMaxAges = array_filter(
+            [
+                'maxage' => $headers->getCacheControlDirective('max-age'),
+                's-maxage' => $headers->getCacheControlDirective('s-maxage'),
+                'wm-s-maxage' => $headers->getCacheControlDirective('wm-s-maxage'),
+            ],
+            'strlen' // Keeps 0, but removes NULL
+        );
     }
 
     public function onMainEntity(MainEntityEvent $event)
@@ -53,20 +59,27 @@ class DefaultMaxAge implements EventSubscriberInterface, MaxAgeInterface
         $this->mainEntity = $event->getEntity();
     }
 
-    public function getMaxage(Request $request)
+    public function getMaxage(Request $request, Response $response)
     {
-        if (!empty($this->explicitMaxAges)) {
-            return $this->explicitMaxAges;
+        $explicit = $this->explicitMaxAges ?: [];
+
+        if (isset($explicit['maxage']) || isset($explicit['s-maxage'])) {
+            return $explicit;
         }
 
         if ($entityExpiry = $this->getMaxAgesForMainEntity()) {
-            return $entityExpiry;
+            return $explicit + $entityExpiry;
         }
 
         $smax = $request->attributes->get('_smaxage', 0);
         $max = $request->attributes->get('_maxage', 0);
+        $wmmax = $request->attributes->get('_wmsmaxage', null);
         if ($smax || $max) {
-            return ['s-maxage' => $smax, 'maxage' => $max];
+            return $explicit + [
+                's-maxage' => $smax,
+                'maxage' => $max,
+                'wm-s-maxage' => $wmmax
+            ];
         }
 
         $path = $request->getPathInfo();
@@ -76,10 +89,10 @@ class DefaultMaxAge implements EventSubscriberInterface, MaxAgeInterface
                 continue;
             }
 
-            return $definition;
+            return $explicit + $definition;
         }
 
-        return ['s-maxage' => 0, 'maxage' => 0];
+        return $explicit + ['s-maxage' => 0, 'maxage' => 0, 'wm-s-maxage' => $wmmax];
     }
 
     protected function getMaxAgesForMainEntity()

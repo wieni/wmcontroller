@@ -4,6 +4,7 @@ namespace Drupal\wmcontroller\Service\Maxage;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class MaxAgeManager implements MaxAgeInterface
 {
@@ -29,10 +30,10 @@ class MaxAgeManager implements MaxAgeInterface
         return $this->strategy;
     }
 
-    public function getMaxAge(Request $request)
+    public function getMaxAge(Request $request, Response $response)
     {
         return $this->container
             ->get($this->getStrategy())
-            ->getMaxage($request);
+            ->getMaxage($request, $response);
     }
 }
