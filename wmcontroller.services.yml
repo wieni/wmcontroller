@@ -48,6 +48,10 @@ parameters:
     wmcontroller.cache.ignored_tags:
         - 'config:block.*'
 
+    # Triggers a flush for tags that match these regexes.
+    wmcontroller.cache.flush_triggers:
+        - ''
+
     # Store the contents of the response and serve it.
     # If disabled, only tags will be stored.
     # This could be useful if the site is proxied by a cdn.
@@ -241,6 +245,7 @@ services:
             - '%wmcontroller.cache.tags%'
             - '%wmcontroller.max_purges_per_invalidation%'
             - '%wmcontroller.cache.ignored_tags%'
+            - '%wmcontroller.cache.flush_triggers%'
         tags: [{ name: cache_tags_invalidator }]
 
     wmcontroller.cache.subscriber:

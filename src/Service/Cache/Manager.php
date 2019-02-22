@@ -28,6 +28,8 @@ class Manager implements CacheTagsInvalidatorInterface
     protected $maxPurgesPerInvalidation;
     /** @var string[] */
     protected $ignoredCacheTags;
+    /** @var string[] */
+    protected $flushTriggerTags;
 
     public function __construct(
         Dispatcher $eventDispatcher,
@@ -38,7 +40,8 @@ class Manager implements CacheTagsInvalidatorInterface
         $storeCache,
         $storeTags,
         $maxPurgesPerInvalidation,
-        $ignoredCacheTags
+        array $ignoredCacheTags,
+        array $flushTriggerTags
     ) {
         $this->eventDispatcher = $eventDispatcher;
         $this->storage = $storage;
@@ -48,7 +51,8 @@ class Manager implements CacheTagsInvalidatorInterface
         $this->storeCache = $storeCache && $storeTags;
         $this->storeTags = $storeTags;
         $this->maxPurgesPerInvalidation = $maxPurgesPerInvalidation;
-        $this->ignoredCacheTags = $ignoredCacheTags;
+        $this->ignoredCacheTags = array_filter($ignoredCacheTags);
+        $this->flushTriggerTags = array_filter($flushTriggerTags);
     }
 
     public function get(Request $request)
@@ -98,8 +102,20 @@ class Manager implements CacheTagsInvalidatorInterface
             return true;
         };
 
-        $this->invalidator->invalidateCacheTags(
-            array_filter($tags, $filter)
-        );
+        // Remove ignored tags
+        $tags = array_filter($tags, $filter);
+
+        // Check if any tag matches a flushTriggerTags regex
+        // If so, flush the entire cache instead.
+        foreach ($tags as $tag) {
+            foreach ($this->flushTriggerTags as $re) {
+                if (preg_match('#' . $re . '#', $tag)) {
+                    $this->storage->flush();
+                    return;
+                }
+            }
+        }
+
+        $this->invalidator->invalidateCacheTags($tags);
     }
 }
