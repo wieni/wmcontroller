@@ -42,8 +42,10 @@ function wmcontroller_cron()
 function wmcontroller_cron_purge_expired()
 {
     $ctr = Drupal::getContainer();
-    $ctr->get('wmcontroller.cache.storage')->removeExpired(
-        $ctr->getParameter('wmcontroller.cache.purge_per_cron')
+    $ctr->get('wmcontroller.cache.storage')->remove(
+        $ctr->get('wmcontroller.cache.storage')->getExpired(
+            $ctr->getParameter('wmcontroller.cache.purge_per_cron')
+        )
     );
 }
 

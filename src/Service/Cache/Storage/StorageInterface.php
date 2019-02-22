@@ -46,9 +46,9 @@ interface StorageInterface
     /**
      * Remove expired items from storage.
      *
-     * @param int $amount
+     * @param string[] The cache ids
      */
-    public function removeExpired($amount);
+    public function getExpired($amount);
 
     /**
      * @param string[] The cache ids to remove

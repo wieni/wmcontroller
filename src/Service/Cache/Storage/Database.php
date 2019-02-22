@@ -97,15 +97,14 @@ class Database implements StorageInterface
         unset($tx); // commit, btw this is marginaal AS FUCK.
     }
 
-    public function removeExpired($amount)
+    public function getExpired($amount)
     {
         $q = $this->db->select(self::TABLE_ENTRIES, 'c')
             ->fields('c', ['id']);
         $q->condition('c.expiry', time(), '<');
         $q->range(0, (int) $amount);
 
-        $ids = $q->execute()->fetchAll(\PDO::FETCH_COLUMN);
-        $this->remove($ids);
+        return $q->execute()->fetchAll(\PDO::FETCH_COLUMN);
     }
 
     public function getByTags(array $tags)
