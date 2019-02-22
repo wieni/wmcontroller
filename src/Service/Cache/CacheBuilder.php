@@ -49,8 +49,15 @@ class CacheBuilder implements CacheBuilderInterface, CacheSerializerInterface
             'id' => $item->getId(),
             'uri' => $item->getUri(),
             'method' => $item->getMethod(),
-            'content' => $includeContent ? gzcompress($item->getBody()) : '',
-            'headers' => $includeContent ? serialize($item->getHeaders()) : [],
+            // base64 encoding the compressed string so the output doesn't
+            // garble potential other encoders ( json_encode ).
+            // The penalty is pretty bad tho.
+            'content' => $includeContent
+                ? base64_encode(gzcompress($item->getBody()))
+                : '',
+            'headers' => $includeContent
+                ? serialize($item->getHeaders())
+                : [],
             'expiry' => $item->getExpiry(),
         ];
     }
@@ -61,7 +68,7 @@ class CacheBuilder implements CacheBuilderInterface, CacheSerializerInterface
             $row['id'],
             $row['uri'],
             $row['method'],
-            empty($row['content']) ? null : gzuncompress($row['content']),
+            empty($row['content']) ? null : gzuncompress(base64_decode($row['content'])),
             empty($row['headers']) ? [] : unserialize($row['headers']),
             $row['expiry']
         );
