@@ -5,42 +5,55 @@ namespace Drupal\wmcontroller\Service\Cache\Storage;
 use Drupal\wmcontroller\Entity\Cache;
 use Drupal\wmcontroller\Exception\NoSuchCacheEntryException;
 
-interface StorageInterface {
-
+interface StorageInterface
+{
     /**
-     * Get expired items, limited by $amount.
+     * @param string $id
      *
-     * Note: Content nor headers will be hydrated.
+     * @param bool $includeBody Whether or not the response body and headers
+     *  should be included
      *
-     * @return Cache[] The expired cache entries.
-     */
-    public function getExpired($amount);
-
-    /**
      * @return Cache
-     *
-     * @throws NoSuchCacheEntryException;
+     * @throws NoSuchCacheEntryException
      */
-    public function get($uri, $method = 'GET');
+    public function load($id, $includeBody = true);
 
+    /**
+     * @param string[] $ids
+     *
+     * @param bool $includeBody Whether or not the response body and headers
+     *  should be included
+     *
+     * @return \Iterator An Iterator that contains Cache items
+     */
+    public function loadMultiple(array $ids, $includeBody = true): \Iterator; // I really want to enforce this
+
+    /**
+     * @param Cache $item
+     * @param string[] $tags
+     */
     public function set(Cache $item, array $tags);
 
     /**
      * Note: Content nor headers will be hydrated.
      *
-     * @return Cache[]
+     * @param string[] $tags
+     *
+     * @return string[] The cache ids
      */
     public function getByTags(array $tags);
 
     /**
-     * @param Cache[] $items
+     * Remove expired items from storage.
+     *
+     * @param string[] The cache ids
      */
-    public function expire(array $items);
+    public function getExpired($amount);
 
     /**
-     * @param Cache[] $items
+     * @param string[] The cache ids to remove
      */
-    public function remove(array $items);
+    public function remove(array $ids);
 
     /**
      * Remove all cache entries.

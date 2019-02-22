@@ -212,7 +212,7 @@ class ViewBuilder
         return $this->responseBuilder->createResponse($this->toRenderArray());
     }
 
-    private function createOriginalRenderArrayFromEntity(EntityInterface $entity)
+    protected function createOriginalRenderArrayFromEntity(EntityInterface $entity)
     {
         $render_controller = $this->entityTypeManager->getViewBuilder(
             $entity->getEntityTypeId()
@@ -225,7 +225,7 @@ class ViewBuilder
         );
     }
 
-    private function addThemeToRenderArray(&$view)
+    protected function addThemeToRenderArray(&$view)
     {
         if ($this->template) {
             $view['#theme'] =
@@ -234,7 +234,7 @@ class ViewBuilder
         }
     }
 
-    private function addHeadElementsToRenderArray(&$view)
+    protected function addHeadElementsToRenderArray(&$view)
     {
         if (count($this->headElements) > 0) {
             if (!isset($view['#attached']['html_head'])) {
@@ -250,7 +250,7 @@ class ViewBuilder
         return $view;
     }
 
-    private function addCustomHooksToRenderArray(&$view)
+    protected function addCustomHooksToRenderArray(&$view)
     {
         $view['#pre_render'] = array_merge(
             $view['#pre_render'] ?? [],
@@ -260,7 +260,7 @@ class ViewBuilder
         return $view;
     }
 
-    private function addCacheTagsToRenderArray(&$view)
+    protected function addCacheTagsToRenderArray(&$view)
     {
         // Add cache tags
         if (empty($view['#cache'])) {
@@ -288,14 +288,14 @@ class ViewBuilder
         }
     }
 
-    private function dispatchCacheTags($view)
+    protected function dispatchCacheTags($view)
     {
         if ($view['#cache']['tags']) {
             $this->dispatcher->dispatchTags($view['#cache']['tags']);
         }
     }
 
-    private function dispatchCacheTagsOfPassedEntities($view)
+    protected function dispatchCacheTagsOfPassedEntities($view)
     {
         foreach ($view['#_data'] as $entity) {
             if ($entity instanceof EntityInterface) {

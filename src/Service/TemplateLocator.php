@@ -53,7 +53,7 @@ class TemplateLocator
      *   directory in that module or theme
      * @return array
      */
-    private function getThemeFiles($type, $location)
+    protected function getThemeFiles($type, $location)
     {
         $themes = [];
         $dir = drupal_get_path($type, $location) .
@@ -93,7 +93,7 @@ class TemplateLocator
      * @param  string   $directory
      * @return string[]
      */
-    private function findTwigFiles($directory)
+    protected function findTwigFiles($directory)
     {
         $fileIterator = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator(
@@ -119,7 +119,7 @@ class TemplateLocator
         return $files;
     }
 
-    private function stripOutTemplatePathAndExtension($templatePath, $file)
+    protected function stripOutTemplatePathAndExtension($templatePath, $file)
     {
         // Strip out the module path
         $file = str_replace($templatePath . DIRECTORY_SEPARATOR, '', $file);

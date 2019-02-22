@@ -10,11 +10,11 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class ResponseBuilder
 {
     /** @var \Drupal\Core\Render\MainContent\HtmlRenderer */
-    private $renderer;
+    protected $renderer;
     /** @var \Symfony\Component\HttpFoundation\RequestStack */
-    private $stack;
+    protected $stack;
     /** @var \Drupal\Core\Routing\RouteMatchInterface */
-    private $routeMatch;
+    protected $routeMatch;
 
     public function __construct(
         HtmlRenderer $renderer,

@@ -6,6 +6,7 @@ use Drupal\wmcontroller\Http\CachedResponse;
 
 class Cache
 {
+    protected $id;
     protected $uri;
     protected $method;
     protected $body;
@@ -15,13 +16,22 @@ class Cache
     /** @var CachedResponse */
     protected $response;
 
-    public function __construct($uri, $method, $body, array $headers, $expiry)
+    public function __construct($id, $uri, $method, $body, array $headers, $expiry)
     {
+        $this->id = $id;
         $this->uri = $uri;
         $this->method = strtoupper($method);
         $this->body = $body;
         $this->headers = $headers;
         $this->expiry = $expiry;
+    }
+
+    /**
+     * @return string
+     */
+    public function getId()
+    {
+        return $this->id;
     }
 
     /**

@@ -42,8 +42,10 @@ function wmcontroller_cron()
 function wmcontroller_cron_purge_expired()
 {
     $ctr = Drupal::getContainer();
-    $ctr->get('wmcontroller.cache.manager')->purge(
-        $ctr->getParameter('wmcontroller.cache.purge_per_cron')
+    $ctr->get('wmcontroller.cache.storage')->remove(
+        $ctr->get('wmcontroller.cache.storage')->getExpired(
+            $ctr->getParameter('wmcontroller.cache.purge_per_cron')
+        )
     );
 }
 
@@ -54,7 +56,7 @@ function wmcontroller_cache_flush()
 {
     $ctr = \Drupal::getContainer();
     if ($ctr->getParameter('wmcontroller.cache.flush_on_cache_rebuild')) {
-        $ctr->get('wmcontroller.cache.manager')->flush();
+        $ctr->get('wmcontroller.cache.storage')->flush();
     }
 }
 
@@ -255,16 +257,4 @@ function wmcontroller_preprocess_pager(&$variables)
 
     $variables['items'] = $items;
     $variables['#cache']['contexts'][] = 'url.query_args';
-}
-
-function wmcontroller_user_login(AccountInterface $account)
-{
-    // We store the user roles in session in order to apply different caching
-    // behaviours based on those roles.
-    \Drupal::getContainer()
-        ->get('session')
-        ->set(
-            'roles',
-            $account->getRoles()
-        );
 }

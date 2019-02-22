@@ -3,7 +3,6 @@
 namespace Drupal\wmcontroller\Twig;
 
 use Drupal\wmcontroller\WmcontrollerEvents;
-use Drupal\wmcontroller\Event\EntityPresentedEvent;
 use Drupal\wmcontroller\Event\PresentedEvent;
 
 abstract class Template extends \Twig_Template

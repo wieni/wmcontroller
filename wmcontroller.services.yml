@@ -8,8 +8,7 @@ parameters:
         # to be.
         module: ''
 
-        # The theme where your templates can be found
-        # (if applicable)
+        # The theme where your templates can be found (optional)
         theme: ''
 
         # The relative path your template reside in.
@@ -19,19 +18,26 @@ parameters:
     # Expiry rules.
     # maxage = client side caching duration
     # s-maxage = server side caching duration (this can be drupal db or a cdn)
+    # wm-s-maxage = custom cache-control directive for different local cache ttl
     wmcontroller.cache.expiry:
         # Determine max and s-max based on content-type and/or bundle.
         # _default is used when no definition is available for any given bundle.
         entities:
             node:
                 _default: { maxage: 120, s-maxage: 300 }
+                # example
+                #   Client side caching for 2 minutes
+                #   CDN caching for 5 minutes
+                #   Local db caching for 1 hour
+                #
+                # article: { maxage: 120, s-maxage: 300, wm-s-maxage: 3600 }
             taxonomy_term:
                 _default: { maxage: 120, s-maxage: 300 }
 
         # If the current page isn't rendering some kind of entity these regexes
         # will determine which maxage will be set.
         # The paths these regexes are matched against are the actual request paths,
-        # not the route name or route path.
+        # not the route name or route path. Query parameters are ignored
         paths:
             '^/$':           { maxage: 120, s-maxage: 300 }
             # '^/admin/.*$':   { maxage: 0, s-maxage: 0 }
@@ -41,6 +47,10 @@ parameters:
     # Ignore purges for tags that match these regexes.
     wmcontroller.cache.ignored_tags:
         - 'config:block.*'
+
+    # Triggers a flush for tags that match these regexes.
+    wmcontroller.cache.flush_triggers:
+        - ''
 
     # Store the contents of the response and serve it.
     # If disabled, only tags will be stored.
@@ -84,7 +94,8 @@ parameters:
           roles:
               - 'anonymous'
 
-    # Whitelisted query parameters
+    # Whitelisted query parameters.
+    # These query parameters become part of the internal cache key.
     wmcontroller.cache.query.whitelist:
         - 'page'
 
@@ -97,25 +108,50 @@ parameters:
     # The service responsible for storing cache entries
     wmcontroller.cache.storage: wmcontroller.cache.storage.mysql
 
-    # The service responsible for purging cache entries
-    wmcontroller.cache.purger: wmcontroller.cache.storage.mysql
+    # The service responsible for deciding the max-age
+    wmcontroller.cache.maxage: wmcontroller.cache.maxage.default
+
+    # The service responsible for building the cache item
+    wmcontroller.cache.builder: wmcontroller.cache.builder.default
 
     # The service responsible for deciding the max-age
-    wmcontroller.maxage.service: wmcontroller.maxage.default
+    # Note: make sure the serializer returns a format that is expected by the
+    # cache storage.
+    wmcontroller.cache.serializer: wmcontroller.cache.builder.default
+
+    # The service responsible for invalidating tags
+    wmcontroller.cache.invalidator: wmcontroller.cache.invalidator.default
+
+    # The service responsible for building the cache key
+    wmcontroller.cache.keygenerator: wmcontroller.cache.keygenerator.default
 
     # List of routes that need to have their ?page= query param rewritten to a
     # route param.
     wmcontroller.pager_routes: []
 
+    # List of response headers to strip
+    wmcontroller.cache.stripped_headers:
+        - 'x-ua-compatible'
+
+    # If an invalidation causes removal of more than this amount of pages
+    # a purge will be done instead. Useful if your CDN charges per path.
+    # Note: By default this number is set to an insanely high number. If you
+    # use a CDN that charges for invalidations. Set this number much lower.
+    wmcontroller.max_purges_per_invalidation: 100000
+
 services:
     wmcontroller.routing.injectfrontcontroller:
         class:  Drupal\wmcontroller\EventSubscriber\InjectFrontControllerRouteSubscriber
-        arguments: ['%wmcontroller.settings%']
+        arguments:
+            - '%wmcontroller.settings%'
         tags: [{ name: event_subscriber }]
 
     wmcontroller.service.responsebuilder:
         class: Drupal\wmcontroller\Service\ResponseBuilder
-        arguments: ['@main_content_renderer.html', '@request_stack', '@current_route_match']
+        arguments:
+            - '@main_content_renderer.html'
+            - '@request_stack'
+            - '@current_route_match'
 
     wmcontroller.renderer.viewbuilder:
         class: Drupal\wmcontroller\EventSubscriber\ViewRendererSubscriber
@@ -123,7 +159,8 @@ services:
 
     wmcontroller.service.templatelocator:
         class: Drupal\wmcontroller\Service\TemplateLocator
-        arguments: ['%wmcontroller.settings%']
+        arguments:
+             - '%wmcontroller.settings%'
 
     wmcontroller.viewbuilder:
         class: Drupal\wmcontroller\ViewBuilder\ViewBuilder
@@ -135,7 +172,8 @@ services:
 
     wmcontroller.presenter.factory:
         class: Drupal\wmcontroller\Service\PresenterFactory
-        arguments: ['@service_container']
+        arguments:
+            - '@service_container'
 
     wmcontroller.presenter.subscriber:
         class: Drupal\wmcontroller\EventSubscriber\PresenterSubscriber
@@ -150,7 +188,8 @@ services:
 
     wmcontroller.cache.dispatcher:
         class: Drupal\wmcontroller\Service\Cache\Dispatcher
-        arguments: ['@event_dispatcher']
+        arguments:
+            - '@event_dispatcher'
 
     wmcontroller.cache.storage:
         class: Drupal\wmcontroller\Service\Cache\Storage\StorageInterface
@@ -159,73 +198,123 @@ services:
             - '@service_container'
             - '%wmcontroller.cache.storage%'
 
-    wmcontroller.cache.purger:
-        class: Drupal\wmcontroller\Service\Cache\Purger\PurgerInterface
+    wmcontroller.cache.serializer:
+        class: Drupal\wmcontroller\Service\Cache\CacheSerializerInterface
         factory: Drupal\wmcontroller\Service\Factory::create
         arguments:
             - '@service_container'
-            - '%wmcontroller.cache.purger%'
+            - '%wmcontroller.cache.serializer%'
+
+    wmcontroller.cache.builder:
+        class: Drupal\wmcontroller\Service\Cache\CacheBuilderInterface
+        factory: Drupal\wmcontroller\Service\Factory::create
+        arguments:
+            - '@service_container'
+            - '%wmcontroller.cache.builder%'
+
+    wmcontroller.cache.invalidator:
+        class: Drupal\wmcontroller\Service\Cache\InvalidatorInterface
+        factory: Drupal\wmcontroller\Service\Factory::create
+        arguments:
+            - '@service_container'
+            - '%wmcontroller.cache.invalidator%'
+
+    wmcontroller.cache.maxage:
+        class: Drupal\wmcontroller\Service\Cache\MaxAgeInterface
+        factory: Drupal\wmcontroller\Service\Factory::create
+        arguments:
+            - '@service_container'
+            - '%wmcontroller.cache.maxage%'
+
+    wmcontroller.cache.keygenerator:
+        class: Drupal\wmcontroller\Service\Cache\CacheKeyGeneratorInterface
+        factory: Drupal\wmcontroller\Service\Factory::create
+        arguments:
+            - '@service_container'
+            - '%wmcontroller.cache.keygenerator%'
 
     wmcontroller.cache.manager:
         class: Drupal\wmcontroller\Service\Cache\Manager
         arguments:
+            - '@wmcontroller.cache.dispatcher'
             - '@wmcontroller.cache.storage'
-            - '@wmcontroller.cache.purger'
+            - '@wmcontroller.cache.invalidator'
+            - '@wmcontroller.cache.keygenerator'
+            - '@wmcontroller.cache.builder'
+            - '%wmcontroller.cache.store%'
+            - '%wmcontroller.cache.tags%'
+            - '%wmcontroller.max_purges_per_invalidation%'
+            - '%wmcontroller.cache.ignored_tags%'
+            - '%wmcontroller.cache.flush_triggers%'
+        tags: [{ name: cache_tags_invalidator }]
 
     wmcontroller.cache.subscriber:
         class: Drupal\wmcontroller\EventSubscriber\CacheSubscriber
         arguments:
-            - '@wmcontroller.cache.storage'
-            - '@current_user'
-            - '@wmcontroller.maxage'
-            - '@page_cache_response_policy'
-            - '%wmcontroller.cache.store%'
-            - '%wmcontroller.cache.tags%'
+            - '@wmcontroller.cache.manager'
+            - '@wmcontroller.cache.validation'
+            - '@wmcontroller.cache.enrich_request'
+            - '@wmcontroller.cache.maxage'
             - '%wmcontroller.cache.hitheader%'
-            - '%wmcontroller.cache.ignore_authenticated_users%'
-            - '%wmcontroller.cache.ignore_roles%'
-            - '%wmcontroller.cache.grouped_roles%'
-            - '%wmcontroller.cache.query.whitelist%'
+            - '%wmcontroller.cache.stripped_headers%'
         tags: [{ name: event_subscriber }]
 
-    wmcontroller.cache.policy:
-        class: Drupal\wmcontroller\Http\Policy\OverrideSessionPolicy
+    wmcontroller.cache.enrich_request:
+        class: Drupal\wmcontroller\Service\Cache\EnrichRequest
         arguments:
-            - '@current_user'
-            - '%wmcontroller.cache.tags%'
+            - '@session_handler.storage'
+            - '@session_configuration'
+            - '@database'
             - '%wmcontroller.cache.ignore_authenticated_users%'
-            - '%wmcontroller.cache.ignore_roles%'
-        tags:
-            - { name: page_cache_request_policy }
-
-    wmcontroller.cache.storage.mysql:
-        class: Drupal\wmcontroller\Service\Cache\Storage\Database
-        arguments: ['@database']
 
     wmcontroller.cache.middleware:
         class: Drupal\wmcontroller\Http\Middleware\Cache
-        arguments: ['@event_dispatcher']
-        tags:
-            - { name: http_middleware, priority: 250, responder: true }
-
-    wmcontroller.cache.invalidator:
-        class: Drupal\wmcontroller\Service\Cache\Invalidator
         arguments:
-            - '@wmcontroller.cache.manager'
-            - '%wmcontroller.cache.ignored_tags%'
-        tags:
-            - { name: cache_tags_invalidator }
+            - '@event_dispatcher'
+        tags: [{ name: http_middleware, priority: 250, responder: true }]
 
     wmcontroller.pager.subscriber:
         class: Drupal\wmcontroller\EventSubscriber\PagerRewriteSubscriber
-        arguments: ['%wmcontroller.pager_routes%']
+        arguments:
+            - '%wmcontroller.pager_routes%'
         tags: [{ name: event_subscriber }]
 
-    wmcontroller.maxage:
-        class: Drupal\wmcontroller\Service\Maxage\MaxAgeManager
-        arguments: ['@service_container', '%wmcontroller.maxage.service%']
+    wmcontroller.cache.storage.mysql:
+        class: Drupal\wmcontroller\Service\Cache\Storage\Database
+        arguments:
+            - '@database'
+            - '@wmcontroller.cache.serializer'
 
-    wmcontroller.maxage.default:
-        class: Drupal\wmcontroller\Service\Maxage\DefaultMaxAge
-        arguments: ['%wmcontroller.cache.expiry%']
+    wmcontroller.cache.invalidator.default:
+        class: Drupal\wmcontroller\Service\Cache\Invalidator
+        arguments:
+            - '@wmcontroller.cache.storage'
+
+    wmcontroller.cache.maxage.default:
+        class: Drupal\wmcontroller\Service\Cache\MaxAgeDecider
+        arguments:
+            - '%wmcontroller.cache.expiry%'
+        tags: [{ name: event_subscriber }]
+
+    wmcontroller.cache.keygenerator.default:
+        class: Drupal\wmcontroller\Service\Cache\CacheKeyGenerator
+        arguments:
+            - '%wmcontroller.cache.ignore_authenticated_users%'
+            - '%wmcontroller.cache.grouped_roles%'
+            - '%wmcontroller.cache.query.whitelist%'
+
+    wmcontroller.cache.builder.default:
+        class: Drupal\wmcontroller\Service\Cache\CacheBuilder
+        arguments:
+            - '%wmcontroller.cache.store%'
+
+    wmcontroller.cache.validation:
+        class: Drupal\wmcontroller\Service\Cache\Validation\Validation
+        arguments:
+            - '@wmcontroller.cache.dispatcher'
+            - '@page_cache_response_policy'
+            - '%wmcontroller.cache.ignore_authenticated_users%'
+            - '%wmcontroller.cache.store%'
+            - '%wmcontroller.cache.tags%'
+            - '%wmcontroller.cache.ignore_roles%'
         tags: [{ name: event_subscriber }]

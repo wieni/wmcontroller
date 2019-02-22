@@ -9,8 +9,7 @@ class Factory
     public static function create(
         ContainerInterface $ctr,
         $serviceName
-    )
-    {
+    ) {
         return $ctr->get($serviceName);
     }
 }
