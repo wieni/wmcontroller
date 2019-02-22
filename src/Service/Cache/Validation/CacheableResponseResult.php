@@ -4,7 +4,6 @@ namespace Drupal\wmcontroller\Service\Cache\Validation;
 
 class CacheableResponseResult extends ValidationResult
 {
-    const ALLOW_STORE = 'allowStoreResponse';
     const ALLOW_CACHED = 'allowCached';
 
     /**
