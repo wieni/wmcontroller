@@ -116,6 +116,14 @@ class Validation implements EventSubscriberInterface
         $event->add($this->isCacheableAccordingToDrupal($request, $response));
     }
 
+    protected function isAuthenticated(Request $request)
+    {
+        return $request->attributes->get(
+            EnrichRequest::AUTHENTICATED,
+            true
+        );
+    }
+
     protected function getUserId(Request $request)
     {
         return $request->attributes->get(
@@ -143,7 +151,7 @@ class Validation implements EventSubscriberInterface
     protected function authenticationCheck(Request $request)
     {
         return AccessResult::forbiddenIf(
-            $this->ignoreAuthenticatedUsers && $this->getUserId($request),
+            $this->ignoreAuthenticatedUsers && $this->isAuthenticated($request),
             'Authenticated user'
         );
     }

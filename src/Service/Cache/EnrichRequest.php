@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\Request;
 
 class EnrichRequest
 {
+    const AUTHENTICATED = '_wmcontroller.authenticated';
     const UID = '_wmcontroller.uid';
     const ROLES = '_wmcontroller.roles';
     const SESSION = '_wmcontroller.session';
@@ -36,9 +37,12 @@ class EnrichRequest
 
     public function enrichRequest(Request $request)
     {
+        $hasSession = $this->sessionConfiguration->hasSession($request);
+        $request->attributes->set(static::AUTHENTICATED, $hasSession);
+
         if (
             $this->ignoreAuthenticatedUsers
-            || !$this->sessionConfiguration->hasSession($request)
+            || !$hasSession
         ) {
             $request->attributes->set(static::SESSION, []);
             $request->attributes->set(static::UID, 0);
