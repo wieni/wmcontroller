@@ -159,7 +159,7 @@ class Validation implements EventSubscriberInterface
     protected function roleCheck(Request $request)
     {
         return AccessResult::forbiddenIf(
-            $this->ignoreAuthenticatedUsers
+            !$this->ignoreAuthenticatedUsers
             && $this->ignoredRoles
             && array_intersect($this->ignoredRoles, $this->getRoles($request)),
             'Ignored role'
