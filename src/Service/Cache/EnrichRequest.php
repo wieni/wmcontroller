@@ -3,6 +3,7 @@
 namespace Drupal\wmcontroller\Service\Cache;
 
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\SessionConfigurationInterface;
 use SessionHandlerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -46,7 +47,7 @@ class EnrichRequest
         ) {
             $request->attributes->set(static::SESSION, []);
             $request->attributes->set(static::UID, 0);
-            $request->attributes->set(static::ROLES, ['anonymous']);
+            $request->attributes->set(static::ROLES, [AccountInterface::ANONYMOUS_ROLE]);
             return;
         }
 
@@ -96,7 +97,7 @@ class EnrichRequest
     protected function loadUserRoles($uid)
     {
         if ($uid == 0) {
-            return ['anonymous'];
+            return [AccountInterface::ANONYMOUS_ROLE];
         }
 
         $q = $this->db->select('user__roles', 'ur')

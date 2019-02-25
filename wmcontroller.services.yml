@@ -71,7 +71,7 @@ parameters:
     # If wmcontroller.cache.ignore_authenticated_users = false
     # Skip cache entirely for these roles.
     wmcontroller.cache.ignore_roles:
-        - 'admin'
+        - 'administrator'
         - 'editor'
 
     # If wmcontroller.cache.ignore_authenticated_users = false

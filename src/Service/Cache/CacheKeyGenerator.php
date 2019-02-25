@@ -2,6 +2,7 @@
 
 namespace Drupal\wmcontroller\Service\Cache;
 
+use Drupal\Core\Session\AccountInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 class CacheKeyGenerator implements CacheKeyGeneratorInterface
@@ -61,14 +62,23 @@ class CacheKeyGenerator implements CacheKeyGeneratorInterface
             return [];
         }
 
-        $uid = $request->attributes->get(EnrichRequest::UID, 0);
+        $uid = (int) $request->attributes->get(EnrichRequest::UID, 0);
         $roles = $request->attributes->get(EnrichRequest::ROLES, []);
 
         if ($uid === 1) {
             $roles[] = 'administrator';
         }
         if ($uid === 0) {
-            $roles[] = 'anonymous';
+            $roles[] = AccountInterface::ANONYMOUS_ROLE;
+        }
+
+        return $this->groupRoles($roles);
+    }
+
+    protected function groupRoles(array $roles)
+    {
+        if (!$roles) {
+            return [];
         }
 
         $names = [];
