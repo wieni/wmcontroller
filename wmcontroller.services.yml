@@ -320,7 +320,7 @@ services:
         tags: [{ name: event_subscriber }]
 
     wmcontroller.main_entity.subscriber:
-        class: Drupal\wmcontroller\Service\MainEntitySubscriber
+        class: Drupal\wmcontroller\EventSubscriber\MainEntitySubscriber
         arguments:
             - '@wmcontroller.main_entity'
         tags: [{ name: event_subscriber }]

@@ -1,9 +1,10 @@
 <?php
 
-namespace Drupal\wmcontroller\Service;
+namespace Drupal\wmcontroller\EventSubscriber;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\wmcontroller\Event\MainEntityEvent;
+use Drupal\wmcontroller\Service\MainEntity;
 use Drupal\wmcontroller\WmcontrollerEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
