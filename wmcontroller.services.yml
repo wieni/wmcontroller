@@ -318,3 +318,12 @@ services:
             - '%wmcontroller.cache.tags%'
             - '%wmcontroller.cache.ignore_roles%'
         tags: [{ name: event_subscriber }]
+
+    wmcontroller.main_entity.subscriber:
+        class: Drupal\wmcontroller\Service\MainEntitySubscriber
+        arguments:
+            - '@wmcontroller.main_entity'
+        tags: [{ name: event_subscriber }]
+
+    wmcontroller.main_entity:
+        class: Drupal\wmcontroller\Service\MainEntity
