@@ -67,10 +67,6 @@ class MaxAgeDecider implements EventSubscriberInterface, MaxAgeInterface
             return $explicit;
         }
 
-        if ($entityExpiry = $this->getMaxAgesForMainEntity()) {
-            return $explicit + $entityExpiry;
-        }
-
         $smax = $request->attributes->get('_smaxage', 0);
         $max = $request->attributes->get('_maxage', 0);
         $wmmax = $request->attributes->get('_wmsmaxage', null);
@@ -80,6 +76,10 @@ class MaxAgeDecider implements EventSubscriberInterface, MaxAgeInterface
                 'maxage' => $max,
                 'wm-s-maxage' => $wmmax
             ];
+        }
+
+        if ($entityExpiry = $this->getMaxAgesForMainEntity()) {
+            return $explicit + $entityExpiry;
         }
 
         $path = $request->getPathInfo();
