@@ -67,14 +67,14 @@ class MaxAgeDecider implements EventSubscriberInterface, MaxAgeInterface
             return $explicit;
         }
 
-        $smax = $request->attributes->get('_smaxage', 0);
-        $max = $request->attributes->get('_maxage', 0);
-        $wmmax = $request->attributes->get('_wmsmaxage', null);
-        if ($smax || $max) {
+        if (
+            $request->attributes->has('_smaxage')
+            || $request->attributes->has('_maxage')
+        ) {
             return $explicit + [
-                's-maxage' => $smax,
-                'maxage' => $max,
-                'wm-s-maxage' => $wmmax
+                's-maxage' => $request->attributes->get('_smaxage', 0),
+                'maxage' => $request->attributes->get('_maxage', 0),
+                'wm-s-maxage' => $request->attributes->get('_wmsmaxage', null)
             ];
         }
 
@@ -92,7 +92,7 @@ class MaxAgeDecider implements EventSubscriberInterface, MaxAgeInterface
             return $explicit + $definition;
         }
 
-        return $explicit + ['s-maxage' => 0, 'maxage' => 0, 'wm-s-maxage' => $wmmax];
+        return $explicit + ['s-maxage' => 0, 'maxage' => 0, 'wm-s-maxage' => null];
     }
 
     protected function getMaxAgesForMainEntity()
