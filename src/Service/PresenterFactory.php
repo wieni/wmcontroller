@@ -5,7 +5,7 @@ namespace Drupal\wmcontroller\Service;
 use Drupal\wmcontroller\Entity\HasPresenterInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-class PresenterFactory
+class PresenterFactory implements PresenterFactoryInterface
 {
     /** @var ContainerInterface */
     protected $container;

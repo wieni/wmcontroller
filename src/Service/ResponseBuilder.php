@@ -7,7 +7,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
-class ResponseBuilder
+class ResponseBuilder implements ResponseBuilderInterface
 {
     /** @var \Drupal\Core\Render\MainContent\HtmlRenderer */
     protected $renderer;

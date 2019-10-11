@@ -8,7 +8,7 @@ use RecursiveRegexIterator;
 use RegexIterator;
 use RecursiveDirectoryIterator;
 
-class TemplateLocator
+class TemplateLocator implements TemplateLocatorInterface
 {
     const TWIG_EXT = '.html.twig';
 
@@ -29,11 +29,6 @@ class TemplateLocator
         $this->settings = $settings;
     }
 
-    /**
-     * Get all custom themes
-     *
-     * @return array
-     */
     public function getThemes()
     {
         $type = 'module';

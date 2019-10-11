@@ -4,7 +4,7 @@ namespace Drupal\wmcontroller\Service;
 
 use Drupal\Core\Entity\EntityInterface;
 
-class MainEntity
+class MainEntity implements MainEntityInterface
 {
     /** @var EntityInterface */
     protected $entity;
