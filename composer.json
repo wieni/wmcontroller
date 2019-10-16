@@ -17,5 +17,9 @@
                 "drush.services.yml": "^9"
             }
         }
+    },
+    "require": {
+        "php": ">=7.0.0",
+        "drupal/core": "^8.6"
     }
 }
