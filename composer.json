@@ -1,5 +1,6 @@
 {
     "name": "wieni/wmcontroller",
+    "type": "drupal-module",
     "description": "Some helpers for building controllers in Drupal 8.",
     "license": "MIT",
     "authors": [
@@ -8,9 +9,10 @@
             "email": "info@wieni.be"
         }
     ],
-    "minimum-stability": "dev",
-    "prefer-stable": true,
-    "type": "drupal-module",
+    "require": {
+        "php": ">=7.0.0",
+        "drupal/core": "^8.6"
+    },
     "extra": {
         "drush": {
             "services": {
@@ -18,8 +20,6 @@
             }
         }
     },
-    "require": {
-        "php": ">=7.0.0",
-        "drupal/core": "^8.6"
-    }
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }
