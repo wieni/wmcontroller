@@ -9,10 +9,13 @@ use Drupal\wmcontroller\Service\Cache\Dispatcher;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Controller\ArgumentResolverInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class FrontController extends ControllerBase
 {
+    /** @var ArgumentResolverInterface */
+    protected $argumentResolver;
 
     /** @var ControllerResolverInterface */
     protected $controllerResolver;
@@ -24,9 +27,11 @@ class FrontController extends ControllerBase
     protected $dispatcher;
 
     public function __construct(
+        ArgumentResolverInterface $argumentResolver,
         ControllerResolverInterface $controllerResolver,
         Dispatcher $dispatcher
     ) {
+        $this->argumentResolver = $argumentResolver;
         $this->dispatcher = $dispatcher;
         $this->controllerResolver = $controllerResolver;
     }
@@ -34,6 +39,7 @@ class FrontController extends ControllerBase
     public static function create(ContainerInterface $container)
     {
         return new static(
+            $container->get('http_kernel.controller.argument_resolver'),
             $container->get('controller_resolver'),
             $container->get('wmcontroller.cache.dispatcher')
         );
@@ -71,8 +77,7 @@ class FrontController extends ControllerBase
 
         return call_user_func_array(
             $controller,
-            // @see \Drupal\Core\Controller\ControllerResolver::doGetArguments
-            $this->controllerResolver->getArguments($request, $controller)
+            $this->argumentResolver->getArguments($request, $controller)
         );
     }
 

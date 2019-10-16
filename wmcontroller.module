@@ -1,6 +1,7 @@
 <?php
 
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Url;
 use Drupal\wmcontroller\EventSubscriber\PagerRewriteSubscriber;
 
 /**
@@ -157,11 +158,11 @@ function wmcontroller_preprocess_pager(&$variables)
         ];
 
         $moveQueryToParam($options);
-        $items['first']['href'] = \Drupal::url(
+        $items['first']['href'] = Url::fromRoute(
             $route_name,
             $route_parameters,
             $options
-        );
+        )->toString();
 
         if (isset($tags[0])) {
             $items['first']['text'] = $tags[0];
@@ -177,11 +178,11 @@ function wmcontroller_preprocess_pager(&$variables)
         ];
 
         $moveQueryToParam($options);
-        $items['previous']['href'] = \Drupal::url(
+        $items['previous']['href'] = Url::fromRoute(
             $route_name,
             $route_parameters,
             $options
-        );
+        )->toString();
         if (isset($tags[1])) {
             $items['previous']['text'] = $tags[1];
         }
@@ -198,11 +199,11 @@ function wmcontroller_preprocess_pager(&$variables)
             ];
 
             $moveQueryToParam($options);
-            $items['pages'][$i]['href'] = \Drupal::url(
+            $items['pages'][$i]['href'] = Url::fromRoute(
                 $route_name,
                 $route_parameters,
                 $options
-            );
+            )->toString();
 
             if ($i == $pager_current) {
                 $variables['current'] = $i;
@@ -225,11 +226,11 @@ function wmcontroller_preprocess_pager(&$variables)
         ];
 
         $moveQueryToParam($options);
-        $items['next']['href'] = \Drupal::url(
+        $items['next']['href'] = Url::fromRoute(
             $route_name,
             $route_parameters,
             $options
-        );
+        )->toString();
         if (isset($tags[3])) {
             $items['next']['text'] = $tags[3];
         }
@@ -244,11 +245,11 @@ function wmcontroller_preprocess_pager(&$variables)
         ];
 
         $moveQueryToParam($options);
-        $items['last']['href'] = \Drupal::url(
+        $items['last']['href'] = Url::fromRoute(
             $route_name,
             $route_parameters,
             $options
-        );
+        )->toString();
 
         if (isset($tags[4])) {
             $items['last']['text'] = $tags[4];
