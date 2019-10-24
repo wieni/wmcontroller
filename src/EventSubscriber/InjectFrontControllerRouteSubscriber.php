@@ -2,7 +2,6 @@
 
 namespace Drupal\wmcontroller\EventSubscriber;
 
-use Drupal\wmcontroller\Controller\FrontController;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 use Drupal\Core\Routing\RoutingEvents;
@@ -68,9 +67,14 @@ class InjectFrontControllerRouteSubscriber extends RouteSubscriberBase
 
         // Change the default controller to our own FrontController
         // The FrontController will delegate to a bundle-specific controller
-        $defaults['_controller'] = FrontController::class .
-            '::' .
-            $controllerMethod;
+        $defaults['_controller'] = sprintf(
+            '%s%s%s',
+            $this->settings['frontcontroller'],
+            class_exists($this->settings['frontcontroller'])
+                ? '::' // FQN::method
+                : ':', // servicename:method
+            $controllerMethod
+        );
 
         // Add the namespace of where the bundle-specific controllers live
         // so the delegating FrontController has all the information it needs.

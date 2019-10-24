@@ -15,6 +15,9 @@ parameters:
         # (relative to your module / theme dir)
         path: 'templates'
 
+        # The controller responsible for forwarding to bundle-specific controllers
+        frontcontroller: 'Drupal\wmcontroller\Controller\FrontController'
+
     # Expiry rules.
     # maxage = client side caching duration
     # s-maxage = server side caching duration (this can be drupal db or a cdn)
