@@ -2,6 +2,7 @@
 
 namespace Drupal\wmcontroller\EventSubscriber;
 
+use Drupal\wmcontroller\Controller\FrontController;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 use Drupal\Core\Routing\RoutingEvents;
@@ -15,12 +16,18 @@ class InjectFrontControllerRouteSubscriber extends RouteSubscriberBase
 {
     protected $settings;
 
+    protected $frontController = FrontController::class;
+
     public function __construct(array $settings)
     {
         if (empty($settings['module'])) {
             throw new \Exception(
                 'wmcontroller requires a non-empty module entry in wmcontroller.settings'
             );
+        }
+
+        if (isset($settings['frontcontroller'])) {
+            $this->frontController = $settings['frontcontroller'];
         }
 
         $this->settings = $settings;
@@ -69,8 +76,8 @@ class InjectFrontControllerRouteSubscriber extends RouteSubscriberBase
         // The FrontController will delegate to a bundle-specific controller
         $defaults['_controller'] = sprintf(
             '%s%s%s',
-            $this->settings['frontcontroller'],
-            class_exists($this->settings['frontcontroller'])
+            $this->frontController,
+            class_exists($this->frontController)
                 ? '::' // FQN::method
                 : ':', // servicename:method
             $controllerMethod

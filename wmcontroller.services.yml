@@ -18,6 +18,11 @@ parameters:
         # The controller responsible for forwarding to bundle-specific controllers
         frontcontroller: 'Drupal\wmcontroller\Controller\FrontController'
 
+        # Throw a 404 NotFoundHttpException when an entity is not translated
+        # in the current language. ( /en/node/123 gives 404 if node/123 has no
+        # en translation )
+        404_when_not_translated: true
+
     # Expiry rules.
     # maxage = client side caching duration
     # s-maxage = server side caching duration (this can be drupal db or a cdn)

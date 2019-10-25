@@ -26,14 +26,25 @@ class FrontController extends ControllerBase
     /** @var Dispatcher */
     protected $dispatcher;
 
+    /** @var array */
+    protected $settings;
+
+    protected $throw404WhenNotTranslated = true;
+
     public function __construct(
         ArgumentResolverInterface $argumentResolver,
         ControllerResolverInterface $controllerResolver,
-        Dispatcher $dispatcher
+        Dispatcher $dispatcher,
+        array $settings
     ) {
         $this->argumentResolver = $argumentResolver;
         $this->dispatcher = $dispatcher;
         $this->controllerResolver = $controllerResolver;
+        $this->settings = $settings;
+
+        if (isset($this->settings['404_when_not_translated'])) {
+            $this->throw404WhenNotTranslated = $this->settings['404_when_not_translated'];
+        }
     }
 
     public static function create(ContainerInterface $container)
@@ -41,7 +52,8 @@ class FrontController extends ControllerBase
         return new static(
             $container->get('http_kernel.controller.argument_resolver'),
             $container->get('controller_resolver'),
-            $container->get('wmcontroller.cache.dispatcher')
+            $container->get('wmcontroller.cache.dispatcher'),
+            $container->getParameter('wmcontroller.settings'),
         );
     }
 
@@ -60,6 +72,7 @@ class FrontController extends ControllerBase
      */
     protected function forward(Request $request, EntityInterface $entity)
     {
+        $this->validateLangcode($entity);
         $this->request = $request;
 
         $controller = [$this->getController($entity), 'show'];
@@ -116,6 +129,20 @@ class FrontController extends ControllerBase
     protected function camelize($input, $separator = '_')
     {
         return str_replace($separator, '', ucwords($input, $separator));
+    }
+
+    protected function validateLangcode(EntityInterface $entity)
+    {
+        $langcode = $this->languageManager()->getCurrentLanguage()->getId();
+        $isMultiLang = count($this->languageManager()->getLanguages()) > 1;
+
+        if (
+            $isMultiLang
+            && $this->throw404WhenNotTranslated
+            && $entity->language()->getId() !== $langcode
+        ) {
+            throw new NotFoundHttpException();
+        }
     }
 }
 
