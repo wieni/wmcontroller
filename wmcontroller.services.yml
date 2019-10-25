@@ -150,8 +150,6 @@ parameters:
 services:
     wmcontroller.routing.injectfrontcontroller:
         class:  Drupal\wmcontroller\EventSubscriber\InjectFrontControllerRouteSubscriber
-        arguments:
-            - '%wmcontroller.settings%'
         tags: [{ name: event_subscriber }]
 
     wmcontroller.service.responsebuilder:
@@ -335,3 +333,9 @@ services:
 
     wmcontroller.main_entity:
         class: Drupal\wmcontroller\Service\MainEntity
+
+    wmcontroller.entity_controller_resolver:
+        class: Drupal\wmcontroller\Service\EntityControllerResolver
+        arguments:
+            - '@class_resolver'
+            - '%wmcontroller.settings%'

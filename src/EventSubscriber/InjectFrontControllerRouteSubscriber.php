@@ -20,12 +20,6 @@ class InjectFrontControllerRouteSubscriber extends RouteSubscriberBase
 
     public function __construct(array $settings)
     {
-        if (empty($settings['module'])) {
-            throw new \Exception(
-                'wmcontroller requires a non-empty module entry in wmcontroller.settings'
-            );
-        }
-
         if (isset($settings['frontcontroller'])) {
             $this->frontController = $settings['frontcontroller'];
         }
@@ -83,23 +77,7 @@ class InjectFrontControllerRouteSubscriber extends RouteSubscriberBase
             $controllerMethod
         );
 
-        // Add the namespace of where the bundle-specific controllers live
-        // so the delegating FrontController has all the information it needs.
-        $defaults['_controller_namespace'] = $this->getControllerNamespace();
-
         $route->setDefaults($defaults);
-    }
-
-    /**
-     * Get the controller namespace of the bundle-specific controllers
-     * For example: \Drupal\mymodule\Controller
-     *
-     * @return string
-     */
-    protected function getControllerNamespace()
-    {
-        $moduleName = $this->settings['module'];
-        return "Drupal\\$moduleName\\Controller";
     }
 }
 
