@@ -53,7 +53,7 @@ class FrontController extends ControllerBase
             $container->get('http_kernel.controller.argument_resolver'),
             $container->get('controller_resolver'),
             $container->get('wmcontroller.cache.dispatcher'),
-            $container->getParameter('wmcontroller.settings'),
+            $container->getParameter('wmcontroller.settings')
         );
     }
 
