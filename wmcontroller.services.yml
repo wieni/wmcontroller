@@ -151,6 +151,8 @@ services:
     wmcontroller.routing.injectfrontcontroller:
         class:  Drupal\wmcontroller\EventSubscriber\InjectFrontControllerRouteSubscriber
         tags: [{ name: event_subscriber }]
+        arguments:
+            - '%wmcontroller.settings%'
 
     wmcontroller.service.responsebuilder:
         class: Drupal\wmcontroller\Service\ResponseBuilder
