@@ -341,3 +341,10 @@ services:
         arguments:
             - '@class_resolver'
             - '%wmcontroller.settings%'
+
+    wmcontroller.twig_extension.presenter:
+        class: Drupal\wmcontroller\Twig\Extension\PresenterExtension
+        arguments:
+            - '@wmcontroller.presenter.factory'
+            - '@wmcontroller.cache.dispatcher'
+        tags: [{ name: twig.extension }]
