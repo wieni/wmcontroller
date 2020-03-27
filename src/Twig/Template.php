@@ -23,8 +23,16 @@ abstract class Template extends \Twig_Template
     public function display(array $context, array $blocks = array())
     {
         if ($this->env->isDebug()) {
+            $source = $this->getSourceContext();
+            $name = $source->getName();
+            $path = str_replace(DRUPAL_ROOT . '/', '', $source->getPath());
+
             print('<!-- TWIG DEBUG -->');
-            printf('<!-- Template: %s -->', $this->getTemplateName());
+            printf('<!-- Template: %s -->', $name);
+
+            if ($name !== $path) {
+                printf('<!-- Path: %s -->', $path);
+            }
         }
 
         foreach ($context as $k => $var) {
