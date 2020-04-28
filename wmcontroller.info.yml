@@ -3,5 +3,3 @@ type: module
 description: Adds support for bundle-specific controllers for Drupal 8 entities.
 core: 8.x
 package: Wieni
-dependencies:
-  - node
