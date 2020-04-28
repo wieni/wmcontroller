@@ -81,7 +81,7 @@ class FrontController
             && $this->throw404WhenNotTranslated
             && $entity->language()->getId() !== $language->getId()
         ) {
-            throw new NotFoundHttpException();
+            throw new NotFoundHttpException("Entity is not translated in the current language ({$language->getName()}).");
         }
     }
 }
