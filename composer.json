@@ -11,7 +11,8 @@
     ],
     "require": {
         "php": ">=7.1.0",
-        "drupal/core": "^8.6"
+        "drupal/core": "^8.6 || ^9.0"
+    },
     "require-dev": {
         "ergebnis/composer-normalize": "^2.0",
         "wieni/wmcodestyle": "^1.0"
