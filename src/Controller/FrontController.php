@@ -2,89 +2,65 @@
 
 namespace Drupal\wmcontroller\Controller;
 
-use Drupal\Core\Controller\ControllerBase;
-use Drupal\Core\Controller\ControllerResolverInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\wmcontroller\Service\Cache\Dispatcher;
-
 use Drupal\wmcontroller\Service\EntityControllerResolverInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolverInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-class FrontController extends ControllerBase
+class FrontController
 {
-    /** @var ArgumentResolverInterface */
-    protected $argumentResolver;
-
     /** @var EntityControllerResolverInterface */
     protected $entityControllerResolver;
+    /** @var ArgumentResolverInterface */
+    protected $argumentResolver;
+    /** @var LanguageManagerInterface */
+    protected $languageManager;
+    /** @var Dispatcher */
+    protected $dispatcher;
+    /** @var array */
+    protected $settings;
+    /** @var bool */
+    protected $throw404WhenNotTranslated = true;
 
     /** @var Request */
     protected $request;
 
-    /** @var Dispatcher */
-    protected $dispatcher;
-
-    /** @var array */
-    protected $settings;
-
-    protected $throw404WhenNotTranslated = true;
-
-    public function __construct(
-        EntityControllerResolverInterface $entityControllerResolver,
-        ArgumentResolverInterface $argumentResolver,
-        Dispatcher $dispatcher,
-        array $settings
-    ) {
-        $this->entityControllerResolver = $entityControllerResolver;
-        $this->argumentResolver = $argumentResolver;
-        $this->dispatcher = $dispatcher;
-        $this->settings = $settings;
-
-        if (isset($this->settings['404_when_not_translated'])) {
-            $this->throw404WhenNotTranslated = $this->settings['404_when_not_translated'];
-        }
-    }
-
     public static function create(ContainerInterface $container)
     {
-        return new static(
-            $container->get('wmcontroller.entity_controller_resolver'),
-            $container->get('http_kernel.controller.argument_resolver'),
-            $container->get('wmcontroller.cache.dispatcher'),
-            $container->getParameter('wmcontroller.settings')
-        );
-    }
+        $instance = new static;
+        $instance->entityControllerResolver = $container->get('wmcontroller.entity_controller_resolver');
+        $instance->argumentResolver = $container->get('http_kernel.controller.argument_resolver');
+        $instance->languageManager = $container->get('language_manager');
+        $instance->dispatcher = $container->get('wmcontroller.cache.dispatcher');
+        $instance->settings = $container->getParameter('wmcontroller.settings');
 
-    public function term(Request $request, EntityInterface $taxonomy_term)
-    {
-        return $this->forward($request, $taxonomy_term);
-    }
+        if (isset($instance->settings['404_when_not_translated'])) {
+            $instance->throw404WhenNotTranslated = $instance->settings['404_when_not_translated'];
+        }
 
-    public function node(Request $request, EntityInterface $node)
-    {
-        return $this->forward($request, $node);
+        return $instance;
     }
 
     /**
      * Forward a request to a controller based on an entities bundle name
      */
-    protected function forward(Request $request, EntityInterface $entity)
+    public function forward(Request $request)
     {
+        $routeName = $request->attributes->get('_route');
+        preg_match('/entity\.(?<entityTypeId>.+)\.canonical/', $routeName, $matches);
+        $entity = $request->attributes->get($matches['entityTypeId']);
+
         $this->validateLangcode($entity);
         $this->request = $request;
 
-        $controller = [$this->entityControllerResolver->getController($entity), 'show'];
-
-        // Check if the controller has a show method
-        if (!is_callable($controller)) {
-            throw new \RuntimeException(sprintf(
-                'Class "%s" does not have a "%s()" method',
-                get_class($controller[0]),
-                $controller[1]
-            ));
+        try {
+            $controller = [$this->entityControllerResolver->getController($entity), 'show'];
+        } catch (\RuntimeException $e) {
+            $controller = $request->attributes->get('_original_controller');
         }
 
         $this->dispatcher->dispatchMainEntity($entity);
@@ -95,15 +71,15 @@ class FrontController extends ControllerBase
         );
     }
 
-    protected function validateLangcode(EntityInterface $entity)
+    protected function validateLangcode(EntityInterface $entity): void
     {
-        $langcode = $this->languageManager()->getCurrentLanguage()->getId();
-        $isMultiLang = count($this->languageManager()->getLanguages()) > 1;
+        $language = $this->languageManager->getCurrentLanguage();
+        $isMultiLang = count($this->languageManager->getLanguages()) > 1;
 
         if (
             $isMultiLang
             && $this->throw404WhenNotTranslated
-            && $entity->language()->getId() !== $langcode
+            && $entity->language()->getId() !== $language->getId()
         ) {
             throw new NotFoundHttpException();
         }

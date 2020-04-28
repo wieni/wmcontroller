@@ -2,6 +2,7 @@
 
 namespace Drupal\wmcontroller\EventSubscriber;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\wmcontroller\Controller\FrontController;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
@@ -9,22 +10,27 @@ use Drupal\Core\Routing\RoutingEvents;
 use Drupal\Core\Routing\RouteSubscriberBase;
 
 /**
- * Alter entity.{node,taxonomy_term}.canonical routes to use bundle-specific
- * controllers.
+ * Alter canonical routes to use bundle-specific controllers.
  */
 class InjectFrontControllerRouteSubscriber extends RouteSubscriberBase
 {
+    /** @var EntityTypeManagerInterface */
+    protected $entityTypeManager;
+    /** @var array */
     protected $settings;
-
+    /** @var string */
     protected $frontController = FrontController::class;
 
-    public function __construct(array $settings)
-    {
+    public function __construct(
+        EntityTypeManagerInterface $entityTypeManager,
+        array $settings
+    ) {
+        $this->entityTypeManager = $entityTypeManager;
+        $this->settings = $settings;
+
         if (isset($settings['frontcontroller'])) {
             $this->frontController = $settings['frontcontroller'];
         }
-
-        $this->settings = $settings;
     }
 
     public static function getSubscribedEvents()
@@ -37,44 +43,26 @@ class InjectFrontControllerRouteSubscriber extends RouteSubscriberBase
 
     protected function alterRoutes(RouteCollection $collection)
     {
-        $routes = [
-            'node' => [
-                'entity.node.canonical',
-            ],
-            'term' => [
-                'entity.taxonomy_term.canonical',
-            ],
-        ];
+        $definitions = $this->entityTypeManager->getDefinitions();
 
-        foreach ($routes as $methodName => $routeNames) {
-            foreach ($routeNames as $routeName) {
-                if ($detailRoute = $collection->get($routeName)) {
-                    $this->alterRoute($detailRoute, $methodName);
-                }
+        foreach ($definitions as $definition) {
+            if ($route = $collection->get("entity.{$definition->id()}.canonical")) {
+                $this->alterRoute($route);
             }
         }
     }
 
-    /**
-     * Change a route's controller to a FrontController
-     * that will delegate the request to a bundle-specific controller
-     *
-     * @param Route $route
-     * @param $controllerMethod
-     */
-    protected function alterRoute(Route $route, $controllerMethod)
+    protected function alterRoute(Route $route): void
     {
         $defaults = $route->getDefaults();
 
-        // Change the default controller to our own FrontController
-        // The FrontController will delegate to a bundle-specific controller
         $defaults['_controller'] = sprintf(
             '%s%s%s',
             $this->frontController,
             class_exists($this->frontController)
                 ? '::' // FQN::method
                 : ':', // servicename:method
-            $controllerMethod
+            'forward'
         );
 
         $route->setDefaults($defaults);
