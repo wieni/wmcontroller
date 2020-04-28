@@ -2,8 +2,8 @@
 
 namespace Drupal\wmcontroller\Twig;
 
-use Drupal\wmcontroller\WmcontrollerEvents;
 use Drupal\wmcontroller\Event\PresentedEvent;
+use Drupal\wmcontroller\WmcontrollerEvents;
 
 abstract class Template extends \Twig_Template
 {
@@ -11,23 +11,14 @@ abstract class Template extends \Twig_Template
 
     protected static $dispatcher;
 
-    protected function getDispatcher()
-    {
-        if (isset(static::$dispatcher)) {
-            return static::$dispatcher;
-        }
-
-        return static::$dispatcher = \Drupal::service('event_dispatcher');
-    }
-
-    public function display(array $context, array $blocks = array())
+    public function display(array $context, array $blocks = [])
     {
         if ($this->env->isDebug()) {
             $source = $this->getSourceContext();
             $name = $source->getName();
             $path = str_replace(DRUPAL_ROOT . '/', '', $source->getPath());
 
-            print('<!-- TWIG DEBUG -->');
+            echo '<!-- TWIG DEBUG -->';
             printf('<!-- Template: %s -->', $name);
 
             if ($name !== $path) {
@@ -59,5 +50,14 @@ abstract class Template extends \Twig_Template
         }
 
         return parent::display($context, $blocks);
+    }
+
+    protected function getDispatcher()
+    {
+        if (isset(static::$dispatcher)) {
+            return static::$dispatcher;
+        }
+
+        return static::$dispatcher = \Drupal::service('event_dispatcher');
     }
 }

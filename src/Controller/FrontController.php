@@ -45,9 +45,7 @@ class FrontController
         return $instance;
     }
 
-    /**
-     * Forward a request to a controller based on an entities bundle name
-     */
+    /** Forward a request to a controller based on an entities bundle name */
     public function forward(Request $request)
     {
         $routeName = $request->attributes->get('_route');
@@ -85,4 +83,3 @@ class FrontController
         }
     }
 }
-

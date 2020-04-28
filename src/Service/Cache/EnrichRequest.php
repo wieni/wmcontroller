@@ -10,10 +10,10 @@ use Symfony\Component\HttpFoundation\Request;
 
 class EnrichRequest
 {
-    const AUTHENTICATED = '_wmcontroller.authenticated';
-    const UID = '_wmcontroller.uid';
-    const ROLES = '_wmcontroller.roles';
-    const SESSION = '_wmcontroller.session';
+    public const AUTHENTICATED = '_wmcontroller.authenticated';
+    public const UID = '_wmcontroller.uid';
+    public const ROLES = '_wmcontroller.roles';
+    public const SESSION = '_wmcontroller.session';
 
     /** @var \SessionHandlerInterface */
     protected $sessionHandler;

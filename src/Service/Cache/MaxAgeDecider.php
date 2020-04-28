@@ -74,7 +74,7 @@ class MaxAgeDecider implements EventSubscriberInterface, MaxAgeInterface
             return $explicit + [
                 's-maxage' => $request->attributes->get('_smaxage', 0),
                 'maxage' => $request->attributes->get('_maxage', 0),
-                'wm-s-maxage' => $request->attributes->get('_wmsmaxage', null)
+                'wm-s-maxage' => $request->attributes->get('_wmsmaxage', null),
             ];
         }
 
@@ -116,5 +116,4 @@ class MaxAgeDecider implements EventSubscriberInterface, MaxAgeInterface
 
         return $bundleDefs[$bundle];
     }
-
 }

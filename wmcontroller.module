@@ -1,6 +1,5 @@
 <?php
 
-use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\wmcontroller\EventSubscriber\PagerRewriteSubscriber;
 
@@ -115,8 +114,7 @@ function wmcontroller_preprocess_pager(&$variables)
     $parameters = $variables['pager']['#parameters'];
     $quantity = $variables['pager']['#quantity'];
     $route_name = $variables['pager']['#route_name'];
-    $route_parameters = isset($variables['pager']['#route_parameters']) ?
-        $variables['pager']['#route_parameters'] : [];
+    $route_parameters = $variables['pager']['#route_parameters'] ?? [];
 
     if ($pager_total[$element] <= 1) {
         return;

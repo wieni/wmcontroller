@@ -19,6 +19,6 @@ abstract class ValidationResult
         if (!is_callable([$this, $method])) {
             return false;
         }
-        return (bool) $this->$method();
+        return (bool) $this->{$method}();
     }
 }

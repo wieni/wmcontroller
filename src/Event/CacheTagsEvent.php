@@ -13,12 +13,9 @@ class CacheTagsEvent extends Event
         $this->tags = $tags;
     }
 
-    /**
-     * @return string[]
-     */
+    /** @return string[] */
     public function getCacheTags()
     {
         return $this->tags;
     }
 }
-

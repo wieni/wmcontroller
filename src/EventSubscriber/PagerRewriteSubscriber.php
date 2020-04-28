@@ -10,9 +10,17 @@ use Symfony\Component\Routing\RouteCollection;
 
 class PagerRewriteSubscriber extends RouteSubscriberBase
 {
-    const ROUTE_PARAM = 'wm_page';
+    public const ROUTE_PARAM = 'wm_page';
 
     protected $routes;
+
+    public function __construct(array $routes)
+    {
+        $this->routes = [];
+        foreach ($routes as $route) {
+            $this->routes[$route] = true;
+        }
+    }
 
     public static function getSubscribedEvents()
     {
@@ -20,28 +28,6 @@ class PagerRewriteSubscriber extends RouteSubscriberBase
         $events[KernelEvents::CONTROLLER][] = ['onController', 0];
 
         return $events;
-    }
-
-    public function __construct(array $routes)
-    {
-        $this->routes = [];
-        foreach ($routes as $route) {
-            $this->routes[$route] = true;
-        };
-    }
-
-    protected function alterRoutes(RouteCollection $collection)
-    {
-        foreach ($this->routes as $route => $_) {
-            if ($route = $collection->get($route)) {
-                $route->setPath(
-                    sprintf('%s/{%s}', $route->getPath(), self::ROUTE_PARAM)
-                );
-                $route->addDefaults([self::ROUTE_PARAM => 0]);
-                $route->setOption('wmcontroller.pager', true);
-                $route->addRequirements([self::ROUTE_PARAM => '\d+']);
-            }
-        }
     }
 
     public function onController(FilterControllerEvent $event)
@@ -57,5 +43,18 @@ class PagerRewriteSubscriber extends RouteSubscriberBase
             $request->attributes->get(self::ROUTE_PARAM, 0)
         );
     }
-}
 
+    protected function alterRoutes(RouteCollection $collection)
+    {
+        foreach ($this->routes as $route => $_) {
+            if ($route = $collection->get($route)) {
+                $route->setPath(
+                    sprintf('%s/{%s}', $route->getPath(), self::ROUTE_PARAM)
+                );
+                $route->addDefaults([self::ROUTE_PARAM => 0]);
+                $route->setOption('wmcontroller.pager', true);
+                $route->addRequirements([self::ROUTE_PARAM => '\d+']);
+            }
+        }
+    }
+}

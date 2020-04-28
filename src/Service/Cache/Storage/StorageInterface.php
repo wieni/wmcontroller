@@ -50,13 +50,9 @@ interface StorageInterface
      */
     public function getExpired($amount);
 
-    /**
-     * @param string[] The cache ids to remove
-     */
+    /** @param string[] The cache ids to remove */
     public function remove(array $ids);
 
-    /**
-     * Remove all cache entries.
-     */
+    /** Remove all cache entries. */
     public function flush();
 }

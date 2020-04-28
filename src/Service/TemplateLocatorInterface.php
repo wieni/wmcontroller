@@ -11,4 +11,3 @@ interface TemplateLocatorInterface
      */
     public function getThemes();
 }
-

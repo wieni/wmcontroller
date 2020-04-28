@@ -2,16 +2,16 @@
 
 namespace Drupal\wmcontroller\Service\Cache;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\wmcontroller\Entity\Cache;
 use Drupal\wmcontroller\Event\CacheInsertEvent;
-use Drupal\wmcontroller\Event\MainEntityEvent;
-use Drupal\wmcontroller\Event\EntityPresentedEvent;
 use Drupal\wmcontroller\Event\CacheTagsEvent;
+use Drupal\wmcontroller\Event\EntityPresentedEvent;
+use Drupal\wmcontroller\Event\MainEntityEvent;
 use Drupal\wmcontroller\Event\ValidationEvent;
 use Drupal\wmcontroller\Service\Cache\Validation\CacheableRequestResult;
 use Drupal\wmcontroller\Service\Cache\Validation\CacheableResponseResult;
 use Drupal\wmcontroller\WmcontrollerEvents;
-use Drupal\Core\Entity\EntityInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -29,9 +29,7 @@ class Dispatcher
         $this->dispatcher = $dispatcher;
     }
 
-    /**
-     * @return MainEntityEvent
-     */
+    /** @return MainEntityEvent */
     public function dispatchMainEntity(EntityInterface $entity)
     {
         $event = new MainEntityEvent($entity);
@@ -43,9 +41,7 @@ class Dispatcher
         return $event;
     }
 
-    /**
-     * @return EntityPresentedEvent
-     */
+    /** @return EntityPresentedEvent */
     public function dispatchPresented(EntityInterface $entity)
     {
         $event = new EntityPresentedEvent($entity);
@@ -57,9 +53,7 @@ class Dispatcher
         return $event;
     }
 
-    /**
-     * @return CacheTagsEvent
-     */
+    /** @return CacheTagsEvent */
     public function dispatchTags(array $tags)
     {
         $event = new CacheTagsEvent($tags);
@@ -71,9 +65,7 @@ class Dispatcher
         return $event;
     }
 
-    /**
-     * @return CacheInsertEvent
-     */
+    /** @return CacheInsertEvent */
     public function dispatchCacheInsertEvent(
         Cache $cache,
         Request $request,
@@ -119,4 +111,3 @@ class Dispatcher
         return $event;
     }
 }
-

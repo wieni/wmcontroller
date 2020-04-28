@@ -26,57 +26,43 @@ class Cache
         $this->expiry = $expiry;
     }
 
-    /**
-     * @return string
-     */
+    /** @return string */
     public function getId()
     {
         return $this->id;
     }
 
-    /**
-     * @return string
-     */
+    /** @return string */
     public function getUri()
     {
         return $this->uri;
     }
 
-    /**
-     * @return string
-     */
+    /** @return string */
     public function getMethod()
     {
         return $this->method;
     }
 
-    /**
-     * @return string
-     */
+    /** @return string */
     public function getBody()
     {
         return $this->body;
     }
 
-    /**
-     * @return array
-     */
+    /** @return array */
     public function getHeaders()
     {
         return $this->headers;
     }
 
-    /**
-     * @return int
-     */
+    /** @return int */
     public function getExpiry()
     {
         return $this->expiry;
     }
 
-    /**
-     * @return CachedResponse
-     */
+    /** @return CachedResponse */
     public function toResponse()
     {
         if (isset($this->response)) {
@@ -92,4 +78,3 @@ class Cache
         return $this->response;
     }
 }
-

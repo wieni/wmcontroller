@@ -55,4 +55,3 @@ class CacheInsertEvent extends Event
         return $this->response;
     }
 }
-

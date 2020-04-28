@@ -13,9 +13,7 @@ class PresentedEvent extends Event
         $this->item = $item;
     }
 
-    /**
-     * @return mixed
-     */
+    /** @return mixed */
     public function getItem()
     {
         return $this->item;
@@ -26,4 +24,3 @@ class PresentedEvent extends Event
         $this->item = $item;
     }
 }
-

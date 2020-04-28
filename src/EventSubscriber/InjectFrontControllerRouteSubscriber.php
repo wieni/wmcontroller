@@ -3,11 +3,11 @@
 namespace Drupal\wmcontroller\EventSubscriber;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Routing\RouteSubscriberBase;
+use Drupal\Core\Routing\RoutingEvents;
 use Drupal\wmcontroller\Controller\FrontController;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
-use Drupal\Core\Routing\RoutingEvents;
-use Drupal\Core\Routing\RouteSubscriberBase;
 
 /**
  * Alter canonical routes to use bundle-specific controllers.
@@ -68,4 +68,3 @@ class InjectFrontControllerRouteSubscriber extends RouteSubscriberBase
         $route->setDefaults($defaults);
     }
 }
-

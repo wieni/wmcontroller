@@ -73,10 +73,7 @@ class ViewBuilder
         return $this;
     }
 
-    /**
-     * @param  array $headElements
-     * @return $this
-     */
+    /** @return $this */
     public function setHeadElements(array $headElements)
     {
         $this->headElements = $headElements;
@@ -85,7 +82,6 @@ class ViewBuilder
     }
 
     /**
-     * @param  array $headElement
      * @param  string $key
      * @return $this
      */
@@ -105,7 +101,6 @@ class ViewBuilder
      *
      * This is done by wmcontroller_theme_set_variables
      *
-     * @param  array $data
      * @return $this
      */
     public function setData(array $data)
@@ -129,18 +124,13 @@ class ViewBuilder
         return $this;
     }
 
-    /**
-     * @return array
-     */
+    /** @return array */
     public function getHooks()
     {
         return $this->hooks;
     }
 
-    /**
-     * @param  array $hooks
-     * @return $this
-     */
+    /** @return $this */
     public function setHooks(array $hooks)
     {
         $this->hooks = $hooks;
@@ -148,10 +138,7 @@ class ViewBuilder
         return $this;
     }
 
-    /**
-     * @param  array $cache
-     * @return $this
-     */
+    /** @return $this */
     public function setCache(array $cache)
     {
         $this->cache = $cache;

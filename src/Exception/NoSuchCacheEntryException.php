@@ -15,4 +15,3 @@ class NoSuchCacheEntryException extends \RuntimeException
         );
     }
 }
-

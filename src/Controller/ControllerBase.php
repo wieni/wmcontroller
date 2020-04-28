@@ -66,4 +66,3 @@ abstract class ControllerBase implements ContainerInjectionInterface
         return new RedirectResponse($url, $status);
     }
 }
-

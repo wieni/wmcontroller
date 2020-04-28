@@ -28,8 +28,8 @@ class ResponseBuilder implements ResponseBuilderInterface
 
     public function createResponse(
         array $renderArray,
-        Request $request = null,
-        RouteMatchInterface $routeMatch = null
+        ?Request $request = null,
+        ?RouteMatchInterface $routeMatch = null
     ) {
         return $this->renderer->renderResponse(
             $renderArray,

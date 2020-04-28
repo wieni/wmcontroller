@@ -2,8 +2,8 @@
 
 namespace Drupal\wmcontroller\Event;
 
-use Symfony\Component\EventDispatcher\Event;
 use Drupal\Core\Entity\EntityInterface;
+use Symfony\Component\EventDispatcher\Event;
 
 class MainEntityEvent extends Event
 {
@@ -15,12 +15,9 @@ class MainEntityEvent extends Event
         $this->entity = $entity;
     }
 
-    /**
-     * @return EntityInterface
-     */
+    /** @return EntityInterface */
     public function getEntity()
     {
         return $this->entity;
     }
 }
-

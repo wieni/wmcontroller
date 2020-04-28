@@ -3,14 +3,14 @@
 namespace Drupal\wmcontroller\Service;
 
 use FilesystemIterator;
+use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RecursiveRegexIterator;
 use RegexIterator;
-use RecursiveDirectoryIterator;
 
 class TemplateLocator implements TemplateLocatorInterface
 {
-    const TWIG_EXT = '.html.twig';
+    public const TWIG_EXT = '.html.twig';
 
     protected $settings;
 
@@ -66,17 +66,17 @@ class TemplateLocator implements TemplateLocatorInterface
             // Transform the filename to a template name
             // node/article/index.html.twig => node.article.index
             $templateName = preg_replace('/\/|\\\/', '.', $fileName);
-            $themes[$templateName] = array(
-                'variables' => array(
-                    '_data' => array(),
-                ),
+            $themes[$templateName] = [
+                'variables' => [
+                    '_data' => [],
+                ],
                 'path' => $dir,
                 'template' => $fileName,
                 'preprocess functions' => [
                     'template_preprocess',
                     'wmcontroller_theme_set_variables',
                 ],
-            );
+            ];
         }
 
         return $themes;
@@ -126,4 +126,3 @@ class TemplateLocator implements TemplateLocatorInterface
         );
     }
 }
-

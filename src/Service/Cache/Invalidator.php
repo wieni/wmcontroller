@@ -21,4 +21,3 @@ class Invalidator implements InvalidatorInterface
         );
     }
 }
-
