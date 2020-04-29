@@ -152,6 +152,7 @@ services:
         class:  Drupal\wmcontroller\EventSubscriber\InjectFrontControllerRouteSubscriber
         tags: [{ name: event_subscriber }]
         arguments:
+            - '@entity_type.manager'
             - '%wmcontroller.settings%'
 
     wmcontroller.service.responsebuilder:
