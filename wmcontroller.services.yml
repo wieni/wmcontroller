@@ -133,10 +133,6 @@ parameters:
     # The service responsible for building the cache key
     wmcontroller.cache.keygenerator: wmcontroller.cache.keygenerator.default
 
-    # List of routes that need to have their ?page= query param rewritten to a
-    # route param.
-    wmcontroller.pager_routes: []
-
     # List of response headers to strip
     wmcontroller.cache.stripped_headers:
         - 'x-ua-compatible'
@@ -281,12 +277,6 @@ services:
         arguments:
             - '@event_dispatcher'
         tags: [{ name: http_middleware, priority: 250, responder: true }]
-
-    wmcontroller.pager.subscriber:
-        class: Drupal\wmcontroller\EventSubscriber\PagerRewriteSubscriber
-        arguments:
-            - '%wmcontroller.pager_routes%'
-        tags: [{ name: event_subscriber }]
 
     wmcontroller.cache.storage.mysql:
         class: Drupal\wmcontroller\Service\Cache\Storage\Database
