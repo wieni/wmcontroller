@@ -198,42 +198,42 @@ services:
 
     wmcontroller.cache.storage:
         class: Drupal\wmcontroller\Service\Cache\Storage\StorageInterface
-        factory: Drupal\wmcontroller\Service\Factory::create
+        factory: Drupal\wmcontroller\Service\ServiceFactory::create
         arguments:
             - '@service_container'
             - '%wmcontroller.cache.storage%'
 
     wmcontroller.cache.serializer:
         class: Drupal\wmcontroller\Service\Cache\CacheSerializerInterface
-        factory: Drupal\wmcontroller\Service\Factory::create
+        factory: Drupal\wmcontroller\Service\ServiceFactory::create
         arguments:
             - '@service_container'
             - '%wmcontroller.cache.serializer%'
 
     wmcontroller.cache.builder:
         class: Drupal\wmcontroller\Service\Cache\CacheBuilderInterface
-        factory: Drupal\wmcontroller\Service\Factory::create
+        factory: Drupal\wmcontroller\Service\ServiceFactory::create
         arguments:
             - '@service_container'
             - '%wmcontroller.cache.builder%'
 
     wmcontroller.cache.invalidator:
         class: Drupal\wmcontroller\Service\Cache\InvalidatorInterface
-        factory: Drupal\wmcontroller\Service\Factory::create
+        factory: Drupal\wmcontroller\Service\ServiceFactory::create
         arguments:
             - '@service_container'
             - '%wmcontroller.cache.invalidator%'
 
     wmcontroller.cache.maxage:
         class: Drupal\wmcontroller\Service\Cache\MaxAgeInterface
-        factory: Drupal\wmcontroller\Service\Factory::create
+        factory: Drupal\wmcontroller\Service\ServiceFactory::create
         arguments:
             - '@service_container'
             - '%wmcontroller.cache.maxage%'
 
     wmcontroller.cache.keygenerator:
         class: Drupal\wmcontroller\Service\Cache\CacheKeyGeneratorInterface
-        factory: Drupal\wmcontroller\Service\Factory::create
+        factory: Drupal\wmcontroller\Service\ServiceFactory::create
         arguments:
             - '@service_container'
             - '%wmcontroller.cache.keygenerator%'
