@@ -2,6 +2,7 @@
 
 namespace Drupal\wmcontroller\Controller;
 
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\wmcontroller\Service\Cache\Dispatcher;
@@ -11,7 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolverInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
-class FrontController
+class FrontController implements ContainerInjectionInterface
 {
     /** @var EntityControllerResolverInterface */
     protected $entityControllerResolver;
