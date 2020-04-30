@@ -20,7 +20,7 @@ class ViewBuilder
     /** @var string */
     protected $viewMode = 'full';
     /** @var string|null */
-    protected $langCode = null;
+    protected $langCode;
     /** @var string|null */
     protected $templateDir;
     /** @var string|null */

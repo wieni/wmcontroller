@@ -9,12 +9,12 @@ class MainEntity implements MainEntityInterface
     /** @var EntityInterface */
     protected $entity;
 
-    public function getEntity()
+    public function getEntity(): ?EntityInterface
     {
         return $this->entity;
     }
 
-    public function setEntity(EntityInterface $entity)
+    public function setEntity(EntityInterface $entity): void
     {
         $this->entity = $entity;
     }

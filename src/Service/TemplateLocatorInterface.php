@@ -9,5 +9,5 @@ interface TemplateLocatorInterface
      *
      * @return array
      */
-    public function getThemes();
+    public function getThemes(): array;
 }

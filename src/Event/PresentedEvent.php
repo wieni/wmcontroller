@@ -19,7 +19,7 @@ class PresentedEvent extends Event
         return $this->item;
     }
 
-    public function setItem($item)
+    public function setItem($item): void
     {
         $this->item = $item;
     }

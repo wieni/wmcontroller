@@ -2,22 +2,23 @@
 
 namespace Drupal\wmcontroller\Service;
 
-use Drupal\Core\Render\MainContent\HtmlRenderer;
+use Drupal\Core\Render\MainContent\MainContentRendererInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Response;
 
 class ResponseBuilder implements ResponseBuilderInterface
 {
-    /** @var \Drupal\Core\Render\MainContent\HtmlRenderer */
+    /** @var MainContentRendererInterface */
     protected $renderer;
-    /** @var \Symfony\Component\HttpFoundation\RequestStack */
+    /** @var RequestStack */
     protected $stack;
-    /** @var \Drupal\Core\Routing\RouteMatchInterface */
+    /** @var RouteMatchInterface */
     protected $routeMatch;
 
     public function __construct(
-        HtmlRenderer $renderer,
+        MainContentRendererInterface $renderer,
         RequestStack $stack,
         RouteMatchInterface $routeMatch
     ) {
@@ -30,7 +31,7 @@ class ResponseBuilder implements ResponseBuilderInterface
         array $renderArray,
         ?Request $request = null,
         ?RouteMatchInterface $routeMatch = null
-    ) {
+    ): Response {
         return $this->renderer->renderResponse(
             $renderArray,
             $request ?: $this->stack->getCurrentRequest(),

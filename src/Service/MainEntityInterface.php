@@ -6,7 +6,7 @@ use Drupal\Core\Entity\EntityInterface;
 
 interface MainEntityInterface
 {
-    public function getEntity();
+    public function getEntity(): ?EntityInterface;
 
-    public function setEntity(EntityInterface $entity);
+    public function setEntity(EntityInterface $entity): void;
 }

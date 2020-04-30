@@ -15,8 +15,7 @@ class MainEntityEvent extends Event
         $this->entity = $entity;
     }
 
-    /** @return EntityInterface */
-    public function getEntity()
+    public function getEntity(): EntityInterface
     {
         return $this->entity;
     }

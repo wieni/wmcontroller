@@ -3,6 +3,7 @@
 namespace Drupal\wmcontroller\Service;
 
 use Drupal\wmcontroller\Entity\HasPresenterInterface;
+use Drupal\wmcontroller\Entity\PresenterInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class PresenterFactory implements PresenterFactoryInterface
@@ -15,7 +16,7 @@ class PresenterFactory implements PresenterFactoryInterface
         $this->container = $container;
     }
 
-    public function getPresenterForEntity(HasPresenterInterface $entity)
+    public function getPresenterForEntity(HasPresenterInterface $entity): PresenterInterface
     {
         $presenter = $this->container->get($entity->getPresenterService());
 

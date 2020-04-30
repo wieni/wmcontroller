@@ -12,6 +12,7 @@ class TemplateLocator implements TemplateLocatorInterface
 {
     public const TWIG_EXT = '.html.twig';
 
+    /** @var array */
     protected $settings;
 
     public function __construct(array $settings)
@@ -29,7 +30,7 @@ class TemplateLocator implements TemplateLocatorInterface
         $this->settings = $settings;
     }
 
-    public function getThemes()
+    public function getThemes(): array
     {
         $type = 'module';
         if (!empty($this->settings['theme'])) {
@@ -46,9 +47,8 @@ class TemplateLocator implements TemplateLocatorInterface
      *   module or theme
      * @param $location
      *   directory in that module or theme
-     * @return array
      */
-    protected function getThemeFiles($type, $location)
+    protected function getThemeFiles(string $type, string $location): array
     {
         $themes = [];
         $dir = drupal_get_path($type, $location) .
@@ -85,10 +85,9 @@ class TemplateLocator implements TemplateLocatorInterface
     /**
      * Find all twig files recursively in a directory
      *
-     * @param  string   $directory
      * @return string[]
      */
-    protected function findTwigFiles($directory)
+    protected function findTwigFiles(string $directory): array
     {
         $fileIterator = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator(
@@ -114,7 +113,7 @@ class TemplateLocator implements TemplateLocatorInterface
         return $files;
     }
 
-    protected function stripOutTemplatePathAndExtension($templatePath, $file)
+    protected function stripOutTemplatePathAndExtension(string $templatePath, string $file): string
     {
         // Strip out the module path
         $file = str_replace($templatePath . DIRECTORY_SEPARATOR, '', $file);

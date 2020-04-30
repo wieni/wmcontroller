@@ -15,14 +15,12 @@ class EntityPresentedEvent extends Event
         $this->entity = $entity;
     }
 
-    /** @return EntityInterface */
-    public function getEntity()
+    public function getEntity(): EntityInterface
     {
         return $this->entity;
     }
 
-    /** @return string[] */
-    public function getCacheTags()
+    public function getCacheTags(): array
     {
         return $this->entity->getCacheTagsToInvalidate();
     }
