@@ -164,7 +164,9 @@ class ViewBuilder
         if ($tag instanceof EntityInterface) {
             return $this->addCacheTags($tag->getCacheTagsToInvalidate());
         }
-        $this->cache['tags'][] = $tag;
+        if ($tag) {
+            $this->cache['tags'][] = $tag;
+        }
 
         return $this;
     }
