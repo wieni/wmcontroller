@@ -2,6 +2,8 @@
 
 namespace Drupal\wmcontroller\Controller;
 
+use Drupal\Core\Controller\ControllerResolverInterface;
+use Drupal\Core\DependencyInjection\ClassResolverInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
@@ -16,6 +18,8 @@ class FrontController implements ContainerInjectionInterface
 {
     /** @var EntityControllerResolverInterface */
     protected $entityControllerResolver;
+    /** @var ControllerResolverInterface */
+    protected $controllerResolver;
     /** @var ArgumentResolverInterface */
     protected $argumentResolver;
     /** @var LanguageManagerInterface */
@@ -34,6 +38,7 @@ class FrontController implements ContainerInjectionInterface
     {
         $instance = new static;
         $instance->entityControllerResolver = $container->get('wmcontroller.entity_controller_resolver');
+        $instance->controllerResolver = $container->get('controller_resolver');
         $instance->argumentResolver = $container->get('http_kernel.controller.argument_resolver');
         $instance->languageManager = $container->get('language_manager');
         $instance->dispatcher = $container->get('wmcontroller.cache.dispatcher');
@@ -60,6 +65,7 @@ class FrontController implements ContainerInjectionInterface
             $controller = [$this->entityControllerResolver->getController($entity), 'show'];
         } catch (\RuntimeException $e) {
             $controller = $request->attributes->get('_original_controller');
+            $controller = $this->controllerResolver->getControllerFromDefinition($controller);
         }
 
         $this->dispatcher->dispatchMainEntity($entity);
