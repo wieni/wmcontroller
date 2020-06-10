@@ -179,6 +179,7 @@ services:
         class: Drupal\wmcontroller\Service\PresenterFactory
         arguments:
             - '@service_container'
+            - '@wmcontroller.cache.dispatcher'
 
     wmcontroller.presenter.subscriber:
         class: Drupal\wmcontroller\EventSubscriber\PresenterSubscriber
