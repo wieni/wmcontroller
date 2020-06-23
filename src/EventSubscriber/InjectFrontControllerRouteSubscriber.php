@@ -56,11 +56,10 @@ class InjectFrontControllerRouteSubscriber extends RouteSubscriberBase
     {
         $defaults = $route->getDefaults();
 
-        if (!isset($defaults['_controller'])) {
-            return;
+        if (isset($defaults['_controller'])) {
+            $defaults['_original_controller'] = $defaults['_controller'];
         }
 
-        $defaults['_original_controller'] = $defaults['_controller'];
         $defaults['_controller'] = sprintf(
             '%s%s%s',
             $this->frontController,
