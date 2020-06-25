@@ -144,11 +144,11 @@ parameters:
     wmcontroller.max_purges_per_invalidation: 100000
 
 services:
-    wmcontroller.routing.injectfrontcontroller:
-        class:  Drupal\wmcontroller\EventSubscriber\InjectFrontControllerRouteSubscriber
-        tags: [{ name: event_subscriber }]
+    wmcontroller.route_enhancer.inject_front_controller:
+        class: Drupal\wmcontroller\Enhancer\InjectFrontControllerRouteEnhancer
+        # This enhancer has to run after route_enhancer.entity
+        tags: [{ name: route_enhancer, priority: 19 }]
         arguments:
-            - '@entity_type.manager'
             - '%wmcontroller.settings%'
 
     wmcontroller.service.responsebuilder:
