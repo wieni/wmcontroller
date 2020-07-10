@@ -23,6 +23,9 @@ parameters:
         # en translation )
         404_when_not_translated: true
 
+        # Routes to never reroute through the front controller
+        ignore_routes: []
+
     # Expiry rules.
     # maxage = client side caching duration
     # s-maxage = server side caching duration (this can be drupal db or a cdn)

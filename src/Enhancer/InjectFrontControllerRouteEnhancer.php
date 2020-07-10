@@ -17,6 +17,8 @@ class InjectFrontControllerRouteEnhancer implements EnhancerInterface
     protected $settings;
     /** @var string */
     protected $frontController = FrontController::class;
+    /** @var array */
+    protected $ignoreRoutes = [];
 
     public function __construct(
         array $settings
@@ -26,6 +28,10 @@ class InjectFrontControllerRouteEnhancer implements EnhancerInterface
         if (isset($settings['frontcontroller'])) {
             $this->frontController = $settings['frontcontroller'];
         }
+
+        if (isset($settings['ignore_routes'])) {
+            $this->ignoreRoutes = $settings['ignore_routes'];
+        }
     }
 
     public function enhance(array $defaults, Request $request)
@@ -33,6 +39,10 @@ class InjectFrontControllerRouteEnhancer implements EnhancerInterface
         $routeName = $defaults[RouteObjectInterface::ROUTE_NAME];
 
         if (!preg_match('#entity\..+\.canonical#', $routeName)) {
+            return $defaults;
+        }
+
+        if (in_array($routeName, $this->ignoreRoutes, true)) {
             return $defaults;
         }
 
