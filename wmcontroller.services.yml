@@ -133,10 +133,6 @@ parameters:
     # The service responsible for building the cache key
     wmcontroller.cache.keygenerator: wmcontroller.cache.keygenerator.default
 
-    # List of routes that need to have their ?page= query param rewritten to a
-    # route param.
-    wmcontroller.pager_routes: []
-
     # List of response headers to strip
     wmcontroller.cache.stripped_headers:
         - 'x-ua-compatible'
