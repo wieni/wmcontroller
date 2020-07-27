@@ -2,7 +2,6 @@
 
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
-use Drupal\wmcontroller\EventSubscriber\PagerRewriteSubscriber;
 
 /**
  * Implements hook_theme().
