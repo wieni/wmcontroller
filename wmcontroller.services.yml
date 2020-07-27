@@ -277,12 +277,6 @@ services:
             - '@event_dispatcher'
         tags: [{ name: http_middleware, priority: 250, responder: true }]
 
-    wmcontroller.pager.subscriber:
-        class: Drupal\wmcontroller\EventSubscriber\PagerRewriteSubscriber
-        arguments:
-            - '%wmcontroller.pager_routes%'
-        tags: [{ name: event_subscriber }]
-
     wmcontroller.cache.storage.mysql:
         class: Drupal\wmcontroller\Service\Cache\Storage\Database
         arguments:
