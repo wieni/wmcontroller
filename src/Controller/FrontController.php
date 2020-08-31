@@ -6,7 +6,12 @@ use Drupal\Core\Controller\ControllerResolverInterface;
 use Drupal\Core\DependencyInjection\ClassResolverInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\node\Entity\Node;
+use Drupal\node\NodeInterface;
+use Drupal\taxonomy\Entity\Term;
+use Drupal\taxonomy\TermInterface;
 use Drupal\wmcontroller\Service\Cache\Dispatcher;
 use Drupal\wmcontroller\Service\EntityControllerResolverInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -78,7 +83,7 @@ class FrontController implements ContainerInjectionInterface
 
     protected function validateLangcode(EntityInterface $entity): void
     {
-        $language = $this->languageManager->getCurrentLanguage();
+        $language = $this->languageManager->getCurrentLanguage(LanguageInterface::TYPE_CONTENT);
         $isMultiLang = count($this->languageManager->getLanguages()) > 1;
 
         if (
