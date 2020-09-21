@@ -2,10 +2,12 @@
 
 namespace Drupal\wmcontroller\EventSubscriber;
 
+use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Core\Cache\CacheableResponseInterface;
+use Drupal\wmcontroller\Event\CacheTagsEvent;
+use Drupal\wmcontroller\Event\EntityPresentedEvent;
 use Drupal\wmcontroller\Exception\NoSuchCacheEntryException;
 use Drupal\wmcontroller\Http\CachedResponse;
-use Drupal\wmcontroller\Event\EntityPresentedEvent;
-use Drupal\wmcontroller\Event\CacheTagsEvent;
 use Drupal\wmcontroller\Service\Cache\EnrichRequest;
 use Drupal\wmcontroller\Service\Cache\Manager;
 use Drupal\wmcontroller\Service\Cache\MaxAgeInterface;
@@ -173,18 +175,28 @@ class CacheSubscriber implements EventSubscriberInterface
 
     public function onTerminate(PostResponseEvent $event)
     {
+        $request = $event->getRequest();
+        $response = $event->getResponse();
+
         if (
             !$event->isMasterRequest()
-            || !$event->getResponse()->isCacheable()
+            || !$response->isCacheable()
         ) {
             return;
         }
 
-        $this->manager->store(
-            $event->getRequest(),
-            $event->getResponse(),
+        $metadata = new CacheableMetadata();
+        $metadata->addCacheTags(
             array_keys($this->presentedEntityTags)
         );
+
+        if ($response instanceof CacheableResponseInterface) {
+            $metadata->addCacheTags(
+                $response->getCacheableMetadata()->getCacheTags()
+            );
+        }
+
+        $this->manager->store($request, $response, $metadata->getCacheTags());
     }
 
     protected function setMaxAge(Response $response, array $definition)
