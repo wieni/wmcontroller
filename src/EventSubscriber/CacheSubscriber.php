@@ -107,6 +107,11 @@ class CacheSubscriber implements EventSubscriberInterface
             if ($this->addHeader) {
                 $response->headers->set(self::CACHE_HEADER, 'HIT');
             }
+
+            if (empty($response->getContent())) {
+                return;
+            }
+
             $event->setResponse($response);
         } catch (NoSuchCacheEntryException $e) {
         }
@@ -114,16 +119,21 @@ class CacheSubscriber implements EventSubscriberInterface
 
     public function onResponse(FilterResponseEvent $event)
     {
-        if (!$event->isMasterRequest()) {
+        $request = $event->getRequest();
+        $response = $event->getResponse();
+
+        if (
+            !$event->isMasterRequest()
+            || $response instanceof CachedResponse
+            || empty($response->getContent())
+        ) {
             return;
         }
 
-        $request = $event->getRequest();
         if ($this->ignore($request, true)) {
             return;
         }
 
-        $response = $event->getResponse();
         if (!($response instanceof CachedResponse) && $this->addHeader) {
             $response->headers->set(self::CACHE_HEADER, 'MISS');
         }
