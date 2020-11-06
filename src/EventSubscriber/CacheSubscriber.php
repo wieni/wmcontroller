@@ -13,16 +13,16 @@ use Drupal\wmcontroller\Service\Cache\Manager;
 use Drupal\wmcontroller\Service\Cache\MaxAgeInterface;
 use Drupal\wmcontroller\Service\Cache\Validation\Validation;
 use Drupal\wmcontroller\WmcontrollerEvents;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpKernel\KernelEvents;
-use Symfony\Component\HttpKernel\Event\PostResponseEvent;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+use Symfony\Component\HttpKernel\Event\PostResponseEvent;
+use Symfony\Component\HttpKernel\KernelEvents;
 
 class CacheSubscriber implements EventSubscriberInterface
 {
-    const CACHE_HEADER = 'X-Wm-Cache';
+    public const CACHE_HEADER = 'X-Wm-Cache';
 
     /** @var Manager */
     protected $manager;

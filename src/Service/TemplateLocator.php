@@ -3,15 +3,16 @@
 namespace Drupal\wmcontroller\Service;
 
 use FilesystemIterator;
+use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RecursiveRegexIterator;
 use RegexIterator;
-use RecursiveDirectoryIterator;
 
 class TemplateLocator implements TemplateLocatorInterface
 {
-    const TWIG_EXT = '.html.twig';
+    public const TWIG_EXT = '.html.twig';
 
+    /** @var array */
     protected $settings;
 
     public function __construct(array $settings)
@@ -29,7 +30,7 @@ class TemplateLocator implements TemplateLocatorInterface
         $this->settings = $settings;
     }
 
-    public function getThemes()
+    public function getThemes(): array
     {
         $type = 'module';
         if (!empty($this->settings['theme'])) {
@@ -46,9 +47,8 @@ class TemplateLocator implements TemplateLocatorInterface
      *   module or theme
      * @param $location
      *   directory in that module or theme
-     * @return array
      */
-    protected function getThemeFiles($type, $location)
+    protected function getThemeFiles(string $type, string $location): array
     {
         $themes = [];
         $dir = drupal_get_path($type, $location) .
@@ -66,17 +66,17 @@ class TemplateLocator implements TemplateLocatorInterface
             // Transform the filename to a template name
             // node/article/index.html.twig => node.article.index
             $templateName = preg_replace('/\/|\\\/', '.', $fileName);
-            $themes[$templateName] = array(
-                'variables' => array(
-                    '_data' => array(),
-                ),
+            $themes[$templateName] = [
+                'variables' => [
+                    '_data' => [],
+                ],
                 'path' => $dir,
                 'template' => $fileName,
                 'preprocess functions' => [
                     'template_preprocess',
                     'wmcontroller_theme_set_variables',
                 ],
-            );
+            ];
         }
 
         return $themes;
@@ -85,10 +85,9 @@ class TemplateLocator implements TemplateLocatorInterface
     /**
      * Find all twig files recursively in a directory
      *
-     * @param  string   $directory
      * @return string[]
      */
-    protected function findTwigFiles($directory)
+    protected function findTwigFiles(string $directory): array
     {
         $fileIterator = new RecursiveIteratorIterator(
             new RecursiveDirectoryIterator(
@@ -114,7 +113,7 @@ class TemplateLocator implements TemplateLocatorInterface
         return $files;
     }
 
-    protected function stripOutTemplatePathAndExtension($templatePath, $file)
+    protected function stripOutTemplatePathAndExtension(string $templatePath, string $file): string
     {
         // Strip out the module path
         $file = str_replace($templatePath . DIRECTORY_SEPARATOR, '', $file);
@@ -126,4 +125,3 @@ class TemplateLocator implements TemplateLocatorInterface
         );
     }
 }
-

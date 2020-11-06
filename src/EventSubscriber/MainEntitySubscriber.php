@@ -2,7 +2,6 @@
 
 namespace Drupal\wmcontroller\EventSubscriber;
 
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\wmcontroller\Event\MainEntityEvent;
 use Drupal\wmcontroller\Service\MainEntity;
 use Drupal\wmcontroller\WmcontrollerEvents;

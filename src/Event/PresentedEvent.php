@@ -13,17 +13,14 @@ class PresentedEvent extends Event
         $this->item = $item;
     }
 
-    /**
-     * @return mixed
-     */
+    /** @return mixed */
     public function getItem()
     {
         return $this->item;
     }
 
-    public function setItem($item)
+    public function setItem($item): void
     {
         $this->item = $item;
     }
 }
-

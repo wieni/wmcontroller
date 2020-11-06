@@ -2,8 +2,8 @@
 
 namespace Drupal\wmcontroller;
 
-use Drupal\Core\DependencyInjection\ServiceModifierInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
+use Drupal\Core\DependencyInjection\ServiceModifierInterface;
 
 class WmcontrollerServiceProvider implements ServiceModifierInterface
 {
@@ -22,4 +22,3 @@ class WmcontrollerServiceProvider implements ServiceModifierInterface
         );
     }
 }
-

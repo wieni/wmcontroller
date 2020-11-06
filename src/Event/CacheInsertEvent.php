@@ -9,13 +9,13 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CacheInsertEvent extends Event
 {
-    /** @var \Drupal\wmcontroller\Entity\Cache */
+    /** @var Cache */
     protected $cache;
     /** @var string[] */
     protected $tags;
-    /** @var \Symfony\Component\HttpFoundation\Request */
+    /** @var Request */
     protected $request;
-    /** @var \Symfony\Component\HttpFoundation\Response */
+    /** @var Response */
     protected $response;
 
     public function __construct(Cache $cache, array $tags, Request $request, Response $response)
@@ -26,33 +26,29 @@ class CacheInsertEvent extends Event
         $this->response = $response;
     }
 
-    public function setCache(Cache $cache)
+    public function setCache(Cache $cache): void
     {
         $this->cache = $cache;
     }
 
-    /** @return Cache */
-    public function getCache()
+    public function getCache(): Cache
     {
         return $this->cache;
     }
 
     /** @return string[] */
-    public function &getTags()
+    public function &getTags(): array
     {
         return $this->tags;
     }
 
-    /** @return \Symfony\Component\HttpFoundation\Request */
-    public function getRequest()
+    public function getRequest(): Request
     {
         return $this->request;
     }
 
-    /** @return \Symfony\Component\HttpFoundation\Response */
-    public function getResponse()
+    public function getResponse(): Response
     {
         return $this->response;
     }
 }
-

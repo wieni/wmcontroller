@@ -4,7 +4,7 @@ namespace Drupal\wmcontroller\Service\Cache\Validation;
 
 class CacheableRequestResult extends ValidationResult
 {
-    const ALLOW_FETCHING = 'allowCachedResponse';
+    public const ALLOW_FETCHING = 'allowCachedResponse';
 
     /**
      * Returns true if nobody says it's forbidden to fetch the cached version.

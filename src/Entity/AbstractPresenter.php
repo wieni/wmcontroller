@@ -6,12 +6,6 @@ abstract class AbstractPresenter implements PresenterInterface
 {
     protected $entity;
 
-    protected function methodNames($methodName)
-    {
-        $uc = ucfirst($methodName);
-        return [$methodName, 'is' . $uc, 'get' . $uc, 'has' . $uc];
-    }
-
     public function __isset($prop)
     {
         return isset($this->entity->{$prop});
@@ -42,5 +36,11 @@ abstract class AbstractPresenter implements PresenterInterface
     public function getEntity()
     {
         return $this->entity;
+    }
+
+    protected function methodNames($methodName)
+    {
+        $uc = ucfirst($methodName);
+        return [$methodName, 'is' . $uc, 'get' . $uc, 'has' . $uc];
     }
 }

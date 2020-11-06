@@ -6,6 +6,7 @@ use Symfony\Component\EventDispatcher\Event;
 
 class CacheTagsEvent extends Event
 {
+    /** @var string[] */
     protected $tags;
 
     public function __construct(array $tags)
@@ -13,12 +14,8 @@ class CacheTagsEvent extends Event
         $this->tags = $tags;
     }
 
-    /**
-     * @return string[]
-     */
-    public function getCacheTags()
+    public function getCacheTags(): array
     {
         return $this->tags;
     }
 }
-

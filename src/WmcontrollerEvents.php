@@ -11,7 +11,7 @@ final class WmcontrollerEvents
      * The event object is an instance of
      * @see \Drupal\wmcontroller\Event\PresentedEvent
      */
-    const PRESENTED = 'item.presented';
+    public const PRESENTED = 'item.presented';
 
     /**
      * Will be triggered whenever a Drupal EntityInterface is injected into
@@ -22,7 +22,7 @@ final class WmcontrollerEvents
      *
      * @see Dispatcher::dispatchPresented().
      */
-    const ENTITY_PRESENTED = 'entity.presented';
+    public const ENTITY_PRESENTED = 'entity.presented';
 
     /**
      * This event can be used to attach additional tags to the current page.
@@ -32,7 +32,7 @@ final class WmcontrollerEvents
      *
      * @see Dispatcher::dispatchTags().
      */
-    const CACHE_TAGS = 'cache.tags';
+    public const CACHE_TAGS = 'cache.tags';
 
     /**
      * Will be triggered when an EntityInterface is being passed
@@ -43,7 +43,7 @@ final class WmcontrollerEvents
      *
      * @see Dispatcher::dispatchMainEntity().
      */
-    const MAIN_ENTITY_RENDER = 'entity.main.render';
+    public const MAIN_ENTITY_RENDER = 'entity.main.render';
 
     /**
      * Will be triggered from the Cache http middleware when a request
@@ -55,7 +55,7 @@ final class WmcontrollerEvents
      * If a response is set on the event object no further processing will occur
      * and the response is served.
      */
-    const CACHE_HANDLE = 'cache.handle';
+    public const CACHE_HANDLE = 'cache.handle';
 
     /**
      * Will be triggered from the Cache manager when a response is stored.
@@ -63,7 +63,7 @@ final class WmcontrollerEvents
      * The event object is an instance of
      * @see \Drupal\wmcontroller\Event\CacheInsertEvent
      */
-    const CACHE_INSERT = 'cache.insert';
+    public const CACHE_INSERT = 'cache.insert';
 
     /**
      * Will be triggered from the Cache http middleware when a request
@@ -72,7 +72,7 @@ final class WmcontrollerEvents
      * The event object is an instance of
      * @see \Drupal\wmcontroller\Event\ValidationEvent
      */
-    const VALIDATE_CACHEABILITY_REQUEST = 'cache.request.validate';
+    public const VALIDATE_CACHEABILITY_REQUEST = 'cache.request.validate';
 
     /**
      * Will be triggered from the CacheSubscriber when a response
@@ -81,5 +81,5 @@ final class WmcontrollerEvents
      * The event object is an instance of
      * @see \Drupal\wmcontroller\Event\ValidationEvent
      */
-    const VALIDATE_CACHEABILITY_RESPONSE = 'cache.response.validate';
+    public const VALIDATE_CACHEABILITY_RESPONSE = 'cache.response.validate';
 }

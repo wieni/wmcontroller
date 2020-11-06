@@ -26,4 +26,3 @@ class ViewRendererSubscriber implements EventSubscriberInterface
         }
     }
 }
-

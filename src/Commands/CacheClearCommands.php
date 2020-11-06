@@ -10,7 +10,8 @@ class CacheClearCommands extends DrushCommands
     /** @var \Drupal\wmcontroller\Service\Cache\Storage\StorageInterface */
     protected $storage;
 
-    public function __construct(StorageInterface $storage) {
+    public function __construct(StorageInterface $storage)
+    {
         $this->storage = $storage;
     }
 

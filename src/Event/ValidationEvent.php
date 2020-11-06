@@ -19,7 +19,7 @@ class ValidationEvent extends Event
     protected $result;
     protected $results = [];
 
-    public function __construct(Request $request, Response $response = null, $resultClass = null)
+    public function __construct(Request $request, ?Response $response = null, $resultClass = null)
     {
         $this->resultClass = $resultClass ?: ValidationResult::class;
         $this->request = $request;
@@ -75,4 +75,3 @@ class ValidationEvent extends Event
         return $result;
     }
 }
-

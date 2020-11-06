@@ -2,16 +2,16 @@
 
 namespace Drupal\wmcontroller\Service\Cache\Storage;
 
+use Drupal\Core\Database\Connection;
 use Drupal\wmcontroller\Entity\Cache;
 use Drupal\wmcontroller\Exception\NoSuchCacheEntryException;
-use Drupal\Core\Database\Connection;
 use Drupal\wmcontroller\Service\Cache\CacheSerializerInterface;
 
 class Database implements StorageInterface
 {
-    const TX = 'wmcontroller_cache_storage';
-    const TABLE_ENTRIES = 'wmcontroller_cache';
-    const TABLE_TAGS = 'wmcontroller_cache_tags';
+    public const TX = 'wmcontroller_cache_storage';
+    public const TABLE_ENTRIES = 'wmcontroller_cache';
+    public const TABLE_TAGS = 'wmcontroller_cache_tags';
 
     /** @var \Drupal\Core\Database\Connection */
     protected $db;

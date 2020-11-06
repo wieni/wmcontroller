@@ -2,11 +2,11 @@
 
 namespace Drupal\wmcontroller\Http\Middleware;
 
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\HttpKernelInterface;
-use Symfony\Component\HttpKernel\Event\GetResponseEvent;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Drupal\wmcontroller\WmcontrollerEvents;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Event\GetResponseEvent;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 class Cache implements HttpKernelInterface
 {
@@ -47,4 +47,3 @@ class Cache implements HttpKernelInterface
         return $this->next->handle($request, $type, $catch);
     }
 }
-

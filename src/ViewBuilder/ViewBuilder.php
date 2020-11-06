@@ -6,35 +6,30 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\wmcontroller\Service\Cache\Dispatcher;
 use Drupal\wmcontroller\Service\ResponseBuilder;
+use Symfony\Component\HttpFoundation\Response;
 
 class ViewBuilder
 {
     /** @var Dispatcher */
     protected $dispatcher;
-
     /** @var EntityTypeManagerInterface */
     protected $entityTypeManager;
-
-    /** @var \Drupal\wmcontroller\Service\ResponseBuilder */
+    /** @var ResponseBuilder */
     protected $responseBuilder;
 
+    /** @var string */
     protected $viewMode = 'full';
-
-    protected $langCode = null;
-
+    /** @var string|null */
+    protected $langCode;
+    /** @var string|null */
     protected $templateDir;
-
+    /** @var string|null */
     protected $template;
-
     /** @var EntityInterface */
     protected $entity;
-
+    /** @var array */
     protected $data = [];
-
-    protected $hooks = [];
-
-    protected $headElements = [];
-
+    /** @var array[] */
     protected $cache = [
         'tags' => [],
         'contexts' => [],
@@ -50,49 +45,25 @@ class ViewBuilder
         $this->responseBuilder = $responseBuilder;
     }
 
-    public function setTemplateDir($templateDir)
+    public function setTemplateDir(?string $templateDir): self
     {
         $this->templateDir = $templateDir;
 
         return $this;
     }
 
-    public function setTemplate($template)
+    public function setTemplate(?string $template): self
     {
         $this->template = $template;
 
         return $this;
     }
 
-    public function setEntity(EntityInterface $entity)
+    public function setEntity(EntityInterface $entity): self
     {
         $this->entity = $entity;
-
         $this->dispatcher->dispatchMainEntity($entity);
 
-        return $this;
-    }
-
-    /**
-     * @param  array $headElements
-     * @return $this
-     */
-    public function setHeadElements(array $headElements)
-    {
-        $this->headElements = $headElements;
-
-        return $this;
-    }
-
-    /**
-     * @param  array $headElement
-     * @param  string $key
-     * @return $this
-     */
-    public function addHeadElement(array $headElement, $key = '')
-    {
-        $key = $key ?: bin2hex(random_bytes(20));
-        $this->headElements[] = [$headElement, $key];
         return $this;
     }
 
@@ -103,67 +74,42 @@ class ViewBuilder
      * When passed [myVariable => 'I am a teapot'], the view will
      * have access to the variable 'myVariable'
      *
-     * This is done by wmcontroller_theme_set_variables
-     *
-     * @param  array $data
-     * @return $this
+     * @see wmcontroller_theme_set_variables
      */
-    public function setData(array $data)
+    public function setData(array $data): self
     {
         $this->data = $data;
 
         return $this;
     }
 
-    public function setViewMode($viewMode)
+    public function setViewMode(string $viewMode): self
     {
         $this->viewMode = $viewMode;
 
         return $this;
     }
 
-    public function setLangCode($langCode)
+    public function setLangCode(?string $langCode): self
     {
         $this->langCode = $langCode;
 
         return $this;
     }
 
-    /**
-     * @return array
-     */
-    public function getHooks()
-    {
-        return $this->hooks;
-    }
-
-    /**
-     * @param  array $hooks
-     * @return $this
-     */
-    public function setHooks(array $hooks)
-    {
-        $this->hooks = $hooks;
-
-        return $this;
-    }
-
-    /**
-     * @param  array $cache
-     * @return $this
-     */
-    public function setCache(array $cache)
+    public function setCache(array $cache): self
     {
         $this->cache = $cache;
 
         return $this;
     }
 
-    public function addCacheTag($tag)
+    public function addCacheTag($tag): self
     {
         if ($tag instanceof EntityInterface) {
             return $this->addCacheTags($tag->getCacheTagsToInvalidate());
         }
+        
         if ($tag) {
             $this->cache['tags'][] = $tag;
         }
@@ -171,27 +117,21 @@ class ViewBuilder
         return $this;
     }
 
-    public function addCacheTags(array $tags)
+    public function addCacheTags(array $tags): self
     {
         array_walk($tags, [$this, 'addCacheTag']);
 
         return $this;
     }
 
-    public function addCacheContexts(string $context)
+    public function addCacheContexts(string $context): self
     {
         $this->cache['contexts'][] = $context;
 
         return $this;
     }
 
-    /** @deprecated Use the toRenderArray() method */
-    public function render()
-    {
-        return $this->toRenderArray();
-    }
-
-    public function toRenderArray()
+    public function toRenderArray(): array
     {
         $view = [];
         if ($this->entity) {
@@ -200,8 +140,6 @@ class ViewBuilder
         $view['#_data'] = $this->data;
 
         $this->addThemeToRenderArray($view);
-        $this->addHeadElementsToRenderArray($view);
-        $this->addCustomHooksToRenderArray($view);
         $this->addCacheTagsToRenderArray($view);
         $this->dispatchCacheTags($view);
         $this->dispatchCacheTagsOfPassedEntities($view);
@@ -209,25 +147,25 @@ class ViewBuilder
         return $view;
     }
 
-    public function toResponse()
+    public function toResponse(): Response
     {
         return $this->responseBuilder->createResponse($this->toRenderArray());
     }
 
-    protected function createOriginalRenderArrayFromEntity(EntityInterface $entity)
+    protected function createOriginalRenderArrayFromEntity(EntityInterface $entity): array
     {
-        $render_controller = $this->entityTypeManager->getViewBuilder(
+        $renderController = $this->entityTypeManager->getViewBuilder(
             $entity->getEntityTypeId()
         );
 
-        return $render_controller->view(
+        return $renderController->view(
             $entity,
             $this->viewMode,
             $this->langCode
         );
     }
 
-    protected function addThemeToRenderArray(&$view)
+    protected function addThemeToRenderArray(array &$view): void
     {
         if ($this->template) {
             $view['#theme'] =
@@ -236,33 +174,7 @@ class ViewBuilder
         }
     }
 
-    protected function addHeadElementsToRenderArray(&$view)
-    {
-        if (count($this->headElements) > 0) {
-            if (!isset($view['#attached']['html_head'])) {
-                $view['#attached']['html_head'] = [];
-            }
-
-            $view['#attached']['html_head'] = array_merge(
-                $view['#attached']['html_head'],
-                $this->headElements
-            );
-        }
-
-        return $view;
-    }
-
-    protected function addCustomHooksToRenderArray(&$view)
-    {
-        $view['#pre_render'] = array_merge(
-            $view['#pre_render'] ?? [],
-            $this->getHooks()
-        );
-
-        return $view;
-    }
-
-    protected function addCacheTagsToRenderArray(&$view)
+    protected function addCacheTagsToRenderArray(array &$view): void
     {
         // Add cache tags
         if (empty($view['#cache'])) {
@@ -290,14 +202,14 @@ class ViewBuilder
         }
     }
 
-    protected function dispatchCacheTags($view)
+    protected function dispatchCacheTags(array $view): void
     {
         if ($view['#cache']['tags']) {
             $this->dispatcher->dispatchTags($view['#cache']['tags']);
         }
     }
 
-    protected function dispatchCacheTagsOfPassedEntities($view)
+    protected function dispatchCacheTagsOfPassedEntities(array $view): void
     {
         foreach ($view['#_data'] as $entity) {
             if ($entity instanceof EntityInterface) {

@@ -2,10 +2,10 @@
 
 namespace Drupal\wmcontroller\EventSubscriber;
 
-use Drupal\wmcontroller\Event\PresentedEvent;
-use Drupal\wmcontroller\WmcontrollerEvents;
-use Drupal\wmcontroller\Service\PresenterFactory;
 use Drupal\wmcontroller\Entity\HasPresenterInterface;
+use Drupal\wmcontroller\Event\PresentedEvent;
+use Drupal\wmcontroller\Service\PresenterFactory;
+use Drupal\wmcontroller\WmcontrollerEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 class PresenterSubscriber implements EventSubscriberInterface

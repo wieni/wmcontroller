@@ -1,7 +1,7 @@
 {
     "name": "wieni/wmcontroller",
     "type": "drupal-module",
-    "description": "Some helpers for building controllers in Drupal 8.",
+    "description": "Adds support for bundle-specific controllers for Drupal 8 entities.",
     "license": "MIT",
     "authors": [
         {
@@ -10,8 +10,12 @@
         }
     ],
     "require": {
-        "php": ">=7.0.0",
-        "drupal/core": "^8.6"
+        "php": ">=7.1.0",
+        "drupal/core": "^8.6 || ^9.0"
+    },
+    "require-dev": {
+        "ergebnis/composer-normalize": "^2.0",
+        "wieni/wmcodestyle": "^1.0"
     },
     "extra": {
         "drush": {
@@ -20,6 +24,18 @@
             }
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Drupal\\wmcontroller\\": "src/"
+        }
+    },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "scripts": {
+        "coding-standards": [
+            "@composer normalize",
+            "php-cs-fixer fix --config=.php_cs.php",
+            "phpstan analyse"
+        ]
+    }
 }

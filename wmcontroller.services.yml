@@ -23,6 +23,9 @@ parameters:
         # en translation )
         404_when_not_translated: true
 
+        # Routes to never reroute through the front controller
+        ignore_routes: []
+
     # Expiry rules.
     # maxage = client side caching duration
     # s-maxage = server side caching duration (this can be drupal db or a cdn)
@@ -144,9 +147,10 @@ parameters:
     wmcontroller.max_purges_per_invalidation: 100000
 
 services:
-    wmcontroller.routing.injectfrontcontroller:
-        class:  Drupal\wmcontroller\EventSubscriber\InjectFrontControllerRouteSubscriber
-        tags: [{ name: event_subscriber }]
+    wmcontroller.route_enhancer.inject_front_controller:
+        class: Drupal\wmcontroller\Enhancer\InjectFrontControllerRouteEnhancer
+        # This enhancer has to run after route_enhancer.entity
+        tags: [{ name: route_enhancer, priority: 19 }]
         arguments:
             - '%wmcontroller.settings%'
 
@@ -178,6 +182,7 @@ services:
         class: Drupal\wmcontroller\Service\PresenterFactory
         arguments:
             - '@service_container'
+            - '@wmcontroller.cache.dispatcher'
 
     wmcontroller.presenter.subscriber:
         class: Drupal\wmcontroller\EventSubscriber\PresenterSubscriber
@@ -197,42 +202,42 @@ services:
 
     wmcontroller.cache.storage:
         class: Drupal\wmcontroller\Service\Cache\Storage\StorageInterface
-        factory: Drupal\wmcontroller\Service\Factory::create
+        factory: Drupal\wmcontroller\Service\ServiceFactory::create
         arguments:
             - '@service_container'
             - '%wmcontroller.cache.storage%'
 
     wmcontroller.cache.serializer:
         class: Drupal\wmcontroller\Service\Cache\CacheSerializerInterface
-        factory: Drupal\wmcontroller\Service\Factory::create
+        factory: Drupal\wmcontroller\Service\ServiceFactory::create
         arguments:
             - '@service_container'
             - '%wmcontroller.cache.serializer%'
 
     wmcontroller.cache.builder:
         class: Drupal\wmcontroller\Service\Cache\CacheBuilderInterface
-        factory: Drupal\wmcontroller\Service\Factory::create
+        factory: Drupal\wmcontroller\Service\ServiceFactory::create
         arguments:
             - '@service_container'
             - '%wmcontroller.cache.builder%'
 
     wmcontroller.cache.invalidator:
         class: Drupal\wmcontroller\Service\Cache\InvalidatorInterface
-        factory: Drupal\wmcontroller\Service\Factory::create
+        factory: Drupal\wmcontroller\Service\ServiceFactory::create
         arguments:
             - '@service_container'
             - '%wmcontroller.cache.invalidator%'
 
     wmcontroller.cache.maxage:
         class: Drupal\wmcontroller\Service\Cache\MaxAgeInterface
-        factory: Drupal\wmcontroller\Service\Factory::create
+        factory: Drupal\wmcontroller\Service\ServiceFactory::create
         arguments:
             - '@service_container'
             - '%wmcontroller.cache.maxage%'
 
     wmcontroller.cache.keygenerator:
         class: Drupal\wmcontroller\Service\Cache\CacheKeyGeneratorInterface
-        factory: Drupal\wmcontroller\Service\Factory::create
+        factory: Drupal\wmcontroller\Service\ServiceFactory::create
         arguments:
             - '@service_container'
             - '%wmcontroller.cache.keygenerator%'

@@ -1,8 +1,5 @@
 <?php
 
-use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\Url;
-
 /**
  * Implements hook_theme().
  */
