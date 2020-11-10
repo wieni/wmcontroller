@@ -8,10 +8,12 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\TranslatableInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\Core\Render\RendererInterface;
-use Drupal\wmcontroller\Service\Cache\Dispatcher;
+use Drupal\wmcontroller\Event\MainEntityEvent;
 use Drupal\wmcontroller\Service\EntityControllerResolverInterface;
+use Drupal\wmcontroller\Service\ViewBuilder;
+use Drupal\wmcontroller\WmcontrollerEvents;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolverInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -26,10 +28,8 @@ class FrontController implements ContainerInjectionInterface
     protected $argumentResolver;
     /** @var LanguageManagerInterface */
     protected $languageManager;
-    /** @var Dispatcher */
-    protected $dispatcher;
-    /** @var RendererInterface */
-    protected $renderer;
+    /** @var EventDispatcherInterface */
+    protected $eventDispatcher;
     /** @var array */
     protected $settings;
     /** @var bool */
@@ -45,8 +45,7 @@ class FrontController implements ContainerInjectionInterface
         $instance->controllerResolver = $container->get('controller_resolver');
         $instance->argumentResolver = $container->get('http_kernel.controller.argument_resolver');
         $instance->languageManager = $container->get('language_manager');
-        $instance->dispatcher = $container->get('wmcontroller.cache.dispatcher');
-        $instance->renderer = $container->get('renderer');
+        $instance->eventDispatcher = $container->get('event_dispatcher');
         $instance->settings = $container->getParameter('wmcontroller.settings');
 
         if (isset($instance->settings['404_when_not_translated'])) {
@@ -59,26 +58,51 @@ class FrontController implements ContainerInjectionInterface
     /** Forward a request to a controller based on an entities bundle name */
     public function forward(Request $request)
     {
-        $routeName = $request->attributes->get('_route');
-        preg_match('/entity\.(?<entityTypeId>.+)\.canonical/', $routeName, $matches);
-        $entity = $request->attributes->get($matches['entityTypeId']);
-
-        $this->validateLangcode($entity);
         $this->request = $request;
 
-        try {
-            $controller = [$this->entityControllerResolver->getController($entity), 'show'];
-        } catch (\RuntimeException $e) {
+        $controller = null;
+        $routeName = $request->attributes->get('_route');
+
+        preg_match('/entity\.(?<entityTypeId>.+)\.canonical/', $routeName, $matches);
+
+        $entityTypeId = $matches['entityTypeId'] ?? null;
+        $entity = $request->attributes->get($entityTypeId);
+
+        if ($entity) {
+            $this->validateLangcode($entity);
+
+            try {
+                $controller = [$this->entityControllerResolver->getController($entity), 'show'];
+            } catch (\RuntimeException $e) {
+                $controller = $request->attributes->get('_original_controller');
+                $controller = $this->controllerResolver->getControllerFromDefinition($controller);
+            }
+
+            $event = new MainEntityEvent($entity);
+            $this->eventDispatcher->dispatch(
+                WmcontrollerEvents::MAIN_ENTITY_RENDER,
+                $event
+            );
+        } else {
             $controller = $request->attributes->get('_original_controller');
             $controller = $this->controllerResolver->getControllerFromDefinition($controller);
         }
 
-        $this->dispatcher->dispatchMainEntity($entity);
+        $arguments = $this->argumentResolver->getArguments($request, $controller);
+        $result = call_user_func_array($controller, $arguments);
 
-        return call_user_func_array(
-            $controller,
-            $this->argumentResolver->getArguments($request, $controller)
-        );
+        /**
+         * Early conversion of ViewBuilder to render array to
+         * make sure bubbleable metadata is not lost.
+         *
+         * @see \Drupal\Core\EventSubscriber\EarlyRenderingControllerWrapperSubscriber
+         */
+        if ($result instanceof ViewBuilder) {
+            // Replace the controller result with a render-array
+            $result = $result->toRenderArray();
+        }
+
+        return $result;
     }
 
     protected function validateLangcode(EntityInterface $entity): void

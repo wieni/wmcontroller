@@ -6,7 +6,6 @@ use Drupal\Core\Routing\EnhancerInterface;
 use Drupal\wmcontroller\Controller\FrontController;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Route;
 
 /**
  * Alter canonical routes to use bundle-specific controllers.
@@ -37,10 +36,6 @@ class InjectFrontControllerRouteEnhancer implements EnhancerInterface
     public function enhance(array $defaults, Request $request)
     {
         $routeName = $defaults[RouteObjectInterface::ROUTE_NAME];
-
-        if (!preg_match('#entity\..+\.canonical#', $routeName)) {
-            return $defaults;
-        }
 
         if (in_array($routeName, $this->ignoreRoutes, true)) {
             return $defaults;

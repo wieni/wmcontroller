@@ -1,19 +1,10 @@
 <?php
 
 /**
- * Implements hook_theme().
- */
-function wmcontroller_theme()
-{
-    return \Drupal::service('wmcontroller.service.templatelocator')
-        ->getThemes();
-}
-
-/**
  * Sets the variables set in a Controller
  *
  * @param $variables
- * @see \Drupal\wmcontroller\ViewBuilder\ViewBuilder::setData
+ * @see \Drupal\wmcontroller\Service\ViewBuilder::setData
  */
 function wmcontroller_theme_set_variables(&$variables)
 {
@@ -23,36 +14,4 @@ function wmcontroller_theme_set_variables(&$variables)
     }
     $variables = array_merge($variables, $variables['_data']);
     unset($variables['_data']);
-}
-
-/**
- * Implements hook_cron()
- */
-function wmcontroller_cron()
-{
-    wmcontroller_cron_purge_expired();
-}
-
-/**
- * Purge expired wmcontroller_cache items.
- */
-function wmcontroller_cron_purge_expired()
-{
-    $ctr = Drupal::getContainer();
-    $ctr->get('wmcontroller.cache.storage')->remove(
-        $ctr->get('wmcontroller.cache.storage')->getExpired(
-            $ctr->getParameter('wmcontroller.cache.purge_per_cron')
-        )
-    );
-}
-
-/**
- * Implements hook_cache_flush().
- */
-function wmcontroller_cache_flush()
-{
-    $ctr = \Drupal::getContainer();
-    if ($ctr->getParameter('wmcontroller.cache.flush_on_cache_rebuild')) {
-        $ctr->get('wmcontroller.cache.storage')->flush();
-    }
 }

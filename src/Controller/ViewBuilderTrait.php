@@ -1,10 +1,8 @@
 <?php
 
-
 namespace Drupal\wmcontroller\Controller;
 
-
-use Drupal\wmcontroller\ViewBuilder\ViewBuilder;
+use Drupal\wmcontroller\Service\ViewBuilder;
 
 trait ViewBuilderTrait
 {
