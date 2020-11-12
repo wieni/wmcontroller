@@ -2,7 +2,7 @@
 
 namespace Drupal\wmcontroller\Controller;
 
-use Drupal\wmcontroller\Service\ViewBuilder;
+use Drupal\wmtwig\ViewBuilder;
 
 trait ViewBuilderTrait
 {
@@ -29,7 +29,7 @@ trait ViewBuilderTrait
     protected function getViewBuilder(): ViewBuilder
     {
         if (!isset($this->viewBuilder)) {
-            $this->viewBuilder = \Drupal::service('wmcontroller.viewbuilder');
+            $this->viewBuilder = \Drupal::service('wmtwig.viewbuilder');
         }
 
         return $this->viewBuilder;

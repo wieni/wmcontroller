@@ -2,7 +2,7 @@
 
 namespace Drupal\wmcontroller\EventSubscriber;
 
-use Drupal\wmcontroller\Service\ViewBuilder;
+use Drupal\wmtwig\ViewBuilder;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\GetResponseForControllerResultEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
