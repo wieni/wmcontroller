@@ -6,13 +6,6 @@ parameters:
         # to be.
         module: ''
 
-        # The theme where your templates can be found (optional)
-        theme: ''
-
-        # The relative path your template reside in.
-        # (relative to your module / theme dir)
-        path: 'templates'
-
         # The controller responsible for forwarding to bundle-specific controllers
         frontcontroller: 'Drupal\wmcontroller\Controller\FrontController'
 
