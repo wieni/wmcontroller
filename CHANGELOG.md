@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add coding standard fixers
 - Add Drupal 9 support
 - Add support for node previews
+- Add support for the [Preview Link](https://www.drupal.org/project/preview_link) module
 
 ### Changed
 - Increase PHP dependency to 7.1
