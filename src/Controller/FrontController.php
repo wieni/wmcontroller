@@ -63,7 +63,7 @@ class FrontController implements ContainerInjectionInterface
         $controller = null;
         $routeName = $request->attributes->get('_route');
 
-        preg_match('/entity\.(?<entityTypeId>.+)\.(canonical|preview_link)/', $routeName, $matches);
+        preg_match('/entity\.(?<entityTypeId>.+)\.(canonical|preview_link)$/', $routeName, $matches);
 
         $entityTypeId = $matches['entityTypeId'] ?? null;
         $entity = $request->attributes->get($entityTypeId);
