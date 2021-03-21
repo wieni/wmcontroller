@@ -1,0 +1,21 @@
+<?php
+
+/**
+ * Implements @see hook_page_top().
+ * This module does not support multiple view modes, so no switcher is needed.
+ *
+ * @see node_page_top()
+ */
+function wmcontroller_page_top(array &$page)
+{
+    if (\Drupal::routeMatch()->getRouteName() !== 'entity.node.preview') {
+        return;
+    }
+
+    if (!isset($page['page_top']['node_preview'])) {
+        return;
+    }
+
+    unset($page['page_top']['node_preview']['view_mode']['view_mode']);
+    unset($page['page_top']['node_preview']['view_mode']['submit']);
+}

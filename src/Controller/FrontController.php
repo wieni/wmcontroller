@@ -68,6 +68,10 @@ class FrontController implements ContainerInjectionInterface
         $entityTypeId = $matches['entityTypeId'] ?? null;
         $entity = $request->attributes->get($entityTypeId);
 
+        if ($routeName === 'entity.node.preview') {
+            $entity = $request->attributes->get('node_preview');
+        }
+
         if ($entity) {
             $this->validateLangcode($entity);
 
