@@ -43,8 +43,8 @@ class Validation implements EventSubscriberInterface
         Dispatcher $eventDispatcher,
         ResponsePolicyInterface $cacheResponsePolicy,
         $ignoreAuthenticatedUsers = true,
-        $storeResponse,
-        $storeTags,
+        $storeResponse = false,
+        $storeTags = false,
         array $ignoredRoles = []
     ) {
         $this->eventDispatcher = $eventDispatcher;
