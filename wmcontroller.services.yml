@@ -1,11 +1,5 @@
 parameters:
     wmcontroller.settings:
-
-        # The module that has controllers for your entities
-        # and if theme (below) is left empty also where your templates ought
-        # to be.
-        module: ''
-
         # The controller responsible for forwarding to bundle-specific controllers
         frontcontroller: 'Drupal\wmcontroller\Controller\FrontController'
 
@@ -40,8 +34,7 @@ services:
     wmcontroller.entity_controller_resolver:
         class: Drupal\wmcontroller\Service\EntityControllerResolver
         arguments:
-            - '@class_resolver'
-            - '%wmcontroller.settings%'
+            - '@plugin.manager.wmcontroller.controller'
 
     wmcontroller.main_entity:
         class: Drupal\wmcontroller\Service\MainEntity
@@ -49,3 +42,7 @@ services:
     wmcontroller.renderer.viewbuilder:
         class: Drupal\wmcontroller\EventSubscriber\ViewRendererSubscriber
         tags: [{ name: event_subscriber }]
+
+    plugin.manager.wmcontroller.controller:
+        class: Drupal\wmcontroller\ControllerPluginManager
+        parent: default_plugin_manager

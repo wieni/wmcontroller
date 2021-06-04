@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add support for the [Preview Link](https://www.drupal.org/project/preview_link) module
 
 ### Changed
+- Change controllers to plugins
 - Increase PHP dependency to 7.1
 - Update module name & description
 - Make bundle-specific controllers optional, falling back to the default 
@@ -22,7 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  translated
 - Stop extending `Drupal\Core\Controller\ControllerBase` in 
  `Drupal\wmcontroller\Controller\FrontController`
-- Inject ViewBuilder in Drupal\wmcontroller\Controller\ControllerBase
 - Apply code style related fixes
 - Only validate language in FrontController when entity is translatable
 - Allow early rendering in controllers
@@ -30,3 +30,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - Remove dependency on the node module
+- Remove the `wmcontroller.settings.module` option since controllers can now be provided in any module.
