@@ -3,15 +3,11 @@
 namespace Drupal\wmcontroller\Controller;
 
 use Drupal\Core\Controller\ControllerResolverInterface;
-use Drupal\Core\DependencyInjection\ClassResolverInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\TranslatableInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\node\Entity\Node;
-use Drupal\node\NodeInterface;
-use Drupal\taxonomy\Entity\Term;
-use Drupal\taxonomy\TermInterface;
 use Drupal\wmcontroller\Service\Cache\Dispatcher;
 use Drupal\wmcontroller\Service\EntityControllerResolverInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -89,6 +85,8 @@ class FrontController implements ContainerInjectionInterface
         if (
             $isMultiLang
             && $this->throw404WhenNotTranslated
+            && $entity instanceOf TranslatableInterface
+            && $entity->isTranslatable()
             && $entity->language()->getId() !== $language->getId()
         ) {
             throw new NotFoundHttpException("Entity is not translated in the current language ({$language->getName()}).");
