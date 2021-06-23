@@ -23,6 +23,13 @@ class Controller extends Plugin
             ]);
         }
 
+        if (isset($this->definition['entity_type'])) {
+            return implode('.', [
+                $this->definition['entity_type'],
+                $this->definition['entity_type'],
+            ]);
+        }
+
         return parent::getId();
     }
 }
