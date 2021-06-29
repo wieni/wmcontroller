@@ -100,39 +100,8 @@ class FrontController implements ContainerInjectionInterface
         }
 
         $arguments = $this->argumentResolver->getArguments($request, $controller);
-        $context = new RenderContext();
 
-        $response = $this->renderer->executeInRenderContext($context, function () use ($controller, $arguments) {
-            return call_user_func_array($controller, $arguments);
-        });
-
-        if ($response instanceof ViewBuilder) {
-            $response = $response->toRenderArray();
-        }
-
-        /**
-         * If there is metadata left on the context, apply it to the response.
-         * @see EarlyRenderingControllerWrapperSubscriber
-         */
-        if (!$context->isEmpty()) {
-            $metadata = $context->pop();
-
-            if (is_array($response)) {
-                BubbleableMetadata::createFromRenderArray($response)
-                    ->merge($metadata)
-                    ->applyTo($response);
-            }
-
-            if ($response instanceof CacheableResponseInterface) {
-                $response->addCacheableDependency($metadata);
-            }
-
-            if ($response instanceof AttachmentsInterface) {
-                $response->addAttachments($metadata->getAttachments());
-            }
-        }
-
-        return $response;
+        return call_user_func_array($controller, $arguments);
     }
 
     protected function validateLangcode(EntityInterface $entity): void

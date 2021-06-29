@@ -22,6 +22,8 @@ installed using Composer:
  composer require wieni/wmcontroller
 ```
 
+You should also include the patch from [#2638686](https://www.drupal.org/node/2638686) if you're getting early rendering errors in your controllers.
+
 ## Configuration
 
 Before you get started, make sure you have configured at least the `module` and `path` options
