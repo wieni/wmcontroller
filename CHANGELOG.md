@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Inject ViewBuilder in Drupal\wmcontroller\Controller\ControllerBase
 - Apply code style related fixes
 - Only validate language in FrontController when entity is translatable
+- Allow early rendering in controllers
 
 ### Removed
 - Remove dependency on the node module

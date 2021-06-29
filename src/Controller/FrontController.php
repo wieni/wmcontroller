@@ -2,12 +2,17 @@
 
 namespace Drupal\wmcontroller\Controller;
 
+use Drupal\Core\Cache\CacheableResponseInterface;
 use Drupal\Core\Controller\ControllerResolverInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\TranslatableInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Render\AttachmentsInterface;
+use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\Core\Render\RenderContext;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\wmcontroller\Service\Cache\Dispatcher;
 use Drupal\wmcontroller\Service\EntityControllerResolverInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -27,6 +32,8 @@ class FrontController implements ContainerInjectionInterface
     protected $languageManager;
     /** @var Dispatcher */
     protected $dispatcher;
+    /** @var RendererInterface */
+    protected $renderer;
     /** @var array */
     protected $settings;
     /** @var bool */
@@ -43,6 +50,7 @@ class FrontController implements ContainerInjectionInterface
         $instance->argumentResolver = $container->get('http_kernel.controller.argument_resolver');
         $instance->languageManager = $container->get('language_manager');
         $instance->dispatcher = $container->get('wmcontroller.cache.dispatcher');
+        $instance->renderer = $container->get('renderer');
         $instance->settings = $container->getParameter('wmcontroller.settings');
 
         if (isset($instance->settings['404_when_not_translated'])) {
@@ -71,10 +79,34 @@ class FrontController implements ContainerInjectionInterface
 
         $this->dispatcher->dispatchMainEntity($entity);
 
-        return call_user_func_array(
-            $controller,
-            $this->argumentResolver->getArguments($request, $controller)
-        );
+        $context = new RenderContext();
+        $response = $this->renderer->executeInRenderContext($context, function () use ($request, $controller) {
+            return call_user_func_array(
+                $controller,
+                $this->argumentResolver->getArguments($request, $controller)
+            );
+        });
+
+        // If there is metadata left on the context, apply it on the response.
+        if (!$context->isEmpty()) {
+            $metadata = $context->pop();
+
+            if (is_array($response)) {
+                BubbleableMetadata::createFromRenderArray($response)
+                    ->merge($metadata)
+                    ->applyTo($response);
+            }
+
+            if ($response instanceof CacheableResponseInterface) {
+                $response->addCacheableDependency($metadata);
+            }
+
+            if ($response instanceof AttachmentsInterface) {
+                $response->addAttachments($metadata->getAttachments());
+            }
+        }
+
+        return $response;
     }
 
     protected function validateLangcode(EntityInterface $entity): void
