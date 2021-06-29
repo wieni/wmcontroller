@@ -4,12 +4,16 @@ namespace Drupal\wmcontroller\ViewBuilder;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Render\AttachmentsInterface;
+use Drupal\Core\Render\AttachmentsTrait;
 use Drupal\wmcontroller\Service\Cache\Dispatcher;
 use Drupal\wmcontroller\Service\ResponseBuilder;
 use Symfony\Component\HttpFoundation\Response;
 
-class ViewBuilder
+class ViewBuilder implements AttachmentsInterface
 {
+    use AttachmentsTrait;
+
     /** @var Dispatcher */
     protected $dispatcher;
     /** @var EntityTypeManagerInterface */
@@ -138,6 +142,7 @@ class ViewBuilder
             $view = $this->createOriginalRenderArrayFromEntity($this->entity);
         }
         $view['#_data'] = $this->data;
+        $view['#attached'] = $this->attachments;
 
         $this->addThemeToRenderArray($view);
         $this->addCacheTagsToRenderArray($view);
