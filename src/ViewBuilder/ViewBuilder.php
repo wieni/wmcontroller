@@ -2,6 +2,8 @@
 
 namespace Drupal\wmcontroller\ViewBuilder;
 
+use Drupal\Core\Cache\CacheableResponseInterface;
+use Drupal\Core\Cache\CacheableResponseTrait;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Render\AttachmentsInterface;
@@ -10,9 +12,10 @@ use Drupal\wmcontroller\Service\Cache\Dispatcher;
 use Drupal\wmcontroller\Service\ResponseBuilder;
 use Symfony\Component\HttpFoundation\Response;
 
-class ViewBuilder implements AttachmentsInterface
+class ViewBuilder implements AttachmentsInterface, CacheableResponseInterface
 {
     use AttachmentsTrait;
+    use CacheableResponseTrait;
 
     /** @var Dispatcher */
     protected $dispatcher;
@@ -138,12 +141,14 @@ class ViewBuilder implements AttachmentsInterface
     public function toRenderArray(): array
     {
         $view = [];
+
         if ($this->entity) {
             $view = $this->createOriginalRenderArrayFromEntity($this->entity);
         }
+
         $view['#_data'] = $this->data;
         $view['#attached'] = $this->attachments;
-
+        $this->cacheabilityMetadata->applyTo($view);
         $this->addThemeToRenderArray($view);
         $this->addCacheTagsToRenderArray($view);
         $this->dispatchCacheTags($view);

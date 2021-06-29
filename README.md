@@ -18,8 +18,9 @@ composer require wieni\wmcontroller
 drush en wmcontroller
 ```
 
-configure wmcontroller in your services.yml (see config below)
+Configure wmcontroller in your services.yml (see config below).
 
+Include the patch from [#2638686](https://www.drupal.org/node/2638686) if you're getting early rendering errors in your controllers.
 ### Controllers
 
 Create bundle-specific controllers with the following convention:
