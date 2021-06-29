@@ -2,12 +2,17 @@
 
 namespace Drupal\wmcontroller\Controller;
 
+use Drupal\Core\Cache\CacheableResponseInterface;
 use Drupal\Core\Controller\ControllerResolverInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\TranslatableInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Render\AttachmentsInterface;
+use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\Core\Render\RenderContext;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\wmcontroller\Event\MainEntityEvent;
 use Drupal\wmcontroller\Service\EntityControllerResolverInterface;
 use Drupal\wmcontroller\WmcontrollerEvents;
@@ -30,6 +35,8 @@ class FrontController implements ContainerInjectionInterface
     protected $languageManager;
     /** @var EventDispatcherInterface */
     protected $eventDispatcher;
+    /** @var RendererInterface */
+    protected $renderer;
     /** @var array */
     protected $settings;
     /** @var bool */
@@ -46,6 +53,7 @@ class FrontController implements ContainerInjectionInterface
         $instance->argumentResolver = $container->get('http_kernel.controller.argument_resolver');
         $instance->languageManager = $container->get('language_manager');
         $instance->eventDispatcher = $container->get('event_dispatcher');
+        $instance->renderer = $container->get('renderer');
         $instance->settings = $container->getParameter('wmcontroller.settings');
 
         if (isset($instance->settings['404_when_not_translated'])) {
@@ -60,7 +68,6 @@ class FrontController implements ContainerInjectionInterface
     {
         $this->request = $request;
 
-        $controller = null;
         $routeName = $request->attributes->get('_route');
 
         preg_match('/entity\.(?<entityTypeId>.+)\.(canonical|preview_link)$/', $routeName, $matches);
@@ -93,20 +100,39 @@ class FrontController implements ContainerInjectionInterface
         }
 
         $arguments = $this->argumentResolver->getArguments($request, $controller);
-        $result = call_user_func_array($controller, $arguments);
+        $context = new RenderContext();
 
-        /**
-         * Early conversion of ViewBuilder to render array to
-         * make sure bubbleable metadata is not lost.
-         *
-         * @see \Drupal\Core\EventSubscriber\EarlyRenderingControllerWrapperSubscriber
-         */
-        if ($result instanceof ViewBuilder) {
-            // Replace the controller result with a render-array
-            $result = $result->toRenderArray();
+        $response = $this->renderer->executeInRenderContext($context, function () use ($controller, $arguments) {
+            return call_user_func_array($controller, $arguments);
+        });
+
+        if ($response instanceof ViewBuilder) {
+            $response = $response->toRenderArray();
         }
 
-        return $result;
+        /**
+         * If there is metadata left on the context, apply it to the response.
+         * @see EarlyRenderingControllerWrapperSubscriber
+         */
+        if (!$context->isEmpty()) {
+            $metadata = $context->pop();
+
+            if (is_array($response)) {
+                BubbleableMetadata::createFromRenderArray($response)
+                    ->merge($metadata)
+                    ->applyTo($response);
+            }
+
+            if ($response instanceof CacheableResponseInterface) {
+                $response->addCacheableDependency($metadata);
+            }
+
+            if ($response instanceof AttachmentsInterface) {
+                $response->addAttachments($metadata->getAttachments());
+            }
+        }
+
+        return $response;
     }
 
     protected function validateLangcode(EntityInterface $entity): void
