@@ -148,7 +148,7 @@ class ViewBuilder implements AttachmentsInterface, CacheableResponseInterface
 
         $view['#_data'] = $this->data;
         $view['#attached'] = $this->attachments;
-        $this->cacheabilityMetadata->applyTo($view);
+        $this->getCacheableMetadata()->applyTo($view);
         $this->addThemeToRenderArray($view);
         $this->addCacheTagsToRenderArray($view);
         $this->dispatchCacheTags($view);
