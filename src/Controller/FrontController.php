@@ -2,16 +2,23 @@
 
 namespace Drupal\wmcontroller\Controller;
 
+use Drupal\Core\Cache\CacheableResponseInterface;
 use Drupal\Core\Controller\ControllerResolverInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\TranslatableInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Render\AttachmentsInterface;
+use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\Core\Render\RenderContext;
 use Drupal\Core\Render\RendererInterface;
-use Drupal\wmcontroller\Service\Cache\Dispatcher;
+use Drupal\wmcontroller\Event\MainEntityEvent;
 use Drupal\wmcontroller\Service\EntityControllerResolverInterface;
+use Drupal\wmcontroller\WmcontrollerEvents;
+use Drupal\wmtwig\ViewBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolverInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -26,8 +33,8 @@ class FrontController implements ContainerInjectionInterface
     protected $argumentResolver;
     /** @var LanguageManagerInterface */
     protected $languageManager;
-    /** @var Dispatcher */
-    protected $dispatcher;
+    /** @var EventDispatcherInterface */
+    protected $eventDispatcher;
     /** @var RendererInterface */
     protected $renderer;
     /** @var array */
@@ -45,7 +52,7 @@ class FrontController implements ContainerInjectionInterface
         $instance->controllerResolver = $container->get('controller_resolver');
         $instance->argumentResolver = $container->get('http_kernel.controller.argument_resolver');
         $instance->languageManager = $container->get('language_manager');
-        $instance->dispatcher = $container->get('wmcontroller.cache.dispatcher');
+        $instance->eventDispatcher = $container->get('event_dispatcher');
         $instance->renderer = $container->get('renderer');
         $instance->settings = $container->getParameter('wmcontroller.settings');
 
@@ -59,26 +66,42 @@ class FrontController implements ContainerInjectionInterface
     /** Forward a request to a controller based on an entities bundle name */
     public function forward(Request $request)
     {
-        $routeName = $request->attributes->get('_route');
-        preg_match('/entity\.(?<entityTypeId>.+)\.canonical/', $routeName, $matches);
-        $entity = $request->attributes->get($matches['entityTypeId']);
-
-        $this->validateLangcode($entity);
         $this->request = $request;
 
-        try {
-            $controller = [$this->entityControllerResolver->getController($entity), 'show'];
-        } catch (\RuntimeException $e) {
+        $routeName = $request->attributes->get('_route');
+
+        preg_match('/entity\.(?<entityTypeId>.+)\.(canonical|preview_link)$/', $routeName, $matches);
+
+        $entityTypeId = $matches['entityTypeId'] ?? null;
+        $entity = $request->attributes->get($entityTypeId);
+
+        if ($routeName === 'entity.node.preview') {
+            $entity = $request->attributes->get('node_preview');
+        }
+
+        if ($entity) {
+            $this->validateLangcode($entity);
+
+            try {
+                $controller = [$this->entityControllerResolver->getController($entity), 'show'];
+            } catch (\RuntimeException $e) {
+                $controller = $request->attributes->get('_original_controller');
+                $controller = $this->controllerResolver->getControllerFromDefinition($controller);
+            }
+
+            $event = new MainEntityEvent($entity);
+            $this->eventDispatcher->dispatch(
+                WmcontrollerEvents::MAIN_ENTITY_RENDER,
+                $event
+            );
+        } else {
             $controller = $request->attributes->get('_original_controller');
             $controller = $this->controllerResolver->getControllerFromDefinition($controller);
         }
 
-        $this->dispatcher->dispatchMainEntity($entity);
+        $arguments = $this->argumentResolver->getArguments($request, $controller);
 
-        return call_user_func_array(
-            $controller,
-            $this->argumentResolver->getArguments($request, $controller)
-        );
+        return call_user_func_array($controller, $arguments);
     }
 
     protected function validateLangcode(EntityInterface $entity): void
