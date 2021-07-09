@@ -37,3 +37,40 @@ all old class/service references and update to the v1 release.
 3. Upgrade your code according to the instructions below.
 8. `drush updb -y && drush cex -y`
 9. Deploy your changes to all environments
+
+#### Upgrading code
+Most code can be updated automatically by running the following bash script. Paths that should be scanned should be 
+passed as arguments:
+
+```bash
+./public/modules/contrib/wmcontroller/scripts/update-to-v1.sh public/modules/custom/* public/themes/custom/* public/sites/*
+```
+
+`wmtwig.settings` should be set in a services.yml file. A typical update would look like this:
+
+##### Before
+```yml
+parameters:
+   wmcontroller.settings:
+      module: 'wmcustom'
+      path: 'templates'
+      theme: 'drupack'
+```
+
+##### After
+```yml
+parameters:
+    wmcontroller.settings:
+        module: 'wmcustom'
+
+    wmtwig.settings:
+        module: 'wmcustom'
+        path: 'templates'
+        theme: 'drupack'
+```
+
+### Early rendering
+Due to changes to caching and the `ViewBuilder` class, controllers are now susceptible to 
+[early rendering issues](https://www.lullabot.com/articles/early-rendering-a-lesson-in-debugging-drupal-8). To work 
+around this, you can include the patch from [#2638686](https://www.drupal.org/node/2638686).
+
