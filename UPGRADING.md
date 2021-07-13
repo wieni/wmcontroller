@@ -60,9 +60,6 @@ parameters:
 ##### After
 ```yml
 parameters:
-    wmcontroller.settings:
-        module: 'wmcustom'
-
     wmtwig.settings:
         module: 'wmcustom'
         path: 'templates'
