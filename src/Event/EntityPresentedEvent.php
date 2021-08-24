@@ -3,7 +3,7 @@
 namespace Drupal\wmcontroller\Event;
 
 use Drupal\Core\Entity\EntityInterface;
-use Symfony\Component\EventDispatcher\Event;
+use Drupal\Component\EventDispatcher\Event;
 
 class EntityPresentedEvent extends Event
 {

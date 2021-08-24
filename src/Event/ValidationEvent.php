@@ -4,7 +4,7 @@ namespace Drupal\wmcontroller\Event;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\wmcontroller\Service\Cache\Validation\ValidationResult;
-use Symfony\Component\EventDispatcher\Event;
+use Drupal\Component\EventDispatcher\Event;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 

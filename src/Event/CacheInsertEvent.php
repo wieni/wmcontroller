@@ -3,7 +3,7 @@
 namespace Drupal\wmcontroller\Event;
 
 use Drupal\wmcontroller\Entity\Cache;
-use Symfony\Component\EventDispatcher\Event;
+use Drupal\Component\EventDispatcher\Event;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
