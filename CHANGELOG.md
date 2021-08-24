@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-## [0.11.0] - 2021-08-24
+## [1.0.0] - 2021-08-24
 ### Added
 - Add support for all entities with canonical routes
 - Add issue & pull request templates
@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add Drupal 9 support
 
 ### Changed
-- Increase PHP dependency to 7.1
+- Increase PHP dependency to 8.0
 - Update module name & description
 - Make bundle-specific controllers optional, falling back to the default 
  controller
