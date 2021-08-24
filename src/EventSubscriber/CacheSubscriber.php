@@ -47,7 +47,7 @@ class CacheSubscriber implements EventSubscriberInterface
         Validation $validation,
         EnrichRequest $enrichRequest,
         MaxAgeInterface $maxAgeStrategy,
-        $addHeader = false,
+        bool $addHeader,
         array $strippedHeaders
     ) {
         $this->manager = $manager;

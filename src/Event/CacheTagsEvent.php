@@ -2,7 +2,7 @@
 
 namespace Drupal\wmcontroller\Event;
 
-use Symfony\Component\EventDispatcher\Event;
+use Drupal\Component\EventDispatcher\Event;
 
 class CacheTagsEvent extends Event
 {

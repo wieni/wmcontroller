@@ -29,8 +29,8 @@ abstract class Template extends \Twig_Template
         foreach ($context as $k => $var) {
             $event = new PresentedEvent($var);
             $this->getDispatcher()->dispatch(
-                WmcontrollerEvents::PRESENTED,
-                $event
+                $event,
+                WmcontrollerEvents::PRESENTED
             );
 
             $context[$k] = $event->getItem();

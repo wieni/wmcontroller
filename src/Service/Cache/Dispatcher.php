@@ -34,8 +34,8 @@ class Dispatcher
     {
         $event = new MainEntityEvent($entity);
         $this->dispatcher->dispatch(
-            WmcontrollerEvents::MAIN_ENTITY_RENDER,
-            $event
+            $event,
+            WmcontrollerEvents::MAIN_ENTITY_RENDER
         );
 
         return $event;
@@ -46,8 +46,8 @@ class Dispatcher
     {
         $event = new EntityPresentedEvent($entity);
         $this->dispatcher->dispatch(
-            WmcontrollerEvents::ENTITY_PRESENTED,
-            $event
+            $event,
+            WmcontrollerEvents::ENTITY_PRESENTED
         );
 
         return $event;
@@ -58,8 +58,8 @@ class Dispatcher
     {
         $event = new CacheTagsEvent($tags);
         $this->dispatcher->dispatch(
-            WmcontrollerEvents::CACHE_TAGS,
-            $event
+            $event,
+            WmcontrollerEvents::CACHE_TAGS
         );
 
         return $event;
@@ -74,8 +74,8 @@ class Dispatcher
     ) {
         $event = new CacheInsertEvent($cache, $tags, $request, $response);
         $this->dispatcher->dispatch(
-            WmcontrollerEvents::CACHE_INSERT,
-            $event
+            $event,
+            WmcontrollerEvents::CACHE_INSERT
         );
 
         return $event;
@@ -90,8 +90,8 @@ class Dispatcher
             CacheableRequestResult::class
         );
         $this->dispatcher->dispatch(
-            WmcontrollerEvents::VALIDATE_CACHEABILITY_REQUEST,
-            $event
+            $event,
+            WmcontrollerEvents::VALIDATE_CACHEABILITY_REQUEST
         );
         return $event;
     }
@@ -105,8 +105,8 @@ class Dispatcher
             CacheableResponseResult::class
         );
         $this->dispatcher->dispatch(
-            WmcontrollerEvents::VALIDATE_CACHEABILITY_RESPONSE,
-            $event
+            $event,
+            WmcontrollerEvents::VALIDATE_CACHEABILITY_RESPONSE
         );
         return $event;
     }
