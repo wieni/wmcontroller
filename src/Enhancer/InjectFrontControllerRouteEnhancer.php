@@ -33,7 +33,7 @@ class InjectFrontControllerRouteEnhancer implements EnhancerInterface
         }
     }
 
-    public function enhance(array $defaults, Request $request)
+    public function enhance(array $defaults, Request $request): array
     {
         $routeName = $defaults[RouteObjectInterface::ROUTE_NAME];
 

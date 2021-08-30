@@ -2,6 +2,7 @@
 
 namespace Drupal\wmcontroller;
 
+use Drupal\Component\Plugin\Factory\FactoryInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
@@ -25,7 +26,7 @@ class ControllerPluginManager extends DefaultPluginManager
         $this->setCacheBackend($cacheBackend, 'wmcontroller_controller_info');
     }
 
-    protected function getFactory()
+    protected function getFactory(): FactoryInterface
     {
         if (!$this->factory) {
             $this->factory = new ControllerPluginFactory($this, $this->pluginInterface);

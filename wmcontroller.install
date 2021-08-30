@@ -3,7 +3,7 @@
 /**
  * Remove old wmcontroller cache tables
  */
-function wmcontroller_update_8003()
+function wmcontroller_update_8003(): void
 {
     $schema = \Drupal::database()->schema();
     $tables = [

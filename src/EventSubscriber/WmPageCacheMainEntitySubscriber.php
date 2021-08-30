@@ -17,14 +17,14 @@ class WmPageCacheMainEntitySubscriber implements EventSubscriberInterface
         $this->mainEntity = $mainEntity;
     }
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         $events['wmpage_cache.maxage_alter'][] = ['onMainEntityAlter'];
 
         return $events;
     }
 
-    public function onMainEntityAlter(MainEntityAlterEvent $event)
+    public function onMainEntityAlter(MainEntityAlterEvent $event): void
     {
         $event->setEntity(
             $this->mainEntity->getEntity()

@@ -6,7 +6,7 @@
  *
  * @see node_page_top()
  */
-function wmcontroller_page_top(array &$page)
+function wmcontroller_page_top(array &$page): void
 {
     if (\Drupal::routeMatch()->getRouteName() !== 'entity.node.preview') {
         return;

@@ -14,7 +14,7 @@ class Controller extends Plugin
     /** @var string */
     public $bundle;
 
-    public function getId()
+    public function getId(): string
     {
         if (isset($this->definition['entity_type'], $this->definition['bundle'])) {
             return implode('.', [

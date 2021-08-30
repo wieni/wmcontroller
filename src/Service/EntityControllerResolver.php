@@ -23,7 +23,7 @@ class EntityControllerResolver implements EntityControllerResolverInterface
             $id = implode('.', [$entity->getEntityTypeId(), $entity->bundle()]);
             return $this->pluginManager->createInstance($id);
         } catch (PluginNotFoundException $e) {
-            throw new \RuntimeException('No bundle-specific controller is provided.');
+            throw new \RuntimeException('No bundle-specific controller is provided.', $e->getCode(), $e);
         }
     }
 }

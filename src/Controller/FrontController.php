@@ -2,21 +2,16 @@
 
 namespace Drupal\wmcontroller\Controller;
 
-use Drupal\Core\Cache\CacheableResponseInterface;
 use Drupal\Core\Controller\ControllerResolverInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\TranslatableInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\Core\Render\AttachmentsInterface;
-use Drupal\Core\Render\BubbleableMetadata;
-use Drupal\Core\Render\RenderContext;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\wmcontroller\Event\MainEntityEvent;
 use Drupal\wmcontroller\Service\EntityControllerResolverInterface;
 use Drupal\wmcontroller\WmcontrollerEvents;
-use Drupal\wmtwig\ViewBuilder;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -47,7 +42,7 @@ class FrontController implements ContainerInjectionInterface
 
     public static function create(ContainerInterface $container)
     {
-        $instance = new static;
+        $instance = new static();
         $instance->entityControllerResolver = $container->get('wmcontroller.entity_controller_resolver');
         $instance->controllerResolver = $container->get('controller_resolver');
         $instance->argumentResolver = $container->get('http_kernel.controller.argument_resolver');
@@ -112,11 +107,11 @@ class FrontController implements ContainerInjectionInterface
         if (
             $isMultiLang
             && $this->throw404WhenNotTranslated
-            && $entity instanceOf TranslatableInterface
+            && $entity instanceof TranslatableInterface
             && $entity->isTranslatable()
             && $entity->language()->getId() !== $language->getId()
         ) {
-            throw new NotFoundHttpException("Entity is not translated in the current language ({$language->getName()}).");
+            throw new NotFoundHttpException(sprintf('Entity is not translated in the current language (%s).', $language->getName()));
         }
     }
 }

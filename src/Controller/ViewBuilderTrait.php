@@ -18,7 +18,7 @@ trait ViewBuilderTrait
      * @param  array       $data
      * @return ViewBuilder
      */
-    protected function view($template = '', $data = [])
+    protected function view(string $template = '', array $data = [])
     {
         return $this->getViewBuilder()
             ->setTemplateDir($this->templateDir)

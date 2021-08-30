@@ -23,7 +23,7 @@ trait RedirectBuilderTrait
      * @return RedirectResponse
      *   A redirect response object that may be returned by the controller.
      */
-    protected function redirect($routeName, array $routeParameters = [], array $options = [], $status = 302)
+    protected function redirect(string $routeName, array $routeParameters = [], array $options = [], int $status = 302)
     {
         $url = Url::fromRoute($routeName, $routeParameters, $options)
             ->setAbsolute(true)
