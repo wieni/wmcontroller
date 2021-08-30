@@ -1,9 +1,7 @@
-parameters:
-    autoload_files:
-        - vendor/drupal/core/includes/bootstrap.inc
-    paths:
-        - src
-
 includes:
 	- vendor/wieni/wmcodestyle/phpstan/custom-rules.neon
-	- vendor/wieni/wmcodestyle/phpstan/php-project.neon
+	- vendor/wieni/wmcodestyle/phpstan/drupal-module.neon
+
+parameters:
+    ignoreErrors:
+        - '#invalid typehint type Drupal\\wmpage_cache\\Event\\MainEntityAlterEvent#'
