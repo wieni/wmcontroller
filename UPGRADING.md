@@ -46,9 +46,10 @@ passed as arguments:
 ./public/modules/contrib/wmcontroller/scripts/update-to-v1.sh public/modules/custom/* public/themes/custom/* public/sites/*
 ```
 
+##### wmtwig.settings
 `wmtwig.settings` should be set in a services.yml file. A typical update would look like this:
 
-##### Before
+**Before**
 ```yml
 parameters:
    wmcontroller.settings:
@@ -57,7 +58,7 @@ parameters:
       theme: 'drupack'
 ```
 
-##### After
+**After**
 ```yml
 parameters:
     wmtwig.settings:
@@ -65,6 +66,10 @@ parameters:
         path: 'templates'
         theme: 'drupack'
 ```
+
+### ViewBuilder::setEntity
+`ViewBuilder::setEntity` has been removed. If your class extends `ControllerBase` or uses `MainEntityTrait`, you can use 
+`$this->setEntity` instead. If not, you can use `MainEntityInterface::setEntity` directly.
 
 ### Early rendering
 Due to changes to caching and the `ViewBuilder` class, controllers are now susceptible to 
