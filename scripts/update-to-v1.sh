@@ -11,4 +11,6 @@ find "$@" -type f -print0 | xargs -0 sed -i -r \
   -e 's/Drupal\\wmcontroller\\ViewBuilder\\ViewBuilder/Drupal\\wmtwig\\ViewBuilder/g' \
   -e 's/wmcontroller\.presenter\.(.+)/wmpresenter.\1/g' \
   -e 's/wmcontroller\.presenter/wmpresenter.presenter/g' \
-  -e 's/wmcontroller\.cache\.(.+)/wmpage_cache.\1/g'
+  -e 's/wmcontroller\.cache\.(.+)/wmpage_cache.\1/g' \
+  -e 's/wmcontroller\.viewbuilder/wmtwig\.viewbuilder/g' \
+  -e 's/wmcontroller\.settings/wmtwig\.settings/g'

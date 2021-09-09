@@ -25,7 +25,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  `Drupal\wmcontroller\Controller\FrontController`
 - Apply code style related fixes
 - Only validate language in FrontController when entity is translatable
-- Allow early rendering in controllers
 - Allow adding attachments to ViewBuilder
 
 ### Removed

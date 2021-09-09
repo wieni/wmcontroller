@@ -20,16 +20,23 @@ Since you have other modules using wmcontroller services, which may now be moved
 your update in two parts: first you enable the stub versions of the new modules (without any logic), then you replace 
 all old class/service references and update to the v1 release.
 
-1. `composer require wieni/wmcontroller:"dev-feature/split-pre as 0.10.2"`
+1. Update wmcontroller and any submodules to their latest versions:
+   - `composer require wieni/wmcontroller:"dev-feature/split-pre as 0.10.2"`
+   - `composer require wieni/wmcontroller_cloudfront:dev-release/v0#c737ec0`
 2. `drush updb -y && drush cex -y`
-3. Enable the modules you want: `wmpage_cache`, `wmtwig` and/or `wmpresenter`. The stub modules bundled with this 
-   version of `wmcontroller` will be enabled.
+3. Enable the stubs of the modules you need: `wmpage_cache`, `wmtwig`, `wmpresenter` and/or any submodules.
 4. Deploy your changes to all environments
-5. `composer require wieni/wmcontroller:"dev-feature/split as 0.10.2"`
-6. The stub modules are now gone. `composer require` the modules you previously enabled
+5. Install the new version of wmcontroller and all modules you previously enabled:
+   - `composer require wieni/wmcontroller:"dev-feature/split as 0.10.2"`
+   - `composer require wieni/wmtwig wieni/wmpresenter wieni/wmpage_cache`
+   - `composer require wieni/wmpage_cache_(cloudfront|flysystem|redis)`
+6. Uninstall old wmcontroller submodules:
+   - `drush pm-uninstall wmcontroller_(cloudfront|flysystem|redis)`
 7. Upgrade your code according to the instructions below.
 8. `drush updb -y && drush cex -y`
 9. Deploy your changes to all environments
+10. Remove old wmcontroller submodules:
+   - `composer remove wieni/wmcontroller_(cloudfront|flysystem|redis)`
 
 #### Direct update
 1. `composer require wieni/wmcontroller:"dev-feature/split as 0.10.2"`
@@ -46,26 +53,21 @@ passed as arguments:
 ./public/modules/contrib/wmcontroller/scripts/update-to-v1.sh public/modules/custom/* public/themes/custom/* public/sites/*
 ```
 
-##### wmtwig.settings
-`wmtwig.settings` should be set in a services.yml file. A typical update would look like this:
-
-**Before**
-```yml
-parameters:
-   wmcontroller.settings:
-      module: 'wmcustom'
-      path: 'templates'
-      theme: 'drupack'
+### `Controller` plugins
+Controllers are now plugins, which means they need an annotation. These annotations look like this:
+```php
+/**
+ * @Controller(
+ *     entity_type = "node",
+ *     bundle = "article",
+ * )
+ */
+class ArticleController
+{
+}
 ```
-
-**After**
-```yml
-parameters:
-    wmtwig.settings:
-        module: 'wmcustom'
-        path: 'templates'
-        theme: 'drupack'
-```
+The namespace and class name are not used anymore to determine the entity type and bundle. This means that you can now 
+change the namespace or class name of your controllers.
 
 ### ViewBuilder::setEntity
 `ViewBuilder::setEntity` has been removed. If your class extends `ControllerBase` or uses `MainEntityTrait`, you can use 
