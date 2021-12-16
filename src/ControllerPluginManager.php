@@ -26,7 +26,7 @@ class ControllerPluginManager extends DefaultPluginManager
         $this->setCacheBackend($cacheBackend, 'wmcontroller_controller_info');
     }
 
-    protected function getFactory(): FactoryInterface
+    protected function getFactory()
     {
         if (!$this->factory) {
             $this->factory = new ControllerPluginFactory($this, $this->pluginInterface);
