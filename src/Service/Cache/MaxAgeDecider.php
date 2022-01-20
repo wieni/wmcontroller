@@ -50,7 +50,7 @@ class MaxAgeDecider implements EventSubscriberInterface, MaxAgeInterface
                 's-maxage' => $headers->getCacheControlDirective('s-maxage'),
                 'wm-s-maxage' => $headers->getCacheControlDirective('wm-s-maxage'),
             ],
-            'strlen' // Keeps 0, but removes NULL
+            static fn ($value) => $value !== null
         );
     }
 
