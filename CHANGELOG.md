@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add Drupal 9 support
 - Add support for node previews
 - Add support for the [Preview Link](https://www.drupal.org/project/preview_link) module
+- Add support for content moderation
 
 ### Changed
 - Change controllers to plugins

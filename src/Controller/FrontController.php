@@ -74,6 +74,10 @@ class FrontController implements ContainerInjectionInterface
             $entity = $request->attributes->get('node_preview');
         }
 
+        if ($routeName === 'entity.node.latest_version') {
+            $entity = $request->attributes->get('node');
+        }
+
         if ($entity) {
             $this->validateLangcode($entity);
 
