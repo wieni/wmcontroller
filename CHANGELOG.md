@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [1.1.0] - 2022-06-28
+### Added
+- Add v2 upgrade guide & script
+- Add stubs of new modules, including only database schema
+
 ## [1.0.1] - 2022-01-20
 ### Fixed
 - Avoid null notice on strlen
