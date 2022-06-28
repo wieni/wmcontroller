@@ -11,29 +11,20 @@
     ],
     "require": {
         "php": "^8.0",
-        "drupal/core": "^9.1"
+        "drupal/core": "^9.1",
+        "wieni/wmtwig": "^1.O"
     },
     "require-dev": {
+        "composer-runtime-api": "^2.0",
         "ergebnis/composer-normalize": "^2.0",
         "wieni/wmcodestyle": "^1.7"
-    },
-    "extra": {
-        "drush": {
-            "services": {
-                "drush.services.yml": "^9 || ^10"
-            }
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Drupal\\wmcontroller\\": "src/"
-        }
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
     "scripts": {
         "coding-standards": [
             "@composer normalize",
+            "rector process",
             "php-cs-fixer fix --config=.php_cs.php",
             "phpstan analyse"
         ]

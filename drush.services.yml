@@ -1,5 +1,0 @@
-services:
-    wmcontroller.commands.cache-clear:
-        class: \Drupal\wmcontroller\Commands\CacheClearCommands
-        arguments: ['@wmcontroller.cache.storage']
-        tags: [{ name: drush.command }]

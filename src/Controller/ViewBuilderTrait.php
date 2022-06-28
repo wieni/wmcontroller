@@ -1,10 +1,8 @@
 <?php
 
-
 namespace Drupal\wmcontroller\Controller;
 
-
-use Drupal\wmcontroller\ViewBuilder\ViewBuilder;
+use Drupal\wmtwig\ViewBuilder;
 
 trait ViewBuilderTrait
 {
@@ -20,7 +18,7 @@ trait ViewBuilderTrait
      * @param  array       $data
      * @return ViewBuilder
      */
-    protected function view($template = '', $data = [])
+    protected function view(string $template = '', array $data = [])
     {
         return $this->getViewBuilder()
             ->setTemplateDir($this->templateDir)
@@ -31,7 +29,7 @@ trait ViewBuilderTrait
     protected function getViewBuilder(): ViewBuilder
     {
         if (!isset($this->viewBuilder)) {
-            $this->viewBuilder = \Drupal::service('wmcontroller.viewbuilder');
+            $this->viewBuilder = \Drupal::service('wmtwig.viewbuilder');
         }
 
         return $this->viewBuilder;

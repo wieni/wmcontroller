@@ -2,12 +2,11 @@
 
 namespace Drupal\wmcontroller\EventSubscriber;
 
-use Drupal\wmcontroller\Event\MainEntityEvent;
 use Drupal\wmcontroller\Service\MainEntity;
-use Drupal\wmcontroller\WmcontrollerEvents;
+use Drupal\wmpage_cache\Event\MainEntityAlterEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-class MainEntitySubscriber implements EventSubscriberInterface
+class WmPageCacheMainEntitySubscriber implements EventSubscriberInterface
 {
     /** @var MainEntity */
     protected $mainEntity;
@@ -20,15 +19,15 @@ class MainEntitySubscriber implements EventSubscriberInterface
 
     public static function getSubscribedEvents(): array
     {
-        return [
-            WmcontrollerEvents::MAIN_ENTITY_RENDER => ['onMainEntity'],
-        ];
+        $events['wmpage_cache.maxage_alter'][] = ['onMainEntityAlter'];
+
+        return $events;
     }
 
-    public function onMainEntity(MainEntityEvent $event): void
+    public function onMainEntityAlter(MainEntityAlterEvent $event): void
     {
-        $this->mainEntity->setEntity(
-            $event->getEntity()
+        $event->setEntity(
+            $this->mainEntity->getEntity()
         );
     }
 }

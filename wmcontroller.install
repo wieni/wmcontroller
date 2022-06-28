@@ -1,91 +1,19 @@
 <?php
 
 /**
- * Implements hook_schema()
+ * Remove old wmcontroller cache tables
  */
-function wmcontroller_schema()
+function wmcontroller_update_8003(): void
 {
-    $schema['wmcontroller_cache'] = [
-        'description' => 'Stores cacheable responses',
-        'fields' => [
-            'id' => [
-                'description' => 'A sha1 of request params',
-                'type' => 'char',
-                'length' => 40,
-                'not null' => true,
-            ],
-            'method' => [
-                'type' => 'varchar_ascii',
-                'length' => 20,
-                'not null' => true,
-            ],
-            'uri' => [
-                'description' => 'The request uri',
-                'type' => 'text',
-                'size' => 'normal', // 64KiB
-                'not null' => true,
-            ],
-            'headers' => [
-                'description' => 'The response headers',
-                'type' => 'text',
-                'size' => 'normal', // 64KiB, should be plenty
-                'not null' => true,
-            ],
-            'content' => [
-                'description' => 'The response body',
-                'type' => 'blob',
-                'size' => 'big', // 4GiB
-                'not null' => false,
-            ],
-            'expiry' => [
-                'description' => 'The time at which this entry becomes stale',
-                'type' => 'int',
-                'unsigned' => true, // We wont handle expiries < 01/01/1970
-                'not null' => true,
-                'size' => 'normal', // Will fail after 2106, next generation's problem.
-            ],
-        ],
-        'primary key' => ['id'],
-        'indexes' => [
-            'expiry' => ['expiry'],
-        ],
+    $schema = \Drupal::database()->schema();
+    $tables = [
+        'wmcontroller_cache',
+        'wmcontroller_cache_tags',
     ];
 
-    $schema['wmcontroller_cache_tags'] = [
-        'description' => 'Stores tags attached to wmcontroller_cache entries',
-        'fields' => [
-            'id' => [
-                'description' => 'A sha1 of request params',
-                'type' => 'char',
-                'length' => 40,
-                'not null' => true,
-            ],
-            'tag' => [
-                'type' => 'varchar_ascii',
-                'length' => 255,
-                'not null' => true,
-            ],
-        ],
-        'primary key' => ['id', 'tag'],
-        'indexes' => ['id' => ['id'], 'tag' => ['tag']],
-    ];
-
-    return $schema;
-}
-
-function wmcontroller_update_8001()
-{
-    drupal_install_schema('wmcontroller');
-}
-
-/**
- * Logout all users by truncating the session table
- * Note: HOOK_logout won't be called
- */
-function wmcontroller_update_8002()
-{
-    $db = \Drupal::database();
-    if ($db->schema()->tableExists('sessions')) {
-        $db->truncate('sessions')->execute();
+    foreach ($tables as $table) {
+        if ($schema->tableExists($table)) {
+            $schema->dropTable($table);
+        }
     }
 }

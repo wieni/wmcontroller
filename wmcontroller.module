@@ -1,58 +1,21 @@
 <?php
 
 /**
- * Implements hook_theme().
- */
-function wmcontroller_theme()
-{
-    return \Drupal::service('wmcontroller.service.templatelocator')
-        ->getThemes();
-}
-
-/**
- * Sets the variables set in a Controller
+ * Implements @see hook_page_top().
+ * This module does not support multiple view modes, so no switcher is needed.
  *
- * @param $variables
- * @see \Drupal\wmcontroller\ViewBuilder\ViewBuilder::setData
+ * @see node_page_top()
  */
-function wmcontroller_theme_set_variables(&$variables)
+function wmcontroller_page_top(array &$page): void
 {
-    // Skip if no data is set or not set as an array
-    if (!isset($variables['_data']) || !is_array($variables['_data'])) {
+    if (\Drupal::routeMatch()->getRouteName() !== 'entity.node.preview') {
         return;
     }
-    $variables = array_merge($variables, $variables['_data']);
-    unset($variables['_data']);
-}
 
-/**
- * Implements hook_cron()
- */
-function wmcontroller_cron()
-{
-    wmcontroller_cron_purge_expired();
-}
-
-/**
- * Purge expired wmcontroller_cache items.
- */
-function wmcontroller_cron_purge_expired()
-{
-    $ctr = Drupal::getContainer();
-    $ctr->get('wmcontroller.cache.storage')->remove(
-        $ctr->get('wmcontroller.cache.storage')->getExpired(
-            $ctr->getParameter('wmcontroller.cache.purge_per_cron')
-        )
-    );
-}
-
-/**
- * Implements hook_cache_flush().
- */
-function wmcontroller_cache_flush()
-{
-    $ctr = \Drupal::getContainer();
-    if ($ctr->getParameter('wmcontroller.cache.flush_on_cache_rebuild')) {
-        $ctr->get('wmcontroller.cache.storage')->flush();
+    if (!isset($page['page_top']['node_preview'])) {
+        return;
     }
+
+    unset($page['page_top']['node_preview']['view_mode']['view_mode']);
+    unset($page['page_top']['node_preview']['view_mode']['submit']);
 }
