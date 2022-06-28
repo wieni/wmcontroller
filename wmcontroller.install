@@ -75,7 +75,8 @@ function wmcontroller_schema()
 
 function wmcontroller_update_8001()
 {
-    drupal_install_schema('wmcontroller');
+    // comment code because the table will already be installed during install of module
+    // drupal_install_schema('wmcontroller');
 }
 
 /**

@@ -2,6 +2,7 @@
 
 namespace Drupal\wmcontroller\Service;
 
+use Drupal\Core\Extension\ExtensionPathResolver;
 use FilesystemIterator;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -15,8 +16,13 @@ class TemplateLocator implements TemplateLocatorInterface
     /** @var array */
     protected $settings;
 
-    public function __construct(array $settings)
-    {
+    /** @var ExtensionPathResolver */
+    protected $extensionPathResolver;
+
+    public function __construct(
+        array $settings,
+        ExtensionPathResolver $extensionPathResolver
+    ) {
         if (empty($settings['module'])) {
             throw new \Exception(
                 'wmcontroller requires a non-empty module entry in wmcontroller.settings'
@@ -28,6 +34,7 @@ class TemplateLocator implements TemplateLocatorInterface
         }
 
         $this->settings = $settings;
+        $this->extensionPathResolver = $extensionPathResolver;
     }
 
     public function getThemes(): array
@@ -51,7 +58,7 @@ class TemplateLocator implements TemplateLocatorInterface
     protected function getThemeFiles(string $type, string $location): array
     {
         $themes = [];
-        $dir = drupal_get_path($type, $location) .
+        $dir = $this->extensionPathResolver->getPath($type, $location) .
             DIRECTORY_SEPARATOR .
             $this->settings['path'];
 

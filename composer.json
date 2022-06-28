@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": "^8.0",
-        "drupal/core": "^9.1"
+        "drupal/core": "^9.3 || ^10"
     },
     "require-dev": {
         "ergebnis/composer-normalize": "^2.0",
