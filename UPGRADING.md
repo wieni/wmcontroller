@@ -22,7 +22,7 @@ all old class/service references and update to the v2 release.
 
 1. Update wmcontroller and any submodules to their latest versions:
    - `composer require wieni/wmcontroller:^1.0`
-   - `composer require wieni/wmcontroller_cloudfront:^1.0
+   - `composer require wieni/wmcontroller_(cloudfront|flysystem|redis):^1.0`
 2. `drush updb -y && drush cex -y`
 3. Enable the stubs of the modules you need: `wmpage_cache`, `wmtwig`, `wmpresenter` and/or any submodules.
 4. Deploy your changes to all environments
