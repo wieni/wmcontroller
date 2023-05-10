@@ -15,9 +15,9 @@ use Drupal\wmcontroller\Service\Cache\Validation\Validation;
 use Drupal\wmcontroller\WmcontrollerEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
-use Symfony\Component\HttpKernel\Event\GetResponseEvent;
-use Symfony\Component\HttpKernel\Event\PostResponseEvent;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
+use Symfony\Component\HttpKernel\Event\ResponseEvent;
+use Symfony\Component\HttpKernel\Event\TerminateEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 class CacheSubscriber implements EventSubscriberInterface
@@ -70,7 +70,7 @@ class CacheSubscriber implements EventSubscriberInterface
         return $events;
     }
 
-    public function onEnrichRequest(GetResponseEvent $event)
+    public function onEnrichRequest(RequestEvent $event)
     {
         // Do a faster-than-drupal user and session lookup
         // Fills the Request attribute with:
@@ -80,7 +80,7 @@ class CacheSubscriber implements EventSubscriberInterface
         $this->enrichRequest->enrichRequest($event->getRequest());
     }
 
-    public function onGetCachedResponse(GetResponseEvent $event)
+    public function onGetCachedResponse(RequestEvent $event)
     {
         if (!$event->isMasterRequest()) {
             return;
@@ -111,7 +111,7 @@ class CacheSubscriber implements EventSubscriberInterface
         }
     }
 
-    public function onResponse(FilterResponseEvent $event)
+    public function onResponse(ResponseEvent $event)
     {
         $request = $event->getRequest();
         $response = $event->getResponse();
@@ -173,7 +173,7 @@ class CacheSubscriber implements EventSubscriberInterface
         }
     }
 
-    public function onTerminate(PostResponseEvent $event)
+    public function onTerminate(TerminateEvent $event)
     {
         $request = $event->getRequest();
         $response = $event->getResponse();

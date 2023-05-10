@@ -1,8 +1,7 @@
 name: Wieni Presenter
 type: module
 description: Adds support for creating & injecting view presenters on top of entity classes
-core: 8.x
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^9.1 || ^10
 package: Wieni
 dependencies:
     - wmtwig

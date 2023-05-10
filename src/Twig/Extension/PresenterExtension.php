@@ -6,9 +6,11 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\wmcontroller\Entity\HasPresenterInterface;
 use Drupal\wmcontroller\Service\Cache\Dispatcher;
 use Drupal\wmcontroller\Service\PresenterFactoryInterface;
-use Twig_SimpleFilter;
+use Twig\Extension\AbstractExtension;
+use Twig\TwigFilter;
 
-class PresenterExtension extends \Twig_Extension
+
+class PresenterExtension extends AbstractExtension
 {
     /** @var PresenterFactoryInterface */
     protected $presenterFactory;
@@ -26,8 +28,8 @@ class PresenterExtension extends \Twig_Extension
     public function getFilters()
     {
         return [
-            new Twig_SimpleFilter('presenter', [$this, 'getPresenter']),
-            new Twig_SimpleFilter('p', [$this, 'getPresenter']),
+            new TwigFilter('presenter', [$this, 'getPresenter']),
+            new TwigFilter('p', [$this, 'getPresenter']),
         ];
     }
 

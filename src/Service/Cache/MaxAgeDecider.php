@@ -7,7 +7,7 @@ use Drupal\wmcontroller\WmcontrollerEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
+use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 class MaxAgeDecider implements EventSubscriberInterface, MaxAgeInterface
@@ -29,7 +29,7 @@ class MaxAgeDecider implements EventSubscriberInterface, MaxAgeInterface
         return $events;
     }
 
-    public function onResponseEarly(FilterResponseEvent $event)
+    public function onResponseEarly(ResponseEvent $event)
     {
         if (!$event->isMasterRequest()) {
             return;
