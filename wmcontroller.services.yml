@@ -30,6 +30,8 @@ parameters:
     # maxage = client side caching duration
     # s-maxage = server side caching duration (this can be drupal db or a cdn)
     # wm-s-maxage = custom cache-control directive for different local cache ttl
+    # stale-while-revalidate indicates that caches MAY serve the response after it becomes stale, up to the indicated number of seconds.
+    # stale-if-error indicates that when an error is encountered, a cached stale response MAY be used to satisfy the request, up to the indicated number of seconds.
     wmcontroller.cache.expiry:
         # Determine max and s-max based on content-type and/or bundle.
         # _default is used when no definition is available for any given bundle.
@@ -40,8 +42,9 @@ parameters:
                 #   Client side caching for 2 minutes
                 #   CDN caching for 5 minutes
                 #   Local db caching for 1 hour
+                #   Serve stale content for 1 day, while revalidating in the background
                 #
-                # article: { maxage: 120, s-maxage: 300, wm-s-maxage: 3600 }
+                # article: { maxage: 120, s-maxage: 300, wm-s-maxage: 3600, stale-while-revalidate: 86400, stale-if-error: 86400 }
             taxonomy_term:
                 _default: { maxage: 120, s-maxage: 300 }
 

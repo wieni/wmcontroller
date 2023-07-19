@@ -49,6 +49,8 @@ class MaxAgeDecider implements EventSubscriberInterface, MaxAgeInterface
                 'maxage' => $headers->getCacheControlDirective('max-age'),
                 's-maxage' => $headers->getCacheControlDirective('s-maxage'),
                 'wm-s-maxage' => $headers->getCacheControlDirective('wm-s-maxage'),
+                'stale-while-revalidate' => $headers->getCacheControlDirective('stale-while-revalidate'),
+                'stale-if-error' => $headers->getCacheControlDirective('stale-if-error'),
             ],
             static fn ($value) => $value !== null
         );
@@ -75,6 +77,8 @@ class MaxAgeDecider implements EventSubscriberInterface, MaxAgeInterface
                 's-maxage' => $request->attributes->get('_smaxage', 0),
                 'maxage' => $request->attributes->get('_maxage', 0),
                 'wm-s-maxage' => $request->attributes->get('_wmsmaxage', null),
+                'stale-while-revalidate' => $request->attributes->get('_stale-while-revalidate', null),
+                'stale-if-error' => $request->attributes->get('_stale-if-error', null),
             ];
         }
 
@@ -92,7 +96,13 @@ class MaxAgeDecider implements EventSubscriberInterface, MaxAgeInterface
             return $explicit + $definition;
         }
 
-        return $explicit + ['s-maxage' => 0, 'maxage' => 0, 'wm-s-maxage' => null];
+        return $explicit + [
+            's-maxage' => 0,
+            'maxage' => 0,
+            'wm-s-maxage' => null,
+            'stale-while-revalidate' => null,
+            'stale-if-error' => null,
+        ];
     }
 
     protected function getMaxAgesForMainEntity()
