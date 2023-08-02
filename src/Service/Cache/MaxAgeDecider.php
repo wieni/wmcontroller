@@ -31,7 +31,7 @@ class MaxAgeDecider implements EventSubscriberInterface, MaxAgeInterface
 
     public function onResponseEarly(ResponseEvent $event)
     {
-        if (!$event->isMasterRequest()) {
+        if (!$event->isMainRequest()) {
             return;
         }
 

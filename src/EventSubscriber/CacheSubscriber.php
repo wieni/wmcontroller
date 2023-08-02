@@ -82,7 +82,7 @@ class CacheSubscriber implements EventSubscriberInterface
 
     public function onGetCachedResponse(RequestEvent $event)
     {
-        if (!$event->isMasterRequest()) {
+        if (!$event->isMainRequest()) {
             return;
         }
 
@@ -117,7 +117,7 @@ class CacheSubscriber implements EventSubscriberInterface
         $response = $event->getResponse();
 
         if (
-            !$event->isMasterRequest()
+            !$event->isMainRequest()
             || $response instanceof CachedResponse
             || empty($response->getContent())
         ) {
@@ -179,7 +179,7 @@ class CacheSubscriber implements EventSubscriberInterface
         $response = $event->getResponse();
 
         if (
-            !$event->isMasterRequest()
+            !$event->isMainRequest()
             || !$response->isCacheable()
         ) {
             return;
