@@ -233,11 +233,19 @@ class CacheSubscriber implements EventSubscriberInterface
             $response->setSharedMaxAge($definition['s-maxage']);
         }
 
-        if (isset($definition['wm-s-maxage'])) {
-            $response->headers->addCacheControlDirective(
-                'wm-s-maxage',
-                $definition['wm-s-maxage']
-            );
+        $directives = [
+            'wm-s-maxage',
+            'stale-while-revalidate',
+            'stale-if-error',
+        ];
+
+        foreach ($directives as $directive) {
+            if (isset($definition[$directive])) {
+                $response->headers->addCacheControlDirective(
+                    $directive,
+                    $definition[$directive]
+                );
+            }
         }
     }
 }
