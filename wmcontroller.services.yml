@@ -347,3 +347,7 @@ services:
             - '@wmcontroller.presenter.factory'
             - '@wmcontroller.cache.dispatcher'
         tags: [{ name: twig.extension }]
+
+    wmcontroller.twig_extension:
+        class: Drupal\wmcontroller\Twig\Extension
+        tags: [{ name: twig.extension }]
