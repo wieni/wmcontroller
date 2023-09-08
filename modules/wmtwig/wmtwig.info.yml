@@ -1,6 +1,5 @@
 name: Wieni Twig
 type: module
 description: Improves the integration of Twig with component and entity-oriented projects
-core: 8.x
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^9.3 || ^10
 package: Wieni

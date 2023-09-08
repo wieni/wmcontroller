@@ -75,5 +75,6 @@ function wmpage_cache_schema()
 
 function wmpage_cache_update_8001()
 {
-    drupal_install_schema('wmpage_cache');
+    // comment code because the table will already be installed during install of module
+    //drupal_install_schema('wmpage_cache');
 }

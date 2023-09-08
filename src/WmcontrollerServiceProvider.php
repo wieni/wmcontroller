@@ -12,13 +12,5 @@ class WmcontrollerServiceProvider implements ServiceModifierInterface
         if ($container->getParameter('wmcontroller.cache.tags')) {
             $container->removeDefinition('http_middleware.page_cache');
         }
-
-        $container->setParameter(
-            'twig.config',
-            $container->getParameter('twig.config') +
-            [
-                'base_template_class' => '\\Drupal\\wmcontroller\\Twig\\Template',
-            ]
-        );
     }
 }

@@ -26,10 +26,11 @@ class Cache implements HttpKernelInterface
 
     public function handle(
         Request $request,
-        $type = self::MASTER_REQUEST,
+        $type = self::MAIN_REQUEST,
         $catch = true
-    ) {
-        if ($type !== static::MASTER_REQUEST) {
+    ): \Symfony\Component\HttpFoundation\Response
+    {
+        if ($type !== static::MAIN_REQUEST) {
             return $this->next->handle($request, $type, $catch);
         }
 

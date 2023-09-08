@@ -171,7 +171,8 @@ services:
     wmcontroller.service.templatelocator:
         class: Drupal\wmcontroller\Service\TemplateLocator
         arguments:
-             - '%wmcontroller.settings%'
+            - '%wmcontroller.settings%'
+            - '@extension.path.resolver'
 
     wmcontroller.viewbuilder:
         class: Drupal\wmcontroller\ViewBuilder\ViewBuilder
@@ -345,4 +346,8 @@ services:
         arguments:
             - '@wmcontroller.presenter.factory'
             - '@wmcontroller.cache.dispatcher'
+        tags: [{ name: twig.extension }]
+
+    wmcontroller.twig_extension:
+        class: Drupal\wmcontroller\Twig\Extension
         tags: [{ name: twig.extension }]

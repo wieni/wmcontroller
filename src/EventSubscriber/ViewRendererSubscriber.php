@@ -4,7 +4,7 @@ namespace Drupal\wmcontroller\EventSubscriber;
 
 use Drupal\wmcontroller\ViewBuilder\ViewBuilder;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpKernel\Event\GetResponseForControllerResultEvent;
+use Symfony\Component\HttpKernel\Event\ViewEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 class ViewRendererSubscriber implements EventSubscriberInterface
@@ -17,7 +17,7 @@ class ViewRendererSubscriber implements EventSubscriberInterface
         return $events;
     }
 
-    public function renderView(GetResponseForControllerResultEvent $event)
+    public function renderView(ViewEvent $event)
     {
         $result = $event->getControllerResult();
         if ($result instanceof ViewBuilder) {
