@@ -17,7 +17,11 @@ class Validation implements EventSubscriberInterface
     protected $cacheableStatusCodes = [
         Response::HTTP_OK => true,
         Response::HTTP_NON_AUTHORITATIVE_INFORMATION => true,
+        Response::HTTP_MULTIPLE_CHOICES => true,
+        Response::HTTP_MOVED_PERMANENTLY => true,
+        Response::HTTP_FOUND => true,
         Response::HTTP_NOT_FOUND => true,
+        Response::HTTP_GONE => true,
     ];
 
     protected $cacheableMethods = [
