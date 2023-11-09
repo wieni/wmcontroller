@@ -65,6 +65,12 @@ class MaxAgeDecider implements EventSubscriberInterface, MaxAgeInterface
     {
         $explicit = $this->explicitMaxAges ?: [];
 
+        if ($this->isPreview($request)) {
+            return [
+                'maxage' => 0,
+            ];
+        }
+
         if (isset($explicit['maxage']) || isset($explicit['s-maxage'])) {
             return $explicit;
         }
@@ -125,5 +131,11 @@ class MaxAgeDecider implements EventSubscriberInterface, MaxAgeInterface
         }
 
         return $bundleDefs[$bundle];
+    }
+
+    protected function isPreview(Request $request): bool
+    {
+        return $request->attributes->has('node_preview')
+            || $request->attributes->has('preview_token');
     }
 }

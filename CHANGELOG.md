@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [1.2.2] - 2023-09-13
+### Fixed
+- Stop caching preview_link preview routes
+
 ## [1.2.1] - 2023-10-30
 ### Fixed
 - Mark http responses with status codes `300`, `301`, `302` and `410` cacheable
