@@ -67,8 +67,6 @@ class FrontController implements ContainerInjectionInterface
 
         preg_match('/entity\.(?<entityTypeId>.+)\.(canonical|preview_link)$/', $routeName, $matches);
 
-        $entityTypeId = $matches['entityTypeId'] ?? null;
-        $entity = $request->attributes->get($entityTypeId);
         if (isset($matches['entityTypeId'])) {
             $entity = $request->attributes->get($matches['entityTypeId']);
         }
