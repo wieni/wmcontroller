@@ -3,8 +3,8 @@
 namespace Drupal\wmcontroller\Enhancer;
 
 use Drupal\Core\Routing\EnhancerInterface;
+use Drupal\Core\Routing\RouteObjectInterface;
 use Drupal\wmcontroller\Controller\FrontController;
-use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**

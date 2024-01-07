@@ -90,8 +90,8 @@ class FrontController implements ContainerInjectionInterface
 
             $event = new MainEntityEvent($entity);
             $this->eventDispatcher->dispatch(
-                WmcontrollerEvents::MAIN_ENTITY_RENDER,
-                $event
+                $event,
+                WmcontrollerEvents::MAIN_ENTITY_RENDER
             );
         } else {
             $controller = $request->attributes->get('_original_controller');
