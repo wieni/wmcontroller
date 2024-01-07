@@ -69,6 +69,9 @@ class FrontController implements ContainerInjectionInterface
 
         $entityTypeId = $matches['entityTypeId'] ?? null;
         $entity = $request->attributes->get($entityTypeId);
+        if (isset($matches['entityTypeId'])) {
+            $entity = $request->attributes->get($matches['entityTypeId']);
+        }
 
         if ($routeName === 'entity.node.preview') {
             $entity = $request->attributes->get('node_preview');
@@ -78,7 +81,7 @@ class FrontController implements ContainerInjectionInterface
             $entity = $request->attributes->get('node');
         }
 
-        if ($entity) {
+        if (isset($entity)) {
             $this->validateLangcode($entity);
 
             try {
