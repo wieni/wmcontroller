@@ -72,6 +72,8 @@ class Manager implements CacheTagsInvalidatorInterface
             return;
         }
 
+        $tags = $this->filterIgnoredTags($tags);
+
         $cache = $this->cacheBuilder->buildCacheEntity(
             $this->cacheKeyGenerator->generateCacheKey($request),
             $request,
@@ -86,24 +88,15 @@ class Manager implements CacheTagsInvalidatorInterface
             $tags
         );
 
-        if ($event->getCache()) {
+        if ($event->getCache() && $event->getCache()->getExpiry() > time()) {
             $this->storage->set($event->getCache(), $event->getTags());
         }
     }
 
     public function invalidateTags(array $tags)
     {
-        $filter = function ($tag) {
-            foreach ($this->ignoredCacheTags as $re) {
-                if (preg_match('#' . $re . '#', $tag)) {
-                    return false;
-                }
-            }
-            return true;
-        };
-
         // Remove ignored tags
-        $tags = array_filter($tags, $filter);
+        $tags = $this->filterIgnoredTags($tags);
 
         // Check if any tag matches a flushTriggerTags regex
         // If so, flush the entire cache instead.
@@ -117,5 +110,20 @@ class Manager implements CacheTagsInvalidatorInterface
         }
 
         $this->invalidator->invalidateCacheTags($tags);
+    }
+
+    private function filterIgnoredTags(array $tags): array
+    {
+        $filter = function ($tag) {
+            foreach ($this->ignoredCacheTags as $re) {
+                if (preg_match('#' . $re . '#', $tag)) {
+                    return false;
+                }
+            }
+            return true;
+        };
+
+        // Remove ignored tags
+        return array_filter($tags, $filter);
     }
 }
