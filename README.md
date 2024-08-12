@@ -26,28 +26,15 @@ You should also include the patch from [#2638686](https://www.drupal.org/node/26
 
 ## Configuration
 
-Before you get started, make sure you have configured at least the `module` and `path` options
- or the module will not work.
+Before you get started, make sure the theme or module that will hold your templates is configured to do so.
+Check [the wmtwig documentation](https://github.com/wieni/wmtwig) for more info.
 
 Configuration is stored as service parameters. You can override these in a service YAML file defined in 
  `$settings['container_yamls']` or in the `services.yml` file of a (custom) module.
 
 ```yaml
 parameters:
-    # Main wmcontroller settings
     wmcontroller.settings:
-
-        # The module that has controllers for your entities
-        # and if theme (below) is left empty also where your templates ought to be.
-        module: ''
-
-        # The theme where your templates are stored (optional)
-        theme: ''
-
-        # The path to the folder your templates are stored.
-        # (relative to your module / theme directory)
-        path: 'templates'
-
         # The controller responsible for forwarding to bundle-specific controllers.
         # Only override this if you know what you're doing.
         frontcontroller: 'Drupal\wmcontroller\Controller\FrontController'
