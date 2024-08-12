@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": "^8.0",
-        "drupal/core": "^9.1 || ^10",
+        "drupal/core": "^9.1 || ^10 || ^11",
         "wieni/wmtwig": "^1.0"
     },
     "require-dev": {
