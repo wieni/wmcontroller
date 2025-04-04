@@ -1,5 +1,5 @@
 name: Wieni Controller
 type: module
 description: Adds support for bundle-specific controllers for Drupal entities.
-core_version_requirement: ^10
+core_version_requirement: ^10 || ^11
 package: Wieni

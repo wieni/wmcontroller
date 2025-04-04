@@ -2,9 +2,11 @@
 
 namespace Drupal\wmcontroller\Twig\Node;
 
+use Twig\Attribute\YieldReady;
 use Twig\Compiler;
 use Twig\Node\Node;
 
+#[YieldReady]
 class DispatchParameterEventNode extends Node
 {
     public function compile(Compiler $compiler)
