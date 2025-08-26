@@ -31,7 +31,7 @@ Create bundle-specific controllers with the following convention:
 
 For example:
 
-`src\Controller\TaxonomyTerm\CategoryController` will be matched against a `taxonomy_term` with bundle `categories`.
+`src\Controller\TaxonomyTerm\CategoryController` will be matched against a `taxonomy_term` with bundle `category`.
 
 We will call the `show()` method on your controller, so make sure your controller has this method.
 
