@@ -41,12 +41,14 @@ class CacheKeyGenerator implements CacheKeyGeneratorInterface
 
         $query = [];
         parse_str($request->getQueryString() ?: '', $query);
-        $query = array_intersect_key(
-            $query,
-            // Todo: whitelist-per request ( routing hasn't happened yet, so can't use route object )
-            // perhaps path-based regex like we do for max-ages
-            array_flip($this->whitelistedQueryParams)
-        );
+        if (!in_array('*', $this->whitelistedQueryParams, true)) {
+            $query = array_intersect_key(
+                $query,
+                // Todo: whitelist-per request ( routing hasn't happened yet, so can't use route object )
+                // perhaps path-based regex like we do for max-ages
+                array_flip($this->whitelistedQueryParams)
+            );
+        }
 
         $query = http_build_query($query);
         if ($query) {

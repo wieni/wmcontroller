@@ -262,6 +262,7 @@ parameters:
 
     # Whitelisted query parameters.
     # These query parameters become part of the internal cache key.
+    # Use '*' to make all query parameters part of the cache key.
     wmcontroller.cache.query.whitelist:
         - 'page'
 

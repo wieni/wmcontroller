@@ -6,9 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-## [1.2.2] - 2023-09-13
+## [1.3.1] - 2026-10-05
+### Added
+- Allow `'*'` in `wmcontroller.cache.query.whitelist` to make all query parameters part of the cache key
+
+## [1.3.0] - 2025-06-03
+### Added
+- Add Drupal 11 support
+
+## [1.2.2] - 2024-04-19
 ### Fixed
 - Stop caching preview_link preview routes
+- Filter ignored tags on Cache object
 
 ## [1.2.1] - 2023-10-30
 ### Fixed
