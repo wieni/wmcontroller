@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+- Allow `'*'` in `wmcontroller.cache.query.whitelist` to make all query parameters part of the cache key
 
 ## [1.2.2] - 2023-09-13
 ### Fixed
