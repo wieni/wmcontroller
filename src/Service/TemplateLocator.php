@@ -68,6 +68,13 @@ class TemplateLocator implements TemplateLocatorInterface
 
         $files = $this->findTwigFiles($dir);
 
+        // Since Drupal 11.2 ThemeManager adds the default variables itself and
+        // template_preprocess() is deprecated.
+        $preprocess = ['wmcontroller_theme_set_variables'];
+        if (version_compare(\Drupal::VERSION, '11.2', '<')) {
+            array_unshift($preprocess, 'template_preprocess');
+        }
+
         foreach ($files as $file) {
             $fileName = $this->stripOutTemplatePathAndExtension($dir, $file);
             // Transform the filename to a template name
@@ -79,10 +86,7 @@ class TemplateLocator implements TemplateLocatorInterface
                 ],
                 'path' => $dir,
                 'template' => $fileName,
-                'preprocess functions' => [
-                    'template_preprocess',
-                    'wmcontroller_theme_set_variables',
-                ],
+                'preprocess functions' => $preprocess,
             ];
         }
 
