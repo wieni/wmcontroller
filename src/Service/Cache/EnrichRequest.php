@@ -106,7 +106,7 @@ class EnrichRequest
         $q->groupBy('ur.entity_id');
         $q->groupBy('ur.roles_target_id');
 
-        $roles = $q->execute()->fetchAll(\PDO::FETCH_COLUMN);
+        $roles = $q->execute()->fetchCol();
         if ($uid === 1 || $uid === '1') {
             $roles[] = 'administrator';
         }

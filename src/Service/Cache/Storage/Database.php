@@ -54,7 +54,7 @@ class Database implements StorageInterface
             ->condition('c.expiry', time(), '>=')
             ->execute();
 
-        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+        while ($row = $stmt->fetchAssoc()) {
             yield $this->assocRowToEntry($row);
         }
     }
@@ -104,7 +104,7 @@ class Database implements StorageInterface
         $q->condition('c.expiry', time(), '<');
         $q->range(0, (int) $amount);
 
-        return $q->execute()->fetchAll(\PDO::FETCH_COLUMN);
+        return $q->execute()->fetchCol();
     }
 
     public function getByTags(array $tags)
@@ -119,7 +119,7 @@ class Database implements StorageInterface
         $q->innerJoin(self::TABLE_TAGS, 't', 't.id = c.id');
         $q->condition('t.tag', $tags, 'IN');
 
-        $ids = $q->execute()->fetchAll(\PDO::FETCH_COLUMN);
+        $ids = $q->execute()->fetchCol();
         return $ids;
     }
 
