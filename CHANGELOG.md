@@ -4,7 +4,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [1.4.0] - 2026-10-26
+### Added
+- Drupal 12 support.
+
+### Fixed
+- Integer PDO fetch modes in the cache storage and `EnrichRequest`, deprecated in Drupal 11.2 and removed in 12.
+- `template_preprocess()` is no longer added to the theme hooks of wmcontroller templates on Drupal 11.2 and later,
+  where core sets the default template variables itself. Rebuild the theme registry after updating.
+
+### Removed
+- Support for Drupal before 11.4 and PHP before 8.2. The module now requires Drupal `^11.4 || ^12` and PHP 8.2 or
+  higher.
 
 ## [1.3.1] - 2026-10-05
 ### Added
