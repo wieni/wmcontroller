@@ -9,7 +9,7 @@ use Symfony\Component\HttpKernel\KernelEvents;
 
 class ViewRendererSubscriber implements EventSubscriberInterface
 {
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         // Just make sure i'm run before the MainContentViewSubscriber
         $events[KernelEvents::VIEW][] = ['renderView', 99];

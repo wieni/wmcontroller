@@ -22,7 +22,7 @@ class MaxAgeDecider implements EventSubscriberInterface, MaxAgeInterface
         $this->expiries = $expiries + ['paths' => [], 'entities' => []];
     }
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         $events[KernelEvents::RESPONSE][] = ['onResponseEarly', 255];
         $events[WmcontrollerEvents::MAIN_ENTITY_RENDER][] = ['onMainEntity', 0];
