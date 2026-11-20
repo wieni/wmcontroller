@@ -18,7 +18,7 @@ class MainEntitySubscriber implements EventSubscriberInterface
         $this->mainEntity = $mainEntity;
     }
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             WmcontrollerEvents::MAIN_ENTITY_RENDER => ['onMainEntity'],

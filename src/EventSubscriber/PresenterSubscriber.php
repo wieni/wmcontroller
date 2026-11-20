@@ -18,7 +18,7 @@ class PresenterSubscriber implements EventSubscriberInterface
         $this->factory = $factory;
     }
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         $events[WmcontrollerEvents::PRESENTED][] = [
             'onEntityPresented',

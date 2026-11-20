@@ -59,7 +59,7 @@ class Validation implements EventSubscriberInterface
         $this->ignoredRoles = $ignoredRoles;
     }
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         $events[WmcontrollerEvents::VALIDATE_CACHEABILITY_REQUEST][] = 'onShouldIgnoreRequest';
         $events[WmcontrollerEvents::VALIDATE_CACHEABILITY_RESPONSE][] = 'onShouldIgnoreResponse';

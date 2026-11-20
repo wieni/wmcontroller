@@ -58,7 +58,7 @@ class CacheSubscriber implements EventSubscriberInterface
         $this->strippedHeaders = $strippedHeaders;
     }
 
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         $events[WmcontrollerEvents::CACHE_HANDLE][] = ['onEnrichRequest', 10001];
         $events[WmcontrollerEvents::CACHE_HANDLE][] = ['onGetCachedResponse', 10000];
